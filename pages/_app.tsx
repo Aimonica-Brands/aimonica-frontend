@@ -55,7 +55,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <RainbowKitProvider
           modalSize="compact"
           locale="en"
-          theme={lightTheme({ accentColor: '#f69d15' })}
+          theme={lightTheme({ accentColor: '#50B4FF' })}
           initialChain={arbitrum}>
           <ConfigProvider locale={enUS} theme={antdTheme}>
             <AntdApp>

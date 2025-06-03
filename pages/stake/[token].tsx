@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Empty, Spin, App, Popover, Collapse, Input } from 'antd';
+import { Button, Modal, Empty, Spin, App, Popover, Collapse, Input } from 'antd';
 import { LeftOutlined, ExportOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { usePageContext } from '@/context';
@@ -18,6 +18,8 @@ export default function Stake() {
   const [amount, setAmount] = useState('');
   const [balance, setBalance] = useState(0);
   const [tabIndex, setTabIndex] = useState(0);
+  const [isUnstakeModalOpen, setIsUnstakeModalOpen] = useState(false);
+  const [isEmergencyUnstakeModalOpen, setIsEmergencyUnstakeModalOpen] = useState(false);
 
   const handleTabChange = (index: number) => {
     setTabIndex(index);
@@ -25,6 +27,14 @@ export default function Stake() {
 
   const handleStake = () => {
     console.log(amount);
+  };
+
+  const handleEmergencyUnstake = () => {
+    setIsEmergencyUnstakeModalOpen(true);
+  };
+
+  const handleUnstake = () => {
+    setIsUnstakeModalOpen(true);
   };
 
   return (
@@ -165,17 +175,16 @@ export default function Stake() {
                   <span>Redemption Time</span>
                   <span>2025-5-25 17:26:46</span>
                 </div>
-                <Button type="primary" size="large" className="stake-btn" onClick={handleStake} loading={loading}>
-                  Emergency Unstake
-                </Button>
-                <div className="text2">(*Warning: Unstaking in advance will result in a 30% deduction of rewards*)</div>
                 <Button
                   type="primary"
                   size="large"
                   className="stake-btn"
-                  onClick={handleStake}
-                  loading={loading}
-                  disabled={true}>
+                  onClick={handleEmergencyUnstake}
+                  loading={loading}>
+                  Emergency Unstake
+                </Button>
+                <div className="text2">(*Warning: Unstaking in advance will result in a 30% deduction of rewards*)</div>
+                <Button type="primary" size="large" className="stake-btn" onClick={handleUnstake} loading={loading}>
                   Unstake
                 </Button>
               </div>
@@ -183,6 +192,79 @@ export default function Stake() {
           </div>
         </div>
       </div>
+
+      <Modal
+        width={'fit-content'}
+        centered
+        closable={false}
+        footer={null}
+        open={isEmergencyUnstakeModalOpen}
+        onOk={() => setIsEmergencyUnstakeModalOpen(false)}
+        onCancel={() => setIsEmergencyUnstakeModalOpen(false)}>
+        <div className="unstake-box">
+          <img src="/assets/images/img-26.png" alt="" className="img-26" />
+          <div className="title">Emergency Unstake</div>
+          <div className="text">（*Warning: Unstaking in advance will result in a 30% deduction of rewards*）</div>
+          <div className="text2">
+            <div className="text2-1">You can only get</div>
+            <div className="text2-2">
+              <div>15K Aimonica(≈$1,500)</div>
+              <div className="s-box">
+                <div className="s-img">
+                  <img src="/assets/images/img-3.png" alt="" />
+                </div>
+                <div className="s-text">1321546521</div>
+              </div>
+            </div>
+          </div>
+          <div className="btn-box">
+            <button className="btn-cancel" onClick={() => setIsEmergencyUnstakeModalOpen(false)}>
+              Cancel
+            </button>
+            <button className="btn-confirm" onClick={() => setIsEmergencyUnstakeModalOpen(false)}>
+              Confirm
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        width={'fit-content'}
+        centered
+        closable={false}
+        footer={null}
+        open={isUnstakeModalOpen}
+        onOk={() => setIsUnstakeModalOpen(false)}
+        onCancel={() => setIsUnstakeModalOpen(false)}>
+        <div className="unstake-box">
+          <img src="/assets/images/img-26.png" alt="" className="img-26" />
+          <div className="title">Unstake</div>
+          <div className="text-box2">
+            <div>Unstaking Fee</div>
+            <div>5%</div>
+          </div>
+          <div className="text2 text3">
+            <div className="text2-1">You can only get</div>
+            <div className="text2-2">
+              <div>15K Aimonica(≈$1,500)</div>
+              <div className="s-box">
+                <div className="s-img">
+                  <img src="/assets/images/img-3.png" alt="" />
+                </div>
+                <div className="s-text">1321546521</div>
+              </div>
+            </div>
+          </div>
+          <div className="btn-box">
+            <button className="btn-cancel" onClick={() => setIsUnstakeModalOpen(false)}>
+              Cancel
+            </button>
+            <button className="btn-confirm" onClick={() => setIsUnstakeModalOpen(false)}>
+              Confirm
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
