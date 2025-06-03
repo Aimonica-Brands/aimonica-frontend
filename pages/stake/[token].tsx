@@ -20,13 +20,14 @@ export default function Stake() {
   const [tabIndex, setTabIndex] = useState(0);
   const [isUnstakeModalOpen, setIsUnstakeModalOpen] = useState(false);
   const [isEmergencyUnstakeModalOpen, setIsEmergencyUnstakeModalOpen] = useState(false);
-
+  const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const handleTabChange = (index: number) => {
     setTabIndex(index);
   };
 
   const handleStake = () => {
     console.log(amount);
+    setIsStakeModalOpen(true);
   };
 
   const handleEmergencyUnstake = () => {
@@ -194,6 +195,7 @@ export default function Stake() {
       </div>
 
       <Modal
+        className="unstake-modal"
         width={'fit-content'}
         centered
         closable={false}
@@ -229,6 +231,7 @@ export default function Stake() {
       </Modal>
 
       <Modal
+        className="unstake-modal"
         width={'fit-content'}
         centered
         closable={false}
@@ -236,7 +239,7 @@ export default function Stake() {
         open={isUnstakeModalOpen}
         onOk={() => setIsUnstakeModalOpen(false)}
         onCancel={() => setIsUnstakeModalOpen(false)}>
-        <div className="unstake-box">
+        <div className="unstake-modal-box">
           <img src="/assets/images/img-26.png" alt="" className="img-26" />
           <div className="title">Unstake</div>
           <div className="text-box2">
@@ -262,6 +265,47 @@ export default function Stake() {
             <button className="btn-confirm" onClick={() => setIsUnstakeModalOpen(false)}>
               Confirm
             </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        className="stake-modal"
+        width={'fit-content'}
+        centered
+        closable={false}
+        footer={null}
+        open={isStakeModalOpen}
+        onOk={() => setIsStakeModalOpen(false)}
+        onCancel={() => setIsStakeModalOpen(false)}>
+        <div className="stake-modal-box">
+          <img src="/assets/images/img-27.png" alt="" className="img-27" />
+          <img src="/assets/images/img-28.png" alt="" className="img-28" />
+          <img src="/assets/images/img-29.png" alt="" className="img-29" />
+          <img src="/assets/images/img-30.png" alt="" className="img-30" />
+          <img src="/assets/images/img-31.png" alt="" className="img-31" />
+          <img src="/assets/images/img-32.png" alt="" className="img-32" />
+          <img src="/assets/images/img-33.png" alt="" className="img-33" onClick={() => setIsStakeModalOpen(false)} />
+
+          <div className="text1">
+            Stake <br /> Success
+          </div>
+          <div className="text2">
+            <div>@AimonicaBrands Copywriter</div>
+            <div>Copywriter</div>
+            <div>Link</div>
+          </div>
+          <div className="text3">
+            <a>https://aimonicabrands.ai</a>
+            <div className="btn-box">
+              <button className="btn-close" onClick={() => setIsStakeModalOpen(false)}>
+                close
+              </button>
+              <button className="btn-share">
+                Share On
+                <img src="/assets/images/icon-twitter.png" alt="" />
+              </button>
+            </div>
           </div>
         </div>
       </Modal>
