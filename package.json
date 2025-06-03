@@ -1,0 +1,45 @@
+{
+  "name": "aimonica-frontend",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NEXT_PUBLIC_APP_ENV=development next dev",
+    "dev:prod": "cross-env NEXT_PUBLIC_APP_ENV=production next dev",
+    "build:dev": "cross-env NEXT_PUBLIC_APP_ENV=development next build",
+    "build": "cross-env NEXT_PUBLIC_APP_ENV=production next build",
+    "start": "next start -p 3009",
+    "lint": "next lint",
+    "fix": "next lint --fix"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.5.1",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.10.4",
+    "@next/env": "^15.1.6",
+    "@rainbow-me/rainbowkit": "^2.2.4",
+    "@tanstack/react-query": "^5.71.1",
+    "animate.css": "^4.1.1",
+    "antd": "^5.17.3",
+    "axios": "^1.7.9",
+    "echarts-for-react": "^3.0.2",
+    "ethers": "^6.13.4",
+    "graphql-request": "^7.1.2",
+    "next": "^12.2.3",
+    "numeral": "^2.0.6",
+    "react": "^18.2.0",
+    "react-countup": "^6.5.3",
+    "react-dom": "18.0.0",
+    "sass": "^1.74.1",
+    "swiper": "^11.2.8",
+    "viem": "^2.24.3",
+    "wagmi": "^2.14.16"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.45",
+    "@types/react": "^18.3.11",
+    "cross-env": "^7.0.3",
+    "eslint": "8.12.0",
+    "eslint-config-next": "12.1.2",
+    "typescript": "5.0.4"
+  }
+}

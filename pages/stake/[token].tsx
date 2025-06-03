@@ -1,0 +1,188 @@
+import React, { useState, useEffect } from 'react';
+import { Button, Table, Empty, Spin, App, Popover, Collapse, Input } from 'antd';
+import { LeftOutlined, ExportOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/router';
+import { usePageContext } from '@/context';
+import { useChainId } from 'wagmi';
+
+export default function Stake() {
+  const { message } = App.useApp();
+  const router = useRouter();
+  const { token: token } = router.query;
+
+  const chainId = useChainId();
+  const { walletAddress, provider } = usePageContext();
+  const [dataSource, setDataSource] = useState([{ rank: 1 }, { rank: 2 }, { rank: 3 }]);
+  const [loading, setLoading] = useState(false);
+
+  const [amount, setAmount] = useState('');
+  const [balance, setBalance] = useState(0);
+  const [tabIndex, setTabIndex] = useState(0);
+
+  const handleTabChange = (index: number) => {
+    setTabIndex(index);
+  };
+
+  const handleStake = () => {
+    console.log(amount);
+  };
+
+  return (
+    <div className="stake-page">
+      <div className="stake-box">
+        <button className="back-box" onClick={() => router.push('/')}>
+          <LeftOutlined />
+          <span>Explore</span>
+          <img src="/assets/images/star.png" alt="" className="star-img" />
+        </button>
+
+        <div className="stake-content">
+          <div className="left-box">
+            <img src="/assets/images/img-23.png" alt="" className="img-23" />
+            <img src="/assets/images/star.png" alt="" className="star-img" />
+
+            <div className="box1">
+              <div className="text">My monicadets know what's up (Monicadets = Monica's army)</div>
+            </div>
+            <div className="box2">
+              <div className="avatar-box">
+                <img src="/assets/images/img-10.png" alt="" />
+                <span>Aimonica</span>
+              </div>
+              <div className="text1">Project Introduction Copywriting</div>
+              <div className="text2">
+                <div>
+                  <span>Users</span>
+                  <span>1000</span>
+                </div>
+                <div>
+                  <span>TVL</span>
+                  <span>$ 1000</span>
+                </div>
+              </div>
+              <div className="text3">
+                <span>Pool Address</span>
+                <a className="pool-address">
+                  8B4j....KTY5s
+                  <ExportOutlined />
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="right-box">
+            <div className="tab-title-box">
+              <button className={tabIndex === 0 ? 'active' : ''} onClick={() => handleTabChange(0)}>
+                STAKE
+              </button>
+              <button className={tabIndex === 1 ? 'active' : ''} onClick={() => handleTabChange(1)}>
+                UNSTAKE
+              </button>
+            </div>
+            {tabIndex === 0 ? (
+              <div className="stake-item">
+                <div className="text">
+                  <span> Rewards </span>
+                  <div className="s-box">
+                    <div className="s-img">
+                      <img src="/assets/images/img-5.png" alt="" />
+                    </div>
+                    <div className="s-text">Points 7.5x AIM</div>
+                  </div>
+                </div>
+                <div className="text margin-bottom">
+                  <span>Your Balance</span>
+                </div>
+                <div className="avatar-box-box">
+                  <div className="avatar-box">
+                    <img src="/assets/images/img-10.png" alt="" />
+                    <span>Aimonica</span>
+                  </div>
+                  <div className="number-box">
+                    <div className="number">1500</div>
+                    <div className="number2">$ 15</div>
+                  </div>
+                </div>
+                <div className="inputbox">
+                  <Input
+                    type="number"
+                    placeholder={`Enter Amount`}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    disabled={loading}
+                  />
+                  <button className="max-btn" onClick={() => setAmount(balance.toString())}>
+                    MAX
+                  </button>
+                </div>
+                <div className="text">
+                  <span>Locking Time</span>
+                  <div className="days">
+                    <button>7D</button>
+                    <button>14D</button>
+                    <button>30D</button>
+                  </div>
+                </div>
+                <div className="text">
+                  <span>Expected Points</span>
+                  <div className="number">1500</div>
+                </div>
+                <Button type="primary" size="large" className="stake-btn" onClick={handleStake} loading={loading}>
+                  STAKE
+                </Button>
+              </div>
+            ) : (
+              <div className="stake-item">
+                <div className="text">
+                  <span>Your Balance</span>
+                </div>
+                <div className="avatar-box-box margin-bottom">
+                  <div className="avatar-box">
+                    <img src="/assets/images/img-10.png" alt="" />
+                    <span>Aimonica</span>
+                  </div>
+                  <div className="number-box">
+                    <div className="number">1500</div>
+                  </div>
+                </div>
+                <div className="text">
+                  <span>Your Earned Points</span>
+                  <div className="s-box">
+                    <div className="s-img">
+                      <img src="/assets/images/img-3.png" alt="" />
+                    </div>
+                    <div className="s-text">10000</div>
+                  </div>
+                </div>
+                <div className="text">
+                  <span>Staking start time</span>
+                  <span>2025-5-25 17:26:46</span>
+                </div>
+                <div className="text">
+                  <span>Locking Time</span>
+                  <span>14D:12H:50M:24S</span>
+                </div>
+                <div className="text">
+                  <span>Redemption Time</span>
+                  <span>2025-5-25 17:26:46</span>
+                </div>
+                <Button type="primary" size="large" className="stake-btn" onClick={handleStake} loading={loading}>
+                  Emergency Unstake
+                </Button>
+                <div className="text2">(*Warning: Unstaking in advance will result in a 30% deduction of rewards*)</div>
+                <Button
+                  type="primary"
+                  size="large"
+                  className="stake-btn"
+                  onClick={handleStake}
+                  loading={loading}
+                  disabled={true}>
+                  Unstake
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
