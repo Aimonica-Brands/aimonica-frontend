@@ -2,58 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Button, Table, Empty, Spin, App, Popover, Collapse } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
-import { usePageContext } from '@/context';
-import { useChainId } from 'wagmi';
 import type { ColumnsType } from 'antd/es/table';
 
 export default function Dashboard() {
   const { message } = App.useApp();
-  const chainId = useChainId();
   const router = useRouter();
-  const { walletAddress, provider } = usePageContext();
   const [assetsLoading, setAssetsLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const [tabIndex, setTabIndex] = useState(0);
-
-  const projectContent = (
-    <div className="project-content">
-      <div className="title">
-        <div className="name">
-          <img src="/assets/images/avatar-1.png" alt="" />
-          <span>name</span>
-        </div>
-        <div className="number">$ 0.0042380</div>
-      </div>
-      <div className="info">
-        <div className="info-title">
-          <img src="/assets/images/img-18.png" alt="" />
-          <span>Project Introduction</span>
-        </div>
-        <div className="info-text">The first AI agent and meme focused waifu investor</div>
-        <div className="info-title">
-          <img src="/assets/images/img-19.png" alt="" />
-          <span>Social Media</span>
-        </div>
-        <a href="https://x.com/AimonicaBrands">
-          <img src="/assets/images/icon-twitter-2.png" alt="" />
-          https://x.com/AimonicaBrands
-        </a>
-        <a href="https://x.com/AimonicaBrands">
-          <img src="/assets/images/icon-telegram-2.png" alt="" />
-          https://x.com/AimonicaBrands
-        </a>
-        <a href="https://x.com/AimonicaBrands">
-          <img src="/assets/images/icon-discord-2.png" alt="" />
-          https://x.com/AimonicaBrands
-        </a>
-        <a href="https://x.com/AimonicaBrands">
-          <img src="/assets/images/icon-medium-2.png" alt="" />
-          https://x.com/AimonicaBrands
-        </a>
-      </div>
-    </div>
-  );
 
   const align = 'center' as const;
   const assetsColumns: ColumnsType<any> = [
@@ -231,9 +188,15 @@ export default function Dashboard() {
           <img src="/assets/images/star.png" alt="" className="star-img" />
         </div>
         <div className="tab-box">
-          <button className={tabIndex === 0 ? 'active' : ''} onClick={() => setTabIndex(0)}>All Chain</button>
-          <button className={tabIndex === 1 ? 'active' : ''} onClick={() => setTabIndex(1)}>Solana</button>
-          <button className={tabIndex === 2 ? 'active' : ''} onClick={() => setTabIndex(2)}>Base</button>
+          <button className={tabIndex === 0 ? 'active' : ''} onClick={() => setTabIndex(0)}>
+            All Chain
+          </button>
+          <button className={tabIndex === 1 ? 'active' : ''} onClick={() => setTabIndex(1)}>
+            Solana
+          </button>
+          <button className={tabIndex === 2 ? 'active' : ''} onClick={() => setTabIndex(2)}>
+            Base
+          </button>
         </div>
 
         <Table

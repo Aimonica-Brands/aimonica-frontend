@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Table, Empty, Spin, App, Popover, Collapse } from 'antd';
 import { useRouter } from 'next/router';
-import { usePageContext } from '@/context';
-import { useChainId } from 'wagmi';
 import type { ColumnsType } from 'antd/es/table';
 
 // Import Swiper React components
@@ -57,9 +55,7 @@ const projectContent = (
 
 export default function Home() {
   const { message } = App.useApp();
-  const chainId = useChainId();
   const router = useRouter();
-  const { walletAddress, provider } = usePageContext();
   const [dataSource, setDataSource] = useState([{ rank: 1 }, { rank: 2 }, { rank: 3 }]);
   const [loading, setLoading] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
@@ -183,11 +179,6 @@ export default function Home() {
       children: <p>{text}</p>
     }
   ];
-
-  useEffect(() => {
-    if (walletAddress && provider) {
-    }
-  }, [walletAddress, provider, chainId]);
 
   const toStake = (record: any) => {
     console.log(record);

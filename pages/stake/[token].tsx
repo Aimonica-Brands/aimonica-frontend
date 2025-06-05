@@ -2,16 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, Empty, Spin, App, Popover, Collapse, Input } from 'antd';
 import { LeftOutlined, ExportOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
-import { usePageContext } from '@/context';
-import { useChainId } from 'wagmi';
 
 export default function Stake() {
   const { message } = App.useApp();
   const router = useRouter();
   const { token: token } = router.query;
-
-  const chainId = useChainId();
-  const { walletAddress, provider } = usePageContext();
   const [dataSource, setDataSource] = useState([{ rank: 1 }, { rank: 2 }, { rank: 3 }]);
   const [loading, setLoading] = useState(false);
 

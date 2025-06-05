@@ -1,52 +1,51 @@
 import { ethers } from 'ethers';
 import { message } from 'antd';
 
-// 导入 ABI
-import USDTABI from './abi/USDT.json';
-import gpdUSDTABI from './abi/gpdUSDT.json';
+import { createAppKit } from '@reown/appkit';
+import { SolanaAdapter } from '@reown/appkit-adapter-solana';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 
-import { arbitrum, mainnet } from 'wagmi/chains';
+import { mainnet, arbitrum, sepolia, solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
 
-export function evmToken() {
-  return {
-    // ETH主网
-    eth: {},
-    // ARB主网
-    arb: {
-      USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-      gpdUSDT: '0xed1B25e98233d138A49ACe801474dA486704F9D5'
-    }
-  };
-}
+export const networks: any = [mainnet, arbitrum, sepolia, solana, solanaTestnet, solanaDevnet];
 
-// 初始合约状态
-export const contractsVariable = {
-  provider: null,
-  contractUSDT: null,
-  contractGPDUSDT: null
+// 0. Get projectId from https://cloud.reown.com
+export const projectId = 'b5863416c73906526923f5c4d6db20c8';
+
+// 1. Create the Wagmi adapter
+export const wagmiAdapter = new WagmiAdapter({
+  ssr: true,
+  projectId,
+  networks
+});
+
+// 2. Create Solana adapter
+export const solanaWeb3JsAdapter = new SolanaAdapter();
+
+// 3. Set up the metadata - Optional
+const metadata = {
+  name: 'AIMonica',
+  description: 'AIMonica DApp',
+  url: 'https://aimonica.dev/', // origin must match your domain & subdomain
+  icons: [`/assets/images/logo2.svg`]
 };
 
-export async function initContracts(chainId: number) {
-  try {
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-
-    if (chainId === arbitrum.id) {
-      const contracts = {
-        provider,
-        contractUSDT: new ethers.Contract(evmToken().arb.USDT, USDTABI, signer),
-        contractGPDUSDT: new ethers.Contract(evmToken().arb.gpdUSDT, gpdUSDTABI, signer)
-      };
-      return contracts;
-    } else {
-      return contractsVariable;
-    }
-  } catch (error) {
-    console.error('Error initializing contracts:', error);
-    return contractsVariable;
+// 4. Create the AppKit instance
+export const modal = createAppKit({
+  adapters: [wagmiAdapter, solanaWeb3JsAdapter],
+  networks,
+  metadata,
+  projectId,
+  features: {
+    analytics: true
+  },
+  themeMode: 'light',
+  themeVariables: {
+    '--w3m-accent': '#50B4FF',
   }
-}
+});
 
+// 错误处理
 export function walletError(error: any) {
   if (error?.code === 4001 || error?.code === 'ACTION_REJECTED') {
     message.error('Transaction rejected by user');

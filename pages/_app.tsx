@@ -6,29 +6,22 @@ import packageJson from '@/package.json';
 import HeaderComponent from '@/components/HeaderComponent';
 import FooterComponent from '@/components/FooterComponent';
 import { PageProvider } from '@/context';
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+
+import { wagmiAdapter } from '@/wallet';
+import { WagmiProvider, type Config } from 'wagmi';
 
 import 'antd/dist/reset.css';
 import '@/styles/index.scss';
 import '@/styles/page.scss';
 import '@/styles/page-mobile.scss';
 
-import '@rainbow-me/rainbowkit/styles.css';
-import { getDefaultConfig, RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
-import { WagmiProvider } from 'wagmi';
-import { mainnet, arbitrum } from 'wagmi/chains';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
-
 dayjs.extend(duration);
 
-const config = getDefaultConfig({
-  appName: 'Aimonica',
-  projectId: 'b5863416c73906526923f5c4d6db20c8',
-  chains: [arbitrum, mainnet],
-  ssr: true
-});
+// Set up queryClient
+const queryClient = new QueryClient();
 
 const antdTheme = {
   algorithm: theme.defaultAlgorithm,
@@ -46,37 +39,29 @@ const antdTheme = {
   }
 };
 
-const queryClient = new QueryClient();
-
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiAdapter.wagmiConfig as Config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          modalSize="compact"
-          locale="en"
-          theme={lightTheme({ accentColor: '#50B4FF' })}
-          initialChain={arbitrum}>
-          <ConfigProvider locale={enUS} theme={antdTheme}>
-            <AntdApp>
-              <PageProvider>
-                <Head>
-                  <meta
-                    name="viewport"
-                    content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"
-                  />
-                  <title>AIMonica</title>
-                </Head>
-                <HeaderComponent />
-                <main>
-                  <Component {...pageProps} />
-                </main>
-                <FooterComponent />
-                <div className="package_version">{packageJson.version}</div>
-              </PageProvider>
-            </AntdApp>
-          </ConfigProvider>
-        </RainbowKitProvider>
+        <ConfigProvider locale={enUS} theme={antdTheme}>
+          <AntdApp>
+            <PageProvider>
+              <Head>
+                <meta
+                  name="viewport"
+                  content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"
+                />
+                <title>AIMonica</title>
+              </Head>
+              <HeaderComponent />
+              <main>
+                <Component {...pageProps} />
+              </main>
+              <FooterComponent />
+              <div className="package_version">{packageJson.version}</div>
+            </PageProvider>
+          </AntdApp>
+        </ConfigProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

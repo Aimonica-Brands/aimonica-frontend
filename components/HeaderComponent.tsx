@@ -1,8 +1,7 @@
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { MenuFoldOutlined } from '@ant-design/icons';
 import { Drawer } from 'antd';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ConnectButton } from '@/components/ConnectButton';
 
 export default function HeaderComponent() {
   const router = useRouter();

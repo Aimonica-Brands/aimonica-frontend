@@ -12,12 +12,17 @@
     "fix": "next lint --fix"
   },
   "dependencies": {
+    "@reown/appkit": "1.7.8",
+    "@reown/appkit-adapter-solana": "1.7.8",
+    "@reown/appkit-adapter-wagmi": "1.7.8",
+    "@solana/web3.js": "^1.98.0",
+    "@tanstack/react-query": "5.62.8",
+    "viem": "^2.21.44",
+    "wagmi": "^2.12.31",
     "@ant-design/icons": "^5.5.1",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.10.4",
     "@next/env": "^15.1.6",
-    "@rainbow-me/rainbowkit": "^2.2.4",
-    "@tanstack/react-query": "^5.71.1",
     "animate.css": "^4.1.1",
     "antd": "^5.17.3",
     "axios": "^1.7.9",
@@ -30,9 +35,7 @@
     "react-countup": "^6.5.3",
     "react-dom": "18.0.0",
     "sass": "^1.74.1",
-    "swiper": "^11.2.8",
-    "viem": "^2.24.3",
-    "wagmi": "^2.14.16"
+    "swiper": "^11.2.8"
   },
   "devDependencies": {
     "@types/node": "^17.0.45",

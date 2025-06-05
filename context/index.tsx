@@ -1,9 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAccount, useChainId } from 'wagmi';
-import { contractsVariable, initContracts } from '../wallet';
+import React, { createContext, useContext, useState } from 'react';
 
 const Context = createContext({
-  ...contractsVariable,
   walletAddress: ''
 });
 
@@ -12,29 +9,9 @@ export function usePageContext() {
 }
 
 export function PageProvider({ children }) {
-  const { address, isConnected } = useAccount();
-  const chainId = useChainId();
-
   const [contextState, setContextState] = useState({
-    ...contractsVariable,
-    walletAddress: address || ''
+    walletAddress: ''
   });
-
-  // 监听钱包连接和网络变化
-  useEffect(() => {
-    async function setupContracts() {
-      console.log(isConnected, address, chainId);
-      if (isConnected && address) {
-        const contracts = await initContracts(chainId);
-        setContextState({ ...contracts, walletAddress: address });
-      } else {
-        // 重置状态
-        setContextState({ ...contractsVariable, walletAddress: '' });
-      }
-    }
-
-    setupContracts();
-  }, [isConnected, address, chainId]);
 
   return <Context.Provider value={contextState}>{children}</Context.Provider>;
 }

@@ -10,7 +10,6 @@ const nextConfig = {
     return config;
   },
   reactStrictMode: false,
-  swcMinify: true,
   images: { disableStaticImages: true },
   eslint: { ignoreDuringBuilds: true }
 };
