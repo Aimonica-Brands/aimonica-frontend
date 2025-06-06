@@ -1,7 +1,8 @@
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { Drawer } from 'antd';
+import { Drawer, Input, Popover, Select } from 'antd';
 import { ConnectButton } from '@/components/ConnectButton';
+import { SearchOutlined } from '@ant-design/icons';
 
 export default function HeaderComponent() {
   const router = useRouter();

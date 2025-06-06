@@ -128,6 +128,25 @@ button {
   }
 }
 
+.ant-input-outlined.search-input {
+  width: 4rem;
+  height: 0.48rem;
+  border-radius: 0.12rem;
+  background: #ffffff;
+  font-family: AiDeep;
+  font-weight: 400;
+  font-size: 0.2rem;
+  color: #50b4ff;
+  margin-right: 0.2rem;
+}
+
+.ant-popover .ant-popover-inner {
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
 @media screen and (max-width: 750px) {
   html {
     font-size: calc(100vw / 7.5);

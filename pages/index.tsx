@@ -14,8 +14,8 @@ import 'swiper/css/pagination';
 // import required modules
 import { EffectCoverflow, Pagination, Autoplay } from 'swiper/modules';
 
-const projectContent = (
-  <div className="project-content">
+const projectPopover = (
+  <div className="project-popover">
     <div className="title">
       <div className="name">
         <img src="/assets/images/avatar-1.png" alt="" />
@@ -93,7 +93,7 @@ export default function Home() {
       width: 120,
       render: (value: any, record: any) => {
         return (
-          <Popover content={projectContent}>
+          <Popover content={projectPopover} arrow={false}>
             <div className="project">
               <div>
                 <img src="/assets/images/avatar-1.png" alt="" />
