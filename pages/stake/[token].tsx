@@ -52,8 +52,24 @@ export default function Stake() {
             </div>
             <div className="box2">
               <div className="avatar-box">
-                <img src="/assets/images/img-10.png" alt="" />
-                <span>Aimonica</span>
+                <div className="avatar">
+                  <img src="/assets/images/img-10.png" alt="" />
+                  <span>Aimonica</span>
+                </div>
+                <div className="icon-box">
+                  <a href="">
+                    <img src="/assets/images/icon-twitter-2.png" alt="" />
+                  </a>
+                  <a href="">
+                    <img src="/assets/images/icon-telegram-2.png" alt="" />
+                  </a>
+                  <a href="">
+                    <img src="/assets/images/icon-discord-2.png" alt="" />
+                  </a>
+                  <a href="">
+                    <img src="/assets/images/icon-dexscreener-2.png" alt="" />
+                  </a>
+                </div>
               </div>
               <div className="text1">Project Introduction Copywriting</div>
               <div className="text2">
@@ -170,6 +186,10 @@ export default function Stake() {
                 <div className="text">
                   <span>Redemption Time</span>
                   <span>2025-5-25 17:26:46</span>
+                </div>
+                <div className="text">
+                  <span>Unstaking Fee</span>
+                  <span className="num">5%</span>
                 </div>
                 <Button
                   type="primary"

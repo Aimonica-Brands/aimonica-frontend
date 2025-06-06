@@ -33,7 +33,7 @@ export default function Dashboard() {
       }
     },
     {
-      title: 'Staking start time',
+      title: 'Staking Start Time',
       dataIndex: '',
       align,
       width: 100,
@@ -122,7 +122,7 @@ export default function Dashboard() {
       }
     },
     {
-      title: 'Redemption time',
+      title: 'Redemption Time',
       dataIndex: '',
       align,
       width: 120,

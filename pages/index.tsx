@@ -56,7 +56,21 @@ const projectContent = (
 export default function Home() {
   const { message } = App.useApp();
   const router = useRouter();
-  const [dataSource, setDataSource] = useState([{ rank: 1 }, { rank: 2 }, { rank: 3 }]);
+  const [dataSource, setDataSource] = useState([
+    { rank: 1 },
+    { rank: 2 },
+    { rank: 3 },
+    { rank: 4 },
+    { rank: 5 },
+    { rank: 6 },
+    { rank: 7 },
+    { rank: 8 },
+    { rank: 9 },
+    { rank: 10 }
+  ]);
+
+  const [levelDataSource, setLevelDataSource] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
   const [tabIndex2, setTabIndex2] = useState(0);
@@ -89,6 +103,24 @@ export default function Home() {
             </div>
           </Popover>
         );
+      }
+    },
+    {
+      title: 'Staked',
+      dataIndex: '',
+      align,
+      width: 80,
+      render: (value: any, record: any) => {
+        return <div className="rank">100M</div>;
+      }
+    },
+    {
+      title: 'Users',
+      dataIndex: '',
+      align,
+      width: 80,
+      render: (value: any, record: any) => {
+        return <div className="rank">100</div>;
       }
     },
     {
@@ -180,6 +212,10 @@ export default function Home() {
     }
   ];
 
+  useEffect(() => {
+    setLevelDataSource([dataSource[1], dataSource[0], dataSource[2]]);
+  }, []);
+
   const toStake = (record: any) => {
     console.log(record);
 
@@ -261,47 +297,53 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="swiper-box">
-          <Swiper
-            grabCursor={true}
-            centeredSlides={true}
-            slidesPerView={'auto'}
-            pagination={true}
-            autoplay={{ delay: 2000, disableOnInteraction: false }}
-            modules={[Pagination, Autoplay]}
-            className="mySwiper">
-            {dataSource.map((item) => (
-              <SwiperSlide key={item.rank}>
-                <img src={`/assets/images/level-bg-${item.rank}.png`} className="bg" />
-                <img src={`/assets/images/level-${item.rank}.png`} className="level" />
-                <div className="avatar-box">
-                  <div className="avatar">
-                    <img src="/assets/images/img-10.png" className="img-10" />
-                  </div>
-                  <div className="name">Aimonica</div>
+        <div className="level-box">
+          {levelDataSource.map((item) => (
+            <div className="level-item">
+              <img src={`/assets/images/level-bg-${item.rank}.png`} className="bg" />
+              <img src={`/assets/images/level-${item.rank}.png`} className="level" />
+              <div className="avatar-box">
+                <div className="avatar">
+                  <img src="/assets/images/img-10.png" className="img-10" />
                 </div>
-                <div className="info-box">
-                  <div className="info-item">
-                    <img src="/assets/images/img-3.png" alt="" className="img-3" />
-                    <div className="text">1321546521</div>
+                <div className="name">Aimonica</div>
+              </div>
+              <div className="info-box">
+                <div className="s-box">
+                  <div className="s-img">
+                    <img src="/assets/images/img-3.png" alt="" />
                   </div>
-                  <div className="info-item">
-                    <img src="/assets/images/img-4.png" alt="" className="img-4" />
-                    <div className="text">1321546521</div>
-                  </div>
-                  <div className="info-item">
-                    <img src="/assets/images/img-5.png" alt="" className="img-5" />
-                    <div className="text">1321546521</div>
-                  </div>
-                  <div className="info-item2">
-                    <button className="stake-btn" onClick={() => toStake(item)}>
-                      Stake
-                    </button>
-                  </div>
+                  <div className="s-text">1321546521</div>
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                <div className="info-item">
+                  <div>Staked</div>
+                  <div>100M</div>
+                </div>
+                <div className="s-box">
+                  <div className="s-img">
+                    <img src="/assets/images/img-4.png" alt="" />
+                  </div>
+                  <div className="s-text">1321546521</div>
+                </div>
+                <div className="info-item">
+                  <div>Users</div>
+                  <div>100</div>
+                </div>
+                <div className="s-box">
+                  <div className="s-img">
+                    <img src="/assets/images/img-5.png" alt="" />
+                  </div>
+                  <div className="s-text">1321546521</div>
+                </div>
+
+                <div className="info-item2">
+                  <button className="stake-btn" onClick={() => toStake(item)}>
+                    Stake
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
         <Table
