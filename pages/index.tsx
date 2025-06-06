@@ -299,7 +299,7 @@ export default function Home() {
 
         <div className="level-box">
           {levelDataSource.map((item) => (
-            <div className="level-item">
+            <div className="level-item" key={item.rank}>
               <img src={`/assets/images/level-bg-${item.rank}.png`} className="bg" />
               <img src={`/assets/images/level-${item.rank}.png`} className="level" />
               <div className="avatar-box">

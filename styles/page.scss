@@ -1335,3 +1335,58 @@ footer {
     }
   }
 }
+
+.search-input {
+  width: 4rem;
+  height: 0.48rem;
+  border-radius: 0.12rem;
+  background: #ffffff;
+  margin-right: 0.2rem;
+  .ant-select-prefix {
+    .anticon-search {
+      font-size: 0.3rem;
+      color: #50b4ff;
+    }
+  }
+}
+.project-box {
+  .project {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    > div {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      > img {
+        width: 0.4rem;
+        height: 0.4rem;
+        border-radius: 50%;
+        margin-right: 0.1rem;
+      }
+      > span {
+        font-family: Poppins;
+        font-weight: 600;
+        font-size: 0.2rem;
+        color: #56b6fe;
+      }
+    }
+    > img {
+      width: 0.3rem;
+      height: 0.3rem;
+    }
+  }
+}
+.ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
+  font-family: AiDeep;
+  font-weight: 400;
+  font-size: 0.2rem;
+  color: #50b4ff;
+}
+.ant-select .ant-select-selection-placeholder {
+  font-family: AiDeep;
+  font-weight: 400;
+  font-size: 0.2rem;
+  color: #50b4ff;
+}
