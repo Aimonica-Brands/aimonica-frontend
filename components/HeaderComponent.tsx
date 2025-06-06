@@ -56,34 +56,20 @@ export default function HeaderComponent() {
     );
   };
 
-  const mockOptions = [
-    {
-      rank: 1,
-      value: 'AIMonica',
-      name: 'AIMonica',
-      avatar: '/assets/images/avatar.png'
-    },
-    {
-      rank: 2,
-      value: 'Bitcoin',
-      name: 'Bitcoin',
-      avatar: '/assets/images/avatar-1.png'
-    }
-  ];
+  const [projectData, setProjectData] = useState([
+    { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
+    { rank: 2, avatar: '/assets/images/avatar-2.png', name: 'FAI' },
+    { rank: 3, avatar: '/assets/images/avatar-3.png', name: 'Ai16z' }
+  ]);
+
   const [searchValue, setSearchValue] = useState(null);
-  const [searchOptions, setSearchOptions] = useState(mockOptions);
+  const [searchOptions, setSearchOptions] = useState(projectData);
 
   const handleSearch = (input: string) => {
     if (!input) {
-      setSearchOptions(mockOptions);
+      setSearchOptions(projectData);
     } else {
-      setSearchOptions(
-        mockOptions.filter(
-          (item) =>
-            item.name.toLowerCase().includes(input.toLowerCase()) ||
-            item.value.toLowerCase().includes(input.toLowerCase())
-        )
-      );
+      setSearchOptions(projectData.filter((item) => item.name.toLowerCase().includes(input.toLowerCase())));
     }
   };
 
@@ -111,7 +97,7 @@ export default function HeaderComponent() {
           filterOption={false}
           onSearch={handleSearch}
           options={searchOptions.map((d) => ({
-            value: d.value,
+            value: d.name,
             label: (
               <div
                 className="project-box"

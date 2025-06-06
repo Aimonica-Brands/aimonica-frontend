@@ -7,15 +7,25 @@ export default function Stake() {
   const { message } = App.useApp();
   const router = useRouter();
   const { token: token } = router.query;
-  const [dataSource, setDataSource] = useState([{ rank: 1 }, { rank: 2 }, { rank: 3 }]);
-  const [loading, setLoading] = useState(false);
+  const [projectData, setProjectData] = useState([
+    { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
+    { rank: 2, avatar: '/assets/images/avatar-2.png', name: 'FAI' },
+    { rank: 3, avatar: '/assets/images/avatar-3.png', name: 'Ai16z' }
+  ]);
 
+  const [projectInfo, setProjectInfo] = useState<any>({});
+  const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [balance, setBalance] = useState(0);
   const [tabIndex, setTabIndex] = useState(0);
   const [isUnstakeModalOpen, setIsUnstakeModalOpen] = useState(false);
   const [isEmergencyUnstakeModalOpen, setIsEmergencyUnstakeModalOpen] = useState(false);
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
+
+  useEffect(() => {
+    setProjectInfo(projectData.find((item) => item.rank === Number(token)));
+  }, [token]);
+
   const handleTabChange = (index: number) => {
     setTabIndex(index);
   };
@@ -53,8 +63,8 @@ export default function Stake() {
             <div className="box2">
               <div className="avatar-box">
                 <div className="avatar">
-                  <img src="/assets/images/avatar.png" alt="" />
-                  <span>Aimonica</span>
+                  <img src={projectInfo?.avatar} alt="" />
+                  <span>{projectInfo?.name}</span>
                 </div>
                 <div className="icon-box">
                   <a href="">

@@ -14,69 +14,23 @@ import type { ColumnsType } from 'antd/es/table';
 // import required modules
 // import { EffectCoverflow, Pagination, Autoplay } from 'swiper/modules';
 
-const projectPopover = (
-  <div className="project-popover">
-    <div className="title">
-      <div className="name">
-        <img src="/assets/images/avatar-1.png" alt="" />
-        <span>name</span>
-      </div>
-      <div className="number">$ 0.0042370</div>
-    </div>
-    <div className="info">
-      <div className="info-title">
-        <img src="/assets/images/img-18.png" alt="" />
-        <span>Project Introduction</span>
-      </div>
-      <div className="info-text">The first AI agent and meme focused waifu investor</div>
-      <div className="info-title">
-        <img src="/assets/images/img-19.png" alt="" />
-        <span>Social Media</span>
-      </div>
-      <a href="https://x.com/AimonicaBrands">
-        <img src="/assets/images/icon-twitter-2.png" alt="" />
-        https://x.com/AimonicaBrands
-      </a>
-      <a href="https://x.com/AimonicaBrands">
-        <img src="/assets/images/icon-telegram-2.png" alt="" />
-        https://x.com/AimonicaBrands
-      </a>
-      <a href="https://x.com/AimonicaBrands">
-        <img src="/assets/images/icon-discord-2.png" alt="" />
-        https://x.com/AimonicaBrands
-      </a>
-      <a href="https://x.com/AimonicaBrands">
-        <img src="/assets/images/icon-medium-2.png" alt="" />
-        https://x.com/AimonicaBrands
-      </a>
-    </div>
-  </div>
-);
-
 export default function Home() {
   const { message } = App.useApp();
   const router = useRouter();
-  const [dataSource, setDataSource] = useState([
-    { rank: 1 },
-    { rank: 2 },
-    { rank: 3 },
-    { rank: 4 },
-    { rank: 5 },
-    { rank: 6 },
-    { rank: 7 },
-    { rank: 8 },
-    { rank: 9 },
-    { rank: 10 }
+  const [projectData, setProjectData] = useState([
+    { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
+    { rank: 2, avatar: '/assets/images/avatar-2.png', name: 'FAI' },
+    { rank: 3, avatar: '/assets/images/avatar-3.png', name: 'Ai16z' }
   ]);
 
-  const [levelDataSource, setLevelDataSource] = useState([]);
+  const [levelData, setLevelData] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
   const [tabIndex2, setTabIndex2] = useState(0);
 
   const align = 'center' as const;
-  const columns: ColumnsType<any> = [
+  const projectColumns: ColumnsType<any> = [
     {
       title: 'Rank',
       dataIndex: 'rank',
@@ -90,14 +44,55 @@ export default function Home() {
       title: 'Project',
       dataIndex: '',
       align,
-      width: 120,
+      width: 150,
       render: (value: any, record: any) => {
         return (
-          <Popover content={projectPopover} arrow={false}>
+          <Popover
+            content={() => {
+              return (
+                <div className="project-popover">
+                  <div className="title">
+                    <div className="name">
+                      <img src={record.avatar} alt="" />
+                      <span>{record.name}</span>
+                    </div>
+                    <div className="number">$ 0.0042370</div>
+                  </div>
+                  <div className="info">
+                    <div className="info-title">
+                      <img src="/assets/images/img-18.png" alt="" />
+                      <span>Project Introduction</span>
+                    </div>
+                    <div className="info-text">The first AI agent and meme focused waifu investor</div>
+                    <div className="info-title">
+                      <img src="/assets/images/img-19.png" alt="" />
+                      <span>Social Media</span>
+                    </div>
+                    <a href="https://x.com/AimonicaBrands">
+                      <img src="/assets/images/icon-twitter-2.png" alt="" />
+                      https://x.com/AimonicaBrands
+                    </a>
+                    <a href="https://x.com/AimonicaBrands">
+                      <img src="/assets/images/icon-telegram-2.png" alt="" />
+                      https://x.com/AimonicaBrands
+                    </a>
+                    <a href="https://x.com/AimonicaBrands">
+                      <img src="/assets/images/icon-discord-2.png" alt="" />
+                      https://x.com/AimonicaBrands
+                    </a>
+                    <a href="https://x.com/AimonicaBrands">
+                      <img src="/assets/images/icon-medium-2.png" alt="" />
+                      https://x.com/AimonicaBrands
+                    </a>
+                  </div>
+                </div>
+              );
+            }}
+            arrow={false}>
             <div className="project">
               <div>
-                <img src="/assets/images/avatar-1.png" alt="" />
-                <span>name</span>
+                <img src={record.avatar} alt="" />
+                <span>{record.name}</span>
               </div>
               <img src="/assets/images/fire.svg" alt="" />
             </div>
@@ -127,7 +122,7 @@ export default function Home() {
       title: 'Total Points',
       dataIndex: '',
       align,
-      width: 160,
+      width: 150,
       render: (value: any, record: any) => {
         return (
           <div className="s-box">
@@ -143,7 +138,7 @@ export default function Home() {
       title: 'TVL($)',
       dataIndex: '',
       align,
-      width: 160,
+      width: 150,
       render: (value: any, record: any) => {
         return (
           <div className="s-box">
@@ -159,7 +154,7 @@ export default function Home() {
       title: 'Rewards',
       dataIndex: '',
       align,
-      width: 160,
+      width: 150,
       render: (value: any, record: any) => {
         return (
           <div className="s-box">
@@ -213,7 +208,7 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    setLevelDataSource([dataSource[1], dataSource[0], dataSource[2]]);
+    setLevelData([projectData[1], projectData[0], projectData[2]]);
   }, []);
 
   const toStake = (record: any) => {
@@ -305,15 +300,15 @@ export default function Home() {
         </div>
 
         <div className="level-box">
-          {levelDataSource.map((item) => (
+          {levelData.map((item) => (
             <div className="level-item" key={item.rank}>
               <img src={`/assets/images/level-bg-${item.rank}.png`} className="bg" />
               <img src={`/assets/images/level-${item.rank}.png`} className="level" />
               <div className="avatar-box">
                 <div className="avatar">
-                  <img src="/assets/images/avatar.png" className="avatar" />
+                  <img src={item.avatar} className="avatar" />
                 </div>
-                <div className="name">Aimonica</div>
+                <div className="name">{item.name}</div>
               </div>
               <div className="info-box">
                 <div className="s-box">
@@ -356,8 +351,8 @@ export default function Home() {
         <Table
           className="tablebox"
           scroll={{ x: '100%' }}
-          columns={columns}
-          dataSource={dataSource}
+          columns={projectColumns}
+          dataSource={projectData}
           pagination={false}
           loading={loading}
           rowKey={(record) => record.rank}
