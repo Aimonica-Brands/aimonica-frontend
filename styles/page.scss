@@ -24,17 +24,15 @@ header {
       a {
         display: flex;
         align-items: center;
-      }
-      img {
-        width: 0.4rem;
-        height: 0.4rem;
-      }
-      span {
         font-family: AiDeep;
         font-weight: 400;
         font-size: 0.24rem;
         color: #60bbfd;
-        margin-left: 0.1rem;
+        img {
+          margin-right: 0.1rem;
+          width: 0.4rem;
+          height: 0.4rem;
+        }
       }
     }
     .menu-list {
@@ -50,6 +48,31 @@ header {
         &.active {
           text-decoration: underline;
         }
+      }
+    }
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .number-box {
+      width: fit-content;
+      min-width: 1.2rem;
+      height: 0.48rem;
+      border-radius: 0.12rem;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      font-family: Poppins;
+      font-weight: 600;
+      font-size: 0.2rem;
+      color: #5c7392;
+      padding: 0 0.15rem;
+      margin-right: 0.2rem;
+      img {
+        width: auto;
+        height: 65%;
+        margin-right: 0.1rem;
       }
     }
   }

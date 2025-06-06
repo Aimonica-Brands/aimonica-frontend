@@ -53,7 +53,7 @@ export default function Stake() {
             <div className="box2">
               <div className="avatar-box">
                 <div className="avatar">
-                  <img src="/assets/images/img-10.png" alt="" />
+                  <img src="/assets/images/avatar.png" alt="" />
                   <span>Aimonica</span>
                 </div>
                 <div className="icon-box">
@@ -116,7 +116,7 @@ export default function Stake() {
                 </div>
                 <div className="avatar-box-box">
                   <div className="avatar-box">
-                    <img src="/assets/images/img-10.png" alt="" />
+                    <img src="/assets/images/avatar.png" alt="" />
                     <span>Aimonica</span>
                   </div>
                   <div className="number-box">
@@ -159,7 +159,7 @@ export default function Stake() {
                 </div>
                 <div className="avatar-box-box margin-bottom">
                   <div className="avatar-box">
-                    <img src="/assets/images/img-10.png" alt="" />
+                    <img src="/assets/images/avatar.png" alt="" />
                     <span>Aimonica</span>
                   </div>
                   <div className="number-box">

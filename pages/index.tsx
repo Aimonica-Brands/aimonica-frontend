@@ -304,7 +304,7 @@ export default function Home() {
               <img src={`/assets/images/level-${item.rank}.png`} className="level" />
               <div className="avatar-box">
                 <div className="avatar">
-                  <img src="/assets/images/img-10.png" className="img-10" />
+                  <img src="/assets/images/avatar.png" className="avatar" />
                 </div>
                 <div className="name">Aimonica</div>
               </div>

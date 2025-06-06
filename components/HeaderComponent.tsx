@@ -57,13 +57,16 @@ export default function HeaderComponent() {
       <div className="header-left">
         <div className="logo-box">
           <a href="">
-            <img src="/assets/images/logo.svg" alt="" />
-            <span>Aimonica</span>
+            <img src="/assets/images/avatar.png" alt="" />
+            AIMONICA
           </a>
         </div>
         {getMenu()}
       </div>
       <div className="header-right">
+        <div className="number-box">
+          <img src="/assets/images/img-3.png" alt="" />0
+        </div>
         <ConnectButton />
       </div>
 
