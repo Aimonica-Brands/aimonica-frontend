@@ -245,31 +245,31 @@ footer {
       right: -0.4rem;
     }
   }
-  .css-box {
-    width: fit-content;
-    margin: 0.2rem auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    .logo2 {
-      width: 0.48rem;
-      height: 0.48rem;
-      margin: 0 0.3rem;
-    }
-    .border1 {
-      width: 2.76rem;
-      border: 0.01rem solid transparent;
-      border-image-source: linear-gradient(270deg, #ffffff -1.76%, rgba(157, 195, 248, 0) 100%);
-      border-image-slice: 1;
-      border-image-width: 1;
-    }
-    .border2 {
-      width: 2.76rem;
-      border: 0.01rem solid transparent;
-      border-image-source: linear-gradient(90deg, #ffffff -1.76%, rgba(157, 195, 248, 0) 100%);
-      border-image-slice: 1;
-      border-image-width: 1;
-    }
+}
+.css-box {
+  width: fit-content;
+  margin: 0.2rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .logo2 {
+    width: 0.48rem;
+    height: 0.48rem;
+    margin: 0 0.3rem;
+  }
+  .border1 {
+    width: 2.76rem;
+    border: 0.01rem solid transparent;
+    border-image-source: linear-gradient(270deg, #ffffff -1.76%, rgba(157, 195, 248, 0) 100%);
+    border-image-slice: 1;
+    border-image-width: 1;
+  }
+  .border2 {
+    width: 2.76rem;
+    border: 0.01rem solid transparent;
+    border-image-source: linear-gradient(90deg, #ffffff -1.76%, rgba(157, 195, 248, 0) 100%);
+    border-image-slice: 1;
+    border-image-width: 1;
   }
 }
 .title-box-2 {
@@ -333,11 +333,12 @@ footer {
     position: relative;
     .banner-1 {
       width: 100%;
+      height: auto;
     }
     .banner-content {
       width: 9.5rem;
       position: absolute;
-      bottom: 0.5rem;
+      bottom: 1rem;
       left: 0;
       right: 0;
       margin: auto;
@@ -348,6 +349,26 @@ footer {
         color: #ffffff;
         text-align: center;
       }
+    }
+    .text2 {
+      font-family: Poppins;
+      font-weight: 600;
+      font-size: 0.24rem;
+      color: #ffffff;
+      text-align: right;
+      position: absolute;
+      left: 5rem;
+      top: 2rem;
+    }
+    .text3 {
+      font-family: Poppins;
+      font-weight: 600;
+      font-size: 0.24rem;
+      color: #ffffff;
+      text-align: left;
+      position: absolute;
+      right: 5rem;
+      top: 5rem;
     }
   }
 

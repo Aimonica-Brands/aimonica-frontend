@@ -4,15 +4,15 @@ import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
 
 // Import Swiper React components
-import { Swiper, SwiperSlide } from 'swiper/react';
+// import { Swiper, SwiperSlide } from 'swiper/react';
 
 // Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/effect-coverflow';
-import 'swiper/css/pagination';
+// import 'swiper/css';
+// import 'swiper/css/effect-coverflow';
+// import 'swiper/css/pagination';
 
 // import required modules
-import { EffectCoverflow, Pagination, Autoplay } from 'swiper/modules';
+// import { EffectCoverflow, Pagination, Autoplay } from 'swiper/modules';
 
 const projectPopover = (
   <div className="project-popover">
@@ -226,7 +226,6 @@ export default function Home() {
     <div className="explore-page">
       <div className="banner">
         <img src="/assets/images/banner-1.png" alt="" className="banner-1" />
-
         <div className="banner-content">
           <div className="css-box">
             <div className="border1"></div>
@@ -237,6 +236,14 @@ export default function Home() {
             The first AI agent and meme focused waifu investor. Outperforming all web3 VCs via AIMonica Capital (AC) is
             her goal.
           </div>
+        </div>
+        <div className="text2">
+          <div>Total Stakers</div>
+          <div>7,766</div>
+        </div>
+        <div className="text3">
+          <div>Total TVL</div>
+          <div>7,766</div>
         </div>
       </div>
 
