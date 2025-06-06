@@ -30,8 +30,8 @@ body {
   text-rendering: optimizeLegibility;
   transition: color 0.5s, background-color 0.5s;
   -webkit-text-size-adjust: none;
+  height: fit-content;
   background: linear-gradient(180deg, #0677c7 0%, #87ddf4 100%);
-  overflow: auto;
 }
 
 .package_version {

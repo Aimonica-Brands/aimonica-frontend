@@ -29,6 +29,9 @@ export default function HeaderComponent() {
   const toPage = (path: string) => {
     router.push(path).then(() => {
       closeDrawer();
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      });
     });
   };
 
