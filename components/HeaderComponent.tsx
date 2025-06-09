@@ -1,39 +1,19 @@
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Drawer, Select } from 'antd';
 import { ConnectButton } from '@/components/ConnectButton';
+import { WalletComponent } from '@/components/WalletComponent';
 import { SearchOutlined } from '@ant-design/icons';
+import { useAppKitAccount } from '@reown/appkit/react';
 
 export default function HeaderComponent() {
   const router = useRouter();
+  const { address, isConnected } = useAppKitAccount();
 
   const menuList = [
-    {
-      label: 'Explore',
-      path: '/'
-    },
-    {
-      label: 'Dashboard',
-      path: '/dashboard'
-    }
+    { label: 'Explore', path: '/' },
+    { label: 'Dashboard', path: '/dashboard' }
   ];
-  const [open, setOpen] = useState(false);
-
-  const showDrawer = () => {
-    setOpen(true);
-  };
-  const closeDrawer = () => {
-    setOpen(false);
-  };
-
-  const toPage = (path: string) => {
-    router.push(path).then(() => {
-      closeDrawer();
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      });
-    });
-  };
 
   const getActive = (path: string) => {
     if (path === '/' && router.pathname.startsWith('/stake')) {
@@ -71,6 +51,14 @@ export default function HeaderComponent() {
     } else {
       setSearchOptions(projectData.filter((item) => item.name.toLowerCase().includes(input.toLowerCase())));
     }
+  };
+
+  const toPage = (path: string) => {
+    router.push(path).then(() => {
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      });
+    });
   };
 
   return (
@@ -117,15 +105,15 @@ export default function HeaderComponent() {
           }))}
         />
 
-        <div className="number-box">
-          <img src="/assets/images/img-3.png" alt="" /> 0
-        </div>
-        <ConnectButton />
-      </div>
+        {address && (
+          <div className="number-box">
+            <img src="/assets/images/img-3.png" alt="" /> 0
+          </div>
+        )}
 
-      <Drawer placement={'right'} closeIcon={null} footer={null} width={'50%'} onClose={closeDrawer} open={open}>
-        <div className="drawer-menu">{getMenu()}</div>
-      </Drawer>
+        <ConnectButton />
+        <WalletComponent />
+      </div>
     </header>
   );
 }

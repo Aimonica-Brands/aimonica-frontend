@@ -3,17 +3,6 @@ import { Button, Table, Empty, Spin, App, Popover, Collapse } from 'antd';
 import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
 
-// Import Swiper React components
-// import { Swiper, SwiperSlide } from 'swiper/react';
-
-// Import Swiper styles
-// import 'swiper/css';
-// import 'swiper/css/effect-coverflow';
-// import 'swiper/css/pagination';
-
-// import required modules
-// import { EffectCoverflow, Pagination, Autoplay } from 'swiper/modules';
-
 export default function Home() {
   const { message } = App.useApp();
   const router = useRouter();

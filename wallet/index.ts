@@ -1,13 +1,10 @@
-import { ethers } from 'ethers';
 import { message } from 'antd';
-
 import { createAppKit } from '@reown/appkit';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import { solana, base, baseSepolia } from '@reown/appkit/networks';
 
-import { mainnet, arbitrum, sepolia, solana, solanaTestnet, solanaDevnet } from '@reown/appkit/networks';
-
-export const networks: any = [mainnet, arbitrum, sepolia, solana, solanaTestnet, solanaDevnet];
+export const networks: any = [solana, base, baseSepolia];
 
 // 0. Get projectId from https://cloud.reown.com
 export const projectId = 'b5863416c73906526923f5c4d6db20c8';
@@ -40,9 +37,7 @@ export const modal = createAppKit({
     analytics: true
   },
   themeMode: 'light',
-  themeVariables: {
-    '--w3m-accent': '#50B4FF'
-  }
+  themeVariables: { '--w3m-accent': '#50B4FF' }
 });
 
 // 错误处理
