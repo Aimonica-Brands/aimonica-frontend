@@ -13,7 +13,8 @@ export const WalletComponent = () => {
     if (isConnected && address && caipNetwork) {
       console.log(`当前已连接: ${caipNetwork.name}, Address: ${address}`);
       console.log('caipNetwork', caipNetwork);
-      initContracts(caipNetwork.chainNamespace, caipNetwork.id).then((res) => {
+
+      initContracts(caipNetwork).then((res) => {
         setProvider(res.provider);
         setUSDCContract(res.usdcContract);
         setGPDUSDCContract(res.gpdUsdcContract);

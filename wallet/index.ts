@@ -27,6 +27,9 @@ const metadata = {
   icons: [`/assets/images/logo2.svg`]
 };
 
+console.log('wagmiAdapter', wagmiAdapter);
+console.log('solanaWeb3JsAdapter', solanaWeb3JsAdapter);
+
 // 4. Create the AppKit instance
 export const modal = createAppKit({
   adapters: [wagmiAdapter, solanaWeb3JsAdapter],

@@ -1,4 +1,7 @@
 import { ethers } from 'ethers';
+import { Connection } from '@solana/web3.js';
+import * as anchor from '@project-serum/anchor';
+import idl from '@/wallet/idl/idl.json';
 
 import USDCABI from '@/wallet/abi/USDC.json';
 import GPDUSDCABI from '@/wallet/abi/gpdUSDC.json';
@@ -10,30 +13,45 @@ const tokenABI = {
     GPDUSDC: '0x4733FA9d295973C53Eaa027894998B7CC364F0ca',
     USDCABI,
     GPDUSDCABI
+  },
+  //   'solana'
+  '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp': {
+    programId: '9sMy4hnC9MML6mioESFZmzpntt3focqwUq1ymPgbMf64',
+    idl
   }
 };
 
-// Contract ABIs
-export const USDC_ABI = USDCABI;
-export const GPDUSDC_ABI = GPDUSDCABI;
+export const initContracts = async (caipNetwork: any) => {
+  const { chainNamespace, id, rpcUrls } = caipNetwork;
 
-export const initContracts = async (chainNamespace: string, chainId: any) => {
-  if (chainNamespace === 'eip155') {
-    const provider = new ethers.BrowserProvider(window.ethereum as any);
-    const signer = await provider.getSigner();
+  const token = tokenABI[id];
 
-    const token = tokenABI[chainId];
-    const usdcContract = new ethers.Contract(token.USDC, token.USDCABI, signer);
-    const gpdUsdcContract = new ethers.Contract(token.GPDUSDC, token.GPDUSDCABI, signer);
+  if (token) {
+    if (chainNamespace === 'eip155') {
+      const provider = new ethers.BrowserProvider(window.ethereum as any);
+      const signer = await provider.getSigner();
+
+      const usdcContract = new ethers.Contract(token.USDC, token.USDCABI, signer);
+      const gpdUsdcContract = new ethers.Contract(token.GPDUSDC, token.GPDUSDCABI, signer);
+      return {
+        provider,
+        usdcContract,
+        gpdUsdcContract
+      };
+    } else if (chainNamespace === 'solana') {
+      const endpoint = rpcUrls.default.http[0];
+
+      return {
+        provider: null,
+        usdcContract: null,
+        gpdUsdcContract: null
+      };
+    }
+  } else {
     return {
-      provider,
-      usdcContract,
-      gpdUsdcContract
+      provider: null,
+      usdcContract: null,
+      gpdUsdcContract: null
     };
   }
-  return {
-    provider: null,
-    usdcContract: null,
-    gpdUsdcContract: null
-  };
 };
