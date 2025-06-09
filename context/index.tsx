@@ -9,15 +9,18 @@ type PageProviderProps = {
 export function PageProvider({ children }: PageProviderProps) {
   const [walletAddress, setWalletAddress] = useState('');
   const [provider, setProvider] = useState(null);
-  const [USDTContract, setUSDTContract] = useState(null);
+  const [USDCContract, setUSDCContract] = useState(null);
+  const [GPDUSDCContract, setGPDUSDCContract] = useState(null);
 
   const contextValue = {
     walletAddress,
     setWalletAddress,
     provider,
     setProvider,
-    USDTContract,
-    setUSDTContract
+    USDCContract,
+    setUSDCContract,
+    GPDUSDCContract,
+    setGPDUSDCContract
   };
 
   return <Context.Provider value={contextValue}>{children}</Context.Provider>;
