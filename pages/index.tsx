@@ -24,7 +24,7 @@ export default function Home() {
       title: 'Rank',
       dataIndex: 'rank',
       align,
-      width: 80,
+      width: 60,
       render: (value: any, record: any) => {
         return <div className="rank">{value}</div>;
       }
@@ -143,7 +143,7 @@ export default function Home() {
       title: 'Rewards',
       dataIndex: '',
       align,
-      width: 150,
+      width: 160,
       render: (value: any, record: any) => {
         return (
           <div className="s-box">
@@ -156,7 +156,7 @@ export default function Home() {
       }
     },
     {
-      title: 'Action',
+      title: '',
       dataIndex: '',
       align,
       width: 100,
@@ -343,7 +343,7 @@ export default function Home() {
 
           <Table
             className="tablebox"
-            scroll={{ x: '100%' }}
+            scroll={{ x: 'max-content' }}
             columns={projectColumns}
             dataSource={projectData}
             pagination={false}

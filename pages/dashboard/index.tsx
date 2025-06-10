@@ -36,7 +36,7 @@ export default function Dashboard() {
       title: 'Staking Start Time',
       dataIndex: '',
       align,
-      width: 100,
+      width: 160,
       render: (value: any, record: any) => {
         return <div className="text">2025-5-25 17:26:46</div>;
       }
@@ -86,6 +86,7 @@ export default function Dashboard() {
       title: '',
       dataIndex: '',
       align,
+      fixed: 'right',
       width: 100,
       render: (value: any, record: any) => {
         return (
@@ -125,7 +126,7 @@ export default function Dashboard() {
       title: 'Redemption Time',
       dataIndex: '',
       align,
-      width: 120,
+      width: 160,
       render: (value: any, record: any) => {
         return <div className="text">2025-5-25 17:26:46</div>;
       }
@@ -134,11 +135,11 @@ export default function Dashboard() {
       title: 'Hash',
       dataIndex: '',
       align,
-      width: 120,
+      width: 160,
       render: (value: any, record: any) => {
         return (
           <a className="hash">
-            <span>51cqdv2WBBcW.....BU4zP84Ui</span>
+            <span>51cqdv.....BU4</span>
             <ExportOutlined />
           </a>
         );
@@ -201,7 +202,7 @@ export default function Dashboard() {
 
         <Table
           className="tablebox"
-          scroll={{ x: '100%' }}
+          scroll={{ x: 'max-content' }}
           columns={assetsColumns}
           dataSource={assetsDataSource}
           pagination={false}
@@ -215,7 +216,7 @@ export default function Dashboard() {
         </div>
         <Table
           className="tablebox"
-          scroll={{ x: '100%' }}
+          scroll={{ x: 'max-content' }}
           columns={historyColumns}
           dataSource={historyDataSource}
           pagination={false}
