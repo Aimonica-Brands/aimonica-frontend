@@ -4,7 +4,7 @@ import { SolanaAdapter } from '@reown/appkit-adapter-solana';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { solana, base, baseSepolia } from '@reown/appkit/networks';
 
-export const networks: any = [solana, base, baseSepolia];
+export const networks: any = [baseSepolia, solana, base];
 
 // 0. Get projectId from https://cloud.reown.com
 export const projectId = 'b5863416c73906526923f5c4d6db20c8';

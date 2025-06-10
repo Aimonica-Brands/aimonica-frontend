@@ -30,6 +30,7 @@ export const initContracts = async (caipNetwork: any) => {
 
       const usdcContract = new ethers.Contract(token.USDC, token.USDCABI, signer);
       const gpdUsdcContract = new ethers.Contract(token.GPDUSDC, token.GPDUSDCABI, signer);
+      console.log('usdcContract', usdcContract);
       return {
         provider,
         usdcContract,

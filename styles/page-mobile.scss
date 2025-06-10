@@ -269,4 +269,84 @@
   .tablebox {
     width: 90vw;
   }
+
+  .stake-page {
+    .stake-box {
+      width: 90vw;
+      .stake-content {
+        width: 100%;
+        margin: 0 auto;
+        flex-direction: column;
+        .left-box {
+          width: 100%;
+          margin-bottom: 0.2rem;
+          .img-23 {
+            right: -0.2rem;
+          }
+        }
+        .right-box {
+          width: calc(100% - 0.6rem);
+        }
+      }
+    }
+  }
+
+  .unstake-modal-box {
+    width: 70vw;
+  }
+
+  .stake-modal-box {
+    .img-27 {
+      width: 90vw;
+      height: auto;
+    }
+    .img-28 {
+      width: 1.5rem;
+      top: 0.3rem;
+    }
+    .img-29 {
+      width: 0.4rem;
+      top: 1rem;
+      left: -0.2rem;
+    }
+    .img-30 {
+      width: 1rem;
+      top: 0.2rem;
+      left: 1.8rem;
+    }
+    .img-31 {
+      width: 1rem;
+      top: 2rem;
+      left: 5rem;
+    }
+    .img-32 {
+      width: 2.5rem;
+      top: 0.7rem;
+      left: 2.6rem;
+    }
+    .img-33 {
+      width: 1rem;
+      top: 0.5rem;
+      right: 0;
+    }
+
+    .text1 {
+      font-size: 0.16rem;
+      top: 0.5rem;
+      left: 0.5rem;
+    }
+    .text2 {
+      width: 1rem;
+      font-size: 0.12rem;
+      top: 1.2rem;
+      left: 0.3rem;
+    }
+    .text3 {
+      top: 2rem;
+      left: 0.3rem;
+      a {
+        font-size: 0.12rem;
+      }
+    }
+  }
 }

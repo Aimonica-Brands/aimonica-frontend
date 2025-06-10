@@ -34,8 +34,9 @@ export default function Stake() {
       setProjectInfo(projectData.find((item) => item.rank === Number(token)));
     }
     if (isConnected && address) {
+      console.log('USDCContract', USDCContract);
       if (USDCContract && GPDUSDCContract) {
-        getBalance();
+        // getBalance();
       }
     }
   }, [isConnected, address, token, USDCContract, GPDUSDCContract]);
@@ -82,8 +83,8 @@ export default function Stake() {
   };
 
   const handleStake = () => {
-    handleApprove();
-    // setIsStakeModalOpen(true);
+    // handleApprove();
+    setIsStakeModalOpen(true);
   };
 
   const handleEmergencyUnstake = () => {
@@ -279,7 +280,7 @@ export default function Stake() {
         open={isEmergencyUnstakeModalOpen}
         onOk={() => setIsEmergencyUnstakeModalOpen(false)}
         onCancel={() => setIsEmergencyUnstakeModalOpen(false)}>
-        <div className="unstake-box">
+        <div className="unstake-modal-box">
           <img src="/assets/images/img-26.png" alt="" className="img-26" />
           <div className="title">Emergency Unstake</div>
           <div className="text">（*Warning: Unstaking in advance will result in a 30% deduction of rewards*）</div>
