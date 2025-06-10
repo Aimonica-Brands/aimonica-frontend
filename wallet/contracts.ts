@@ -1,8 +1,5 @@
 import { ethers } from 'ethers';
-import { Connection } from '@solana/web3.js';
-import * as anchor from '@project-serum/anchor';
 import idl from '@/wallet/idl/idl.json';
-
 import USDCABI from '@/wallet/abi/USDC.json';
 import GPDUSDCABI from '@/wallet/abi/gpdUSDC.json';
 
@@ -39,8 +36,7 @@ export const initContracts = async (caipNetwork: any) => {
         gpdUsdcContract
       };
     } else if (chainNamespace === 'solana') {
-      const endpoint = rpcUrls.default.http[0];
-
+      // const endpoint = rpcUrls.default.http[0];
       return {
         provider: null,
         usdcContract: null,
