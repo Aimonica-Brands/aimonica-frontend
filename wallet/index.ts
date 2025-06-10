@@ -1,10 +1,9 @@
-import { message } from 'antd';
 import { createAppKit } from '@reown/appkit';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { solana, base, baseSepolia } from '@reown/appkit/networks';
+import { solana, solanaDevnet, base, baseSepolia } from '@reown/appkit/networks';
 
-export const networks: any = [baseSepolia, solana, base];
+export const networks: any = process.env.NEXT_PUBLIC_APP_ENV === 'production' ? [base] : [baseSepolia, solanaDevnet];
 
 // 0. Get projectId from https://cloud.reown.com
 export const projectId = 'b5863416c73906526923f5c4d6db20c8';
@@ -31,6 +30,7 @@ const metadata = {
 export const modal = createAppKit({
   adapters: [wagmiAdapter, solanaWeb3JsAdapter],
   networks,
+  defaultNetwork: networks[0],
   metadata,
   projectId,
   features: {
@@ -39,21 +39,3 @@ export const modal = createAppKit({
   themeMode: 'light',
   themeVariables: { '--w3m-accent': '#50B4FF' }
 });
-
-// 错误处理
-export function walletError(error: any) {
-  if (error?.code === 4001 || error?.code === 'ACTION_REJECTED') {
-    message.error('Transaction rejected by user');
-    return;
-  }
-
-  if (error?.data?.message) {
-    message.error(error.data.message);
-    return;
-  }
-
-  if (error?.message) {
-    message.error(error.message);
-    return;
-  }
-}

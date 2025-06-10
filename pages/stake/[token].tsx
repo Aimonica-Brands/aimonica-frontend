@@ -34,9 +34,8 @@ export default function Stake() {
       setProjectInfo(projectData.find((item) => item.rank === Number(token)));
     }
     if (isConnected && address) {
-      console.log('USDCContract', USDCContract);
       if (USDCContract && GPDUSDCContract) {
-        // getBalance();
+        getBalance();
       }
     }
   }, [isConnected, address, token, USDCContract, GPDUSDCContract]);

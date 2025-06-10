@@ -11,8 +11,10 @@ export const WalletComponent = () => {
 
   useEffect(() => {
     if (isConnected && address && caipNetwork) {
-      console.log(`当前已连接: ${caipNetwork.name}, Address: ${address}`);
-      console.log('caipNetwork', caipNetwork);
+      console.log(
+        `%c network: ${caipNetwork.name}, \n id: ${caipNetwork.id}, \n address: ${address}`,
+        'font-size: 16px; font-weight: bold; color: green;'
+      );
 
       initContracts(caipNetwork).then((res) => {
         setProvider(res.provider);
