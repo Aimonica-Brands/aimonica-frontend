@@ -242,124 +242,130 @@ export default function Home() {
       </div>
 
       <div className="page-box">
-        <div className="banner2">
-          <div className="banner2-content">
-            <div className="text1">
-              The first AI agent and meme focused waifu investor. Outperforming all web3 VCs via AIMonica Capital (AC)
-              is her goal.
-            </div>
-            <img src="/assets/images/text.png" alt="" className="text-img" />
-            <img src="/assets/images/img-1.png" alt="" className="img-1" />
-            <img src="/assets/images/img-2.png" alt="" className="img-2" />
-          </div>
-        </div>
-
-        <div className="title-box">
-          <div className="title">
-            Top 100 Project Summary
-            <img src="/assets/images/star.png" alt="" className="star-img" />
-          </div>
-          <div className="css-box">
-            <div className="border1"></div>
-            <img src="/assets/images/logo2.svg" alt="" className="logo2" />
-            <div className="border2"></div>
-          </div>
-        </div>
-
-        <div className="tab-box-box">
-          <div className="tab-box">
-            <button className={tabIndex === 0 ? 'active' : ''} onClick={() => setTabIndex(0)}>
-              All Chain
-            </button>
-            <button className={tabIndex === 1 ? 'active' : ''} onClick={() => setTabIndex(1)}>
-              Solana
-            </button>
-            <button className={tabIndex === 2 ? 'active' : ''} onClick={() => setTabIndex(2)}>
-              Base
-            </button>
-          </div>
-          <div className="tab-box tab-box2">
-            <button className={tabIndex2 === 0 ? 'active' : ''} onClick={() => setTabIndex2(0)}>
-              24H
-            </button>
-            <button className={tabIndex2 === 1 ? 'active' : ''} onClick={() => setTabIndex2(1)}>
-              7D
-            </button>
-          </div>
-        </div>
-
-        <div className="level-box">
-          {levelData.map((item) => (
-            <div className="level-item" key={item.rank}>
-              <img src={`/assets/images/level-bg-${item.rank}.png`} className="bg" />
-              <img src={`/assets/images/level-${item.rank}.png`} className="level" />
-              <div className="avatar-box">
-                <div className="avatar">
-                  <img src={item.avatar} className="avatar" />
-                </div>
-                <div className="name">{item.name}</div>
+        <div className="page-box-box">
+          <div className="banner2">
+            <div className="banner2-content">
+              <div className="text1">
+                The first AI agent and meme focused waifu investor. Outperforming all web3 VCs via AIMonica Capital (AC)
+                is her goal.
               </div>
-              <div className="info-box">
-                <div className="s-box">
-                  <div className="s-img">
-                    <img src="/assets/images/img-3.png" alt="" />
-                  </div>
-                  <div className="s-text">1321546521</div>
-                </div>
-                <div className="info-item">
-                  <div>Staked</div>
-                  <div>100M</div>
-                </div>
-                <div className="s-box">
-                  <div className="s-img">
-                    <img src="/assets/images/img-4.png" alt="" />
-                  </div>
-                  <div className="s-text">1321546521</div>
-                </div>
-                <div className="info-item">
-                  <div>Users</div>
-                  <div>100</div>
-                </div>
-                <div className="s-box">
-                  <div className="s-img">
-                    <img src="/assets/images/img-5.png" alt="" />
-                  </div>
-                  <div className="s-text">1321546521</div>
-                </div>
+              <img src="/assets/images/text.png" alt="" className="text-img" />
+              <img src="/assets/images/img-1.png" alt="" className="img-1" />
+              <img src="/assets/images/img-2.png" alt="" className="img-2" />
+            </div>
+          </div>
 
-                <div className="info-item2">
-                  <button className="stake-btn" onClick={() => toStake(item)}>
-                    Stake
-                  </button>
+          <div className="title-box">
+            <div className="title">
+              Top 100 Project Summary
+              <img src="/assets/images/star.png" alt="" className="star-img" />
+            </div>
+            <div className="css-box">
+              <div className="border1"></div>
+              <img src="/assets/images/logo2.svg" alt="" className="logo2" />
+              <div className="border2"></div>
+            </div>
+          </div>
+
+          <div className="tab-box-box">
+            <div className="tab-box">
+              <button className={tabIndex === 0 ? 'active' : ''} onClick={() => setTabIndex(0)}>
+                All Chain
+              </button>
+              <button className={tabIndex === 1 ? 'active' : ''} onClick={() => setTabIndex(1)}>
+                Solana
+              </button>
+              <button className={tabIndex === 2 ? 'active' : ''} onClick={() => setTabIndex(2)}>
+                Base
+              </button>
+            </div>
+            <div className="tab-box tab-box2">
+              <button className={tabIndex2 === 0 ? 'active' : ''} onClick={() => setTabIndex2(0)}>
+                24H
+              </button>
+              <button className={tabIndex2 === 1 ? 'active' : ''} onClick={() => setTabIndex2(1)}>
+                7D
+              </button>
+            </div>
+          </div>
+
+          <div className="level-box">
+            {levelData.map((item) => (
+              <div className="level-item" key={item.rank}>
+                <img src={`/assets/images/level-bg-${item.rank}.png`} className="bg" />
+                <img src={`/assets/images/level-${item.rank}.png`} className="level" />
+                <div className="avatar-box">
+                  <div className="avatar">
+                    <img src={item.avatar} className="avatar" />
+                  </div>
+                  <div className="name">{item.name}</div>
+                </div>
+                <div className="info-box">
+                  <div className="info-box-item">
+                    <div className="s-box">
+                      <div className="s-img">
+                        <img src="/assets/images/img-3.png" alt="" />
+                      </div>
+                      <div className="s-text">1321546521</div>
+                    </div>
+                    <div className="s-box">
+                      <div className="s-img">
+                        <img src="/assets/images/img-4.png" alt="" />
+                      </div>
+                      <div className="s-text">1321546521</div>
+                    </div>
+                    <div className="s-box">
+                      <div className="s-img">
+                        <img src="/assets/images/img-5.png" alt="" />
+                      </div>
+                      <div className="s-text">1321546521</div>
+                    </div>
+                  </div>
+                  <div className="info-box-item">
+                    <div className="info-item">
+                      <div>Staked</div>
+                      <div>100M</div>
+                    </div>
+                    <div className="info-item">
+                      <div>Users</div>
+                      <div>100</div>
+                    </div>
+                    <div className="info-item2">
+                      <button className="stake-btn" onClick={() => toStake(item)}>
+                        Stake
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+
+          <Table
+            className="tablebox"
+            scroll={{ x: '100%' }}
+            columns={projectColumns}
+            dataSource={projectData}
+            pagination={false}
+            loading={loading}
+            rowKey={(record) => record.rank}
+          />
+
+          <div className="rolling-box rolling-box-2">
+            <div className="rolling-content">
+              <span className="rolling-item">AIMONICA</span>
+              <span className="rolling-item">AIMONICA</span>
+              <span className="rolling-item">AIMONICA</span>
+              <span className="rolling-item">AIMONICA</span>
+              <span className="rolling-item">AIMONICA</span>
             </div>
-          ))}
+          </div>
         </div>
 
-        <Table
-          className="tablebox"
-          scroll={{ x: '100%' }}
-          columns={projectColumns}
-          dataSource={projectData}
-          pagination={false}
-          loading={loading}
-          rowKey={(record) => record.rank}
-        />
         <img src="/assets/images/img-11.png" alt="" className="img-11" />
         <img src="/assets/images/img-12.png" alt="" className="img-12" />
         <img src="/assets/images/img-13.png" alt="" className="img-13" />
         <img src="/assets/images/img-14.png" alt="" className="img-14" />
-
-        <div className="rolling-box rolling-box-2">
-          <div className="rolling-content">
-            <span className="rolling-item">AIMONICA</span>
-            <span className="rolling-item">AIMONICA</span>
-            <span className="rolling-item">AIMONICA</span>
-            <span className="rolling-item">AIMONICA</span>
-            <span className="rolling-item">AIMONICA</span>
-          </div>
-        </div>
       </div>
 
       <div className="page-box2">

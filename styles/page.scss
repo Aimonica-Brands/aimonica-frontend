@@ -1,5 +1,5 @@
 header {
-  width: calc(100vw - 1rem);
+  width: 90vw;
   height: 0.9rem;
   position: fixed;
   top: 0.1rem;
@@ -12,7 +12,7 @@ header {
   border: 1px solid #fff;
   border-radius: 0.24rem;
   backdrop-filter: blur(0.045rem);
-  padding: 0 0.5rem;
+  padding: 0 0.2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,6 +55,19 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    .search-input {
+      width: 4rem;
+      height: 0.48rem;
+      border-radius: 0.12rem;
+      background: #ffffff;
+      margin-right: 0.2rem;
+      .ant-select-prefix {
+        .anticon-search {
+          font-size: 0.3rem;
+          color: #50b4ff;
+        }
+      }
+    }
     .number-box {
       width: fit-content;
       min-width: 1.2rem;
@@ -86,6 +99,7 @@ main {
 footer {
   width: 100%;
   height: fit-content;
+  overflow: hidden;
   .rolling-box {
     width: 100%;
     height: 0.9rem;
@@ -118,7 +132,6 @@ footer {
     .footer-content {
       width: 12rem;
       display: flex;
-      align-items: center;
       justify-content: space-between;
       .footer-left {
         .footer-logo {
@@ -145,6 +158,8 @@ footer {
         }
       }
       .footer-right {
+        width: fit-content;
+        height: fit-content;
         display: flex;
         align-items: center;
         a {
@@ -152,7 +167,7 @@ footer {
           height: 0.4rem;
           margin-left: 0.3rem;
           img {
-            width: 100%;
+            width: auto;
             height: 100%;
           }
         }
@@ -382,6 +397,7 @@ footer {
       position: absolute;
       bottom: 5rem;
       left: 0;
+      z-index: 1;
     }
     .img-12 {
       width: 3rem;
@@ -389,6 +405,7 @@ footer {
       position: absolute;
       bottom: 1.5rem;
       right: 0;
+      z-index: 1;
     }
     .img-13 {
       width: 3rem;
@@ -396,6 +413,7 @@ footer {
       position: absolute;
       bottom: 0;
       left: 0;
+      z-index: 1;
     }
     .img-14 {
       width: 2rem;
@@ -403,6 +421,13 @@ footer {
       position: absolute;
       bottom: 6rem;
       right: 0;
+      z-index: 1;
+    }
+    .page-box-box {
+      width: 100%;
+      height: fit-content;
+      position: relative;
+      z-index: 2;
     }
   }
 
@@ -489,6 +514,7 @@ footer {
           height: 1.3rem;
           border-radius: 50%;
           border: 0.03rem solid #ffffff;
+          margin: 0 auto;
           img {
             width: 100%;
             height: 100%;
@@ -504,11 +530,17 @@ footer {
       .info-box {
         width: 100%;
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.2rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.1rem;
         position: absolute;
         bottom: 0;
         padding: 0.2rem;
+        .info-box-item {
+          width: 100%;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0.1rem;
+        }
 
         .info-item {
           width: 100%;
@@ -534,7 +566,7 @@ footer {
           align-items: center;
           justify-content: flex-end;
           .stake-btn {
-            width: 1.3rem;
+            width: 100%;
             height: 0.4rem;
             border-radius: 0.18rem;
             background: #50b4ff;
@@ -551,16 +583,27 @@ footer {
   .page-box2 {
     width: 100%;
     height: fit-content;
+    min-height: 10rem;
     position: relative;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     .faq-box {
-      width: 8rem;
-      padding-top: 1rem;
+      width: 14rem;
+      padding: 1rem 0;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+      .faq-content {
+        width: 8rem;
+      }
     }
     .img-15 {
       width: auto;
-      height: 10rem;
+      height: 100%;
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      z-index: 1;
     }
     .img-16 {
       width: 5rem;
@@ -568,6 +611,7 @@ footer {
       position: absolute;
       bottom: 0;
       left: 0;
+      z-index: 1;
     }
   }
 }
@@ -1357,19 +1401,6 @@ footer {
   }
 }
 
-.search-input {
-  width: 4rem;
-  height: 0.48rem;
-  border-radius: 0.12rem;
-  background: #ffffff;
-  margin-right: 0.2rem;
-  .ant-select-prefix {
-    .anticon-search {
-      font-size: 0.3rem;
-      color: #50b4ff;
-    }
-  }
-}
 .project-box {
   .project {
     width: 100%;
