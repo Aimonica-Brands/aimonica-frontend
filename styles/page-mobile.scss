@@ -108,24 +108,22 @@
     }
   }
   .title-box-2 {
-    width: fit-content;
-    font-family: AiDeep;
-    font-weight: 400;
-    font-size: 0.64rem;
-    color: #ffffff;
-    position: relative;
+    font-size: 0.4rem;
     .star-img {
-      width: 0.32rem;
-      height: 0.32rem;
-      position: absolute;
-      top: 0.2rem;
-      right: -0.4rem;
+      width: 0.2rem;
+      height: 0.2rem;
+      top: 0.1rem;
+      right: -0.2rem;
     }
   }
 
   .tab-box-box {
     width: 90vw;
     margin: 0.5rem auto;
+  }
+
+  .tab-box {
+    margin: 0.2rem 0;
   }
 
   .explore-page {
@@ -268,6 +266,7 @@
 
   .tablebox {
     width: 90vw;
+    margin: 0.2rem auto;
   }
 
   .stake-page {
@@ -346,6 +345,34 @@
       left: 0.3rem;
       a {
         font-size: 0.12rem;
+      }
+    }
+  }
+
+  .dashboard-page {
+    width: 100%;
+    .page-box {
+      width: 90vw;
+    }
+    .banner-box {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0.2rem 0;
+      .banner-item {
+        width: 60%;
+        text-align: left;
+        margin-bottom: 0.1rem;
+        &:nth-child(1),
+        &:nth-child(2) {
+          border-right: none;
+        }
+      }
+      .img-24 {
+        width: auto;
+        height: 4.2rem;
+        position: absolute;
+        bottom: -0.8rem;
+        right: 0;
       }
     }
   }
