@@ -3,7 +3,8 @@ import { SolanaAdapter } from '@reown/appkit-adapter-solana';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { solana, solanaDevnet, base, baseSepolia } from '@reown/appkit/networks';
 
-export const networks: any = process.env.NEXT_PUBLIC_APP_ENV === 'production' ? [base] : [baseSepolia, solanaDevnet];
+export const networks: any =
+  process.env.NEXT_PUBLIC_APP_ENV === 'production' ? [base, solana] : [baseSepolia, solanaDevnet];
 
 // 0. Get projectId from https://cloud.reown.com
 export const projectId = 'b5863416c73906526923f5c4d6db20c8';
