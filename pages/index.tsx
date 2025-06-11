@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
 
 export default function Home() {
-  const { message } = App.useApp();
   const router = useRouter();
   const [projectData, setProjectData] = useState([
     { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },

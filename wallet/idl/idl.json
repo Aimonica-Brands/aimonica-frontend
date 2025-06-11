@@ -1,40 +1,76 @@
 {
   "version": "0.1.0",
-  "name": "counter",
+  "name": "solana_nft_anchor",
   "instructions": [
     {
-      "name": "initialize",
+      "name": "initNft",
       "accounts": [
-        { "name": "counter", "isMut": true, "isSigner": true },
-        { "name": "user", "isMut": true, "isSigner": true },
-        { "name": "systemProgram", "isMut": false, "isSigner": false }
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "associatedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadataAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": ["CHECK - address"]
+        },
+        {
+          "name": "masterEditionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
       ],
-      "args": []
-    },
-    {
-      "name": "increment",
-      "accounts": [
-        { "name": "counter", "isMut": true, "isSigner": false },
-        { "name": "user", "isMut": false, "isSigner": true }
-      ],
-      "args": []
-    },
-    {
-      "name": "decrement",
-      "accounts": [
-        { "name": "counter", "isMut": true, "isSigner": false },
-        { "name": "user", "isMut": false, "isSigner": true }
-      ],
-      "args": []
-    }
-  ],
-  "accounts": [
-    {
-      "name": "Counter",
-      "type": {
-        "kind": "struct",
-        "fields": [{ "name": "count", "type": "u64" }]
-      }
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
     }
   ]
 }

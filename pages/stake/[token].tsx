@@ -2,17 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, Empty, Spin, App, Popover, Collapse, Input } from 'antd';
 import { LeftOutlined, ExportOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
-import { usePageContext } from '@/context';
-import { useAppKitAccount } from '@reown/appkit/react';
-import { ethers } from 'ethers';
 
 export default function Stake() {
-  const { message } = App.useApp();
   const router = useRouter();
   const { token: token } = router.query;
-
-  const { address, isConnected } = useAppKitAccount();
-  const { USDCContract, GPDUSDCContract } = usePageContext();
 
   const [projectData, setProjectData] = useState([
     { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
@@ -33,56 +26,13 @@ export default function Stake() {
     if (token) {
       setProjectInfo(projectData.find((item) => item.rank === Number(token)));
     }
-    if (isConnected && address) {
-      if (USDCContract && GPDUSDCContract) {
-        getBalance();
-      }
-    }
-  }, [isConnected, address, token, USDCContract, GPDUSDCContract]);
-
-  const getBalance = async () => {
-    const res = await USDCContract.balanceOf(address);
-    const _res = Number(ethers.formatUnits(res, 6));
-    console.log('USDC balance', _res);
-    setBalance(_res);
-
-    checkApproval(_res);
-  };
-
-  const checkApproval = async (balance) => {
-    try {
-      const allowance = await USDCContract.allowance(address, GPDUSDCContract);
-      const _allowance = Number(ethers.formatUnits(allowance, 6));
-      const approved = _allowance > 0 && _allowance >= balance;
-      console.log('approved', approved);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleApprove = async () => {
-    if (loading) return;
-    if (!address || !USDCContract) return message.warning('Please connect wallet first');
-
-    setLoading(true);
-    try {
-      const tx = await USDCContract.approve(GPDUSDCContract, ethers.parseUnits('10000000'));
-      await tx.wait();
-      message.success('Approval transaction confirmed');
-      await checkApproval(balance);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [token]);
 
   const handleTabChange = (index: number) => {
     setTabIndex(index);
   };
 
   const handleStake = () => {
-    // handleApprove();
     setIsStakeModalOpen(true);
   };
 

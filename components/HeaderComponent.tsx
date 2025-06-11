@@ -114,6 +114,10 @@ export default function HeaderComponent() {
           </div>
         )}
 
+        {/* AppKit Connect Button */}
+        <appkit-button size="sm" />
+
+        {/* Wallet initialization component */}
         <WalletComponent />
       </div>
     </header>

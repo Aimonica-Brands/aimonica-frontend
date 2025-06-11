@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
 
 export default function Dashboard() {
-  const { message } = App.useApp();
   const router = useRouter();
   const [assetsLoading, setAssetsLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
