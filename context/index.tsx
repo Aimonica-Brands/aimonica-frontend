@@ -5,7 +5,7 @@ interface PageContextType {
   // 基础状态
   walletAddress: string;
   setWalletAddress: (address: string) => void;
-  
+
   // EVM 合约状态
   provider: any;
   setProvider: (provider: any) => void;
@@ -13,13 +13,15 @@ interface PageContextType {
   setUSDCContract: (contract: any) => void;
   GPDUSDCContract: any;
   setGPDUSDCContract: (contract: any) => void;
-  
+
   // Solana 合约状态
   solanaConnection: any;
   setSolanaConnection: (connection: any) => void;
-  solanaProgram: any;
-  setSolanaProgram: (program: any) => void;
-  
+  solanaReadProgram: any;
+  setSolanaReadProgram: (program: any) => void;
+  solanaWriteProgram: any;
+  setSolanaWriteProgram: (program: any) => void;
+
   // 网络状态
   currentNetworkType: string | null;
   setCurrentNetworkType: (type: string) => void;
@@ -37,16 +39,17 @@ type PageProviderProps = {
 
 export function PageProvider({ children }: PageProviderProps) {
   const [walletAddress, setWalletAddress] = useState('');
-  
+
   // EVM 状态
   const [provider, setProvider] = useState(null);
   const [USDCContract, setUSDCContract] = useState(null);
   const [GPDUSDCContract, setGPDUSDCContract] = useState(null);
-  
+
   // Solana 状态
   const [solanaConnection, setSolanaConnection] = useState(null);
-  const [solanaProgram, setSolanaProgram] = useState(null);
-  
+  const [solanaReadProgram, setSolanaReadProgram] = useState(null);
+  const [solanaWriteProgram, setSolanaWriteProgram] = useState(null);
+
   // 网络状态
   const [currentNetworkType, setCurrentNetworkType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,19 +58,21 @@ export function PageProvider({ children }: PageProviderProps) {
   const contextValue: PageContextType = {
     walletAddress,
     setWalletAddress,
-    
+
     provider,
     setProvider,
     USDCContract,
     setUSDCContract,
     GPDUSDCContract,
     setGPDUSDCContract,
-    
+
     solanaConnection,
     setSolanaConnection,
-    solanaProgram,
-    setSolanaProgram,
-    
+    solanaReadProgram,
+    setSolanaReadProgram,
+    solanaWriteProgram,
+    setSolanaWriteProgram,
+
     currentNetworkType,
     setCurrentNetworkType,
     isLoading,

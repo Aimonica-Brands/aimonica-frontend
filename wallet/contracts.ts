@@ -59,11 +59,13 @@ export const initSolanaContracts = (connection: Connection, walletProvider: any,
     const anchorProvider = new AnchorProvider(connection, walletProvider, { commitment: 'confirmed' });
 
     // 初始化程序
-    const program = new Program(tokenConfig.idl, new PublicKey(tokenConfig.programId), anchorProvider);
+    const readProgram = new Program(tokenConfig.idl, new PublicKey(tokenConfig.readProgramId), anchorProvider);
+    const writeProgram = new Program(tokenConfig.hgnft, new PublicKey(tokenConfig.writeProgramId), anchorProvider);
 
     return {
       connection,
-      program,
+      readProgram,
+      writeProgram,
       anchorProvider,
       walletProvider
     };

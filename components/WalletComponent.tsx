@@ -17,7 +17,8 @@ export const WalletComponent = () => {
     setUSDCContract,
     setGPDUSDCContract,
     setSolanaConnection,
-    setSolanaProgram,
+    setSolanaReadProgram,
+    setSolanaWriteProgram,
     setCurrentNetworkType
   } = usePageContext();
 
@@ -62,7 +63,8 @@ export const WalletComponent = () => {
           console.log(`✅ ${network} 合约初始化成功`, result);
 
           setSolanaConnection(result.connection);
-          setSolanaProgram(result.program);
+          setSolanaReadProgram(result.readProgram);
+          setSolanaWriteProgram(result.writeProgram);
         } catch (error) {
           console.error(`❌ ${network} 合约初始化失败`, error);
         }
@@ -77,7 +79,8 @@ export const WalletComponent = () => {
     setUSDCContract(null);
     setGPDUSDCContract(null);
     setSolanaConnection(null);
-    setSolanaProgram(null);
+    setSolanaReadProgram(null);
+    setSolanaWriteProgram(null);
     setCurrentNetworkType(null);
   };
 

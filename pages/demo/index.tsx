@@ -11,7 +11,7 @@ const { TabPane } = Tabs;
 
 export default function Demo() {
   const { address, isConnected } = useAppKitAccount();
-  const { provider, USDCContract, GPDUSDCContract, solanaConnection, solanaProgram, currentNetworkType } =
+  const { provider, USDCContract, GPDUSDCContract, solanaConnection, solanaReadProgram, solanaWriteProgram, currentNetworkType } =
     usePageContext();
 
   const [loading, setLoading] = useState(false);
@@ -181,7 +181,7 @@ export default function Demo() {
   const SolanaExamples = () => {
     // 签名消息
     const handleSolanaSignMessage = async () => {
-      if (!solanaProgram || !solanaConnection) {
+      if (!solanaReadProgram || !solanaConnection) {
         message.error('请先连接 Solana 钱包');
         return;
       }
@@ -189,7 +189,7 @@ export default function Demo() {
       setLoading(true);
       try {
         const messageBytes = new TextEncoder().encode(signMessage);
-        const signature = await solanaProgram.provider.wallet.signMessage(messageBytes);
+        const signature = await solanaReadProgram.provider.wallet.signMessage(messageBytes);
 
         addResult(`Solana 消息签名成功: ${Buffer.from(signature).toString('hex').slice(0, 20)}...`);
         message.success('消息签名成功');
@@ -205,14 +205,14 @@ export default function Demo() {
 
     // 查询 SOL 余额
     const handleCheckSOLBalance = async () => {
-      if (!solanaConnection || !solanaProgram) {
+      if (!solanaConnection || !solanaReadProgram) {
         message.error('Solana 连接未建立');
         return;
       }
 
       setLoading(true);
       try {
-        const publicKey = solanaProgram.provider.wallet.publicKey;
+        const publicKey = solanaReadProgram.provider.wallet.publicKey;
         const balance = await solanaConnection.getBalance(publicKey);
         const solBalance = balance / 1000000000; // lamports to SOL
 
@@ -228,14 +228,14 @@ export default function Demo() {
 
     // 发送 SOL
     const handleSendSOL = async () => {
-      if (!solanaConnection || !solanaProgram || !transferTo) {
+      if (!solanaConnection || !solanaWriteProgram || !transferTo) {
         message.error('请填写完整信息');
         return;
       }
 
       setLoading(true);
       try {
-        const fromPubkey = solanaProgram.provider.wallet.publicKey;
+        const fromPubkey = solanaWriteProgram.provider.wallet.publicKey;
         const toPubkey = new PublicKey(transferTo);
         const lamports = parseFloat(transferAmount) * 1e9; // SOL to lamports
 
@@ -247,7 +247,7 @@ export default function Demo() {
           })
         );
 
-        const signature = await solanaProgram.provider.sendAndConfirm(transaction);
+        const signature = await solanaWriteProgram.provider.sendAndConfirm(transaction);
 
         addResult(`SOL 转账成功: ${signature}`);
         message.success('SOL 转账成功');
@@ -261,7 +261,7 @@ export default function Demo() {
 
     // 测试合约调用
     const handleTestContract = async () => {
-      if (!solanaProgram) {
+      if (!solanaWriteProgram) {
         message.error('Solana 程序未初始化');
         return;
       }
@@ -270,11 +270,11 @@ export default function Demo() {
       try {
         // 生成测试账户
         const testAccount = anchor.web3.Keypair.generate();
-        const tx = await solanaProgram.methods
+        const tx = await solanaWriteProgram.methods
           .initialize()
           .accounts({
             counter: testAccount.publicKey,
-            user: solanaProgram.provider.wallet.publicKey,
+            user: solanaWriteProgram.provider.wallet.publicKey,
             systemProgram: SystemProgram.programId
           })
           .signers([testAccount])
