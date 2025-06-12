@@ -36,3 +36,4 @@ yarn-error.log*
 
 # cursor
 .cursor
+.env
