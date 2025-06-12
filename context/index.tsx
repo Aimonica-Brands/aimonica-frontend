@@ -1,10 +1,23 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
+// Twitter用户信息类型
+export interface TwitterUser {
+  username: string;
+  id: string;
+  accessToken?: string;
+  refreshToken?: string;
+}
+
 // Context 类型定义
 interface PageContextType {
   // 基础状态
   walletAddress: string;
   setWalletAddress: (address: string) => void;
+
+  // Twitter状态
+  twitterUser: TwitterUser | null;
+  setTwitterUser: (user: TwitterUser | null) => void;
+  isTwitterConnected: boolean;
 
   // EVM 合约状态
   provider: any;
@@ -40,6 +53,9 @@ type PageProviderProps = {
 export function PageProvider({ children }: PageProviderProps) {
   const [walletAddress, setWalletAddress] = useState('');
 
+  // Twitter 状态
+  const [twitterUser, setTwitterUser] = useState<TwitterUser | null>(null);
+
   // EVM 状态
   const [provider, setProvider] = useState(null);
   const [USDCContract, setUSDCContract] = useState(null);
@@ -58,6 +74,11 @@ export function PageProvider({ children }: PageProviderProps) {
   const contextValue: PageContextType = {
     walletAddress,
     setWalletAddress,
+
+    // Twitter 状态
+    twitterUser,
+    setTwitterUser,
+    isTwitterConnected: !!twitterUser,
 
     provider,
     setProvider,

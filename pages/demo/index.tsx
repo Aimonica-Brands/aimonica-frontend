@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, message, Card, Input, Tabs, Divider, Space } from 'antd';
 import { useAppKitAccount } from '@reown/appkit/react';
-import { usePageContext } from '@/context';
+import { usePageContext, TwitterUser } from '@/context';
 import { ethers } from 'ethers';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { handleContractError } from '@/wallet/contracts';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { shareOnTwitter, createShareMessages } from '@/utils/twitter';
+import { getCurrentEnv } from '@/utils/env';
 
 const { TabPane } = Tabs;
 
@@ -21,7 +22,10 @@ export default function Demo() {
     solanaConnection,
     solanaReadProgram,
     solanaWriteProgram,
-    currentNetworkType
+    currentNetworkType,
+    twitterUser,
+    setTwitterUser,
+    isTwitterConnected
   } = usePageContext();
 
   const [loading, setLoading] = useState(false);
@@ -38,84 +42,48 @@ export default function Demo() {
   const [nftLevel, setNftLevel] = useState('1');
   const [mintAccount, setMintAccount] = useState<anchor.web3.Keypair | null>(null);
 
-  // Twitter配置状态
-  const [twitterConfigured, setTwitterConfigured] = useState<boolean | null>(null);
+  // 环境配置
+  const envConfig = getCurrentEnv();
 
-  // 检查Twitter配置
-  React.useEffect(() => {
-    const checkConfig = async () => {
-      try {
-        const response = await fetch('/api/auth/check-config');
-        const data = await response.json();
-        setTwitterConfigured(data.configured);
-
-        if (!data.configured) {
-          console.warn('Twitter配置不完整:', data.details);
-        }
-      } catch (error) {
-        console.error('检查配置失败:', error);
-        setTwitterConfigured(false);
-      }
-    };
-
-    checkConfig();
-  }, []);
+    // 同步NextAuth session到context
+  useEffect(() => {
+    if (status === 'authenticated' && session?.twitterUsername) {
+      const newTwitterUser: TwitterUser = {
+        username: session.twitterUsername,
+        id: session.twitterId,
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      };
+      setTwitterUser(newTwitterUser);
+    } else if (status === 'unauthenticated') {
+      setTwitterUser(null);
+    }
+  }, [session, status, setTwitterUser]);
 
   const addResult = (result: string) => {
     setResults((prev) => [`${new Date().toLocaleTimeString()}: ${result}`, ...prev.slice(0, 9)]);
   };
 
-  // 用于跟踪之前的session状态
-  const prevSessionRef = React.useRef<string | undefined>();
+  // 用于跟踪之前的连接状态
+  const prevConnectedRef = React.useRef<boolean>(false);
 
-  // 检查URL中的错误参数
-  React.useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const error = urlParams.get('error');
-
-    if (error) {
-      let errorMessage = 'Twitter连接发生错误';
-
-      if (error === 'OAuthCallback') {
-        errorMessage = '❌ OAuth回调错误 - 请检查Twitter应用配置中的回调URL是否正确设置';
-      } else if (error === 'Configuration') {
-        errorMessage = '❌ 配置错误 - 请检查环境变量是否正确设置';
-      } else if (error === 'AccessDenied') {
-        errorMessage = '❌ 访问被拒绝 - 用户取消了授权';
+  // 监听Twitter连接状态变化
+  useEffect(() => {
+    if (isTwitterConnected && !prevConnectedRef.current && twitterUser) {
+      // 刚刚连接成功
+      addResult(`✅ Twitter连接成功！欢迎 @${twitterUser.username}`);
+      message.success(`Twitter连接成功！欢迎 @${twitterUser.username}`);
+      
+      // 清理URL参数
+      const url = new URL(window.location.href);
+      if (url.search) {
+        const cleanUrl = `${url.origin}${url.pathname}`;
+        window.history.replaceState({}, document.title, cleanUrl);
       }
-
-      addResult(errorMessage);
-      message.error(errorMessage);
-
-      // 清理URL中的错误参数
-      const cleanUrl = window.location.href.split('?')[0];
-      window.history.replaceState({}, document.title, cleanUrl);
     }
-  }, []);
-
-  // 监听session变化，处理Twitter授权成功后的状态
-  React.useEffect(() => {
-    // 如果从未认证状态变为已认证状态，说明刚刚完成授权
-    if (status === 'authenticated' && session?.twitterUsername) {
-      const wasUnauthenticated = prevSessionRef.current === undefined;
-
-      if (wasUnauthenticated || prevSessionRef.current !== session.twitterUsername) {
-        addResult(`✅ Twitter连接成功！欢迎 @${session.twitterUsername}`);
-        message.success(`Twitter连接成功！欢迎 @${session.twitterUsername}`);
-
-        // 清理URL参数（如果有的话）
-        const url = new URL(window.location.href);
-        if (url.searchParams.has('callbackUrl') || url.searchParams.has('error')) {
-          const cleanUrl = `${url.origin}${url.pathname}`;
-          window.history.replaceState({}, document.title, cleanUrl);
-        }
-      }
-
-      prevSessionRef.current = session.twitterUsername;
-    } else if (status === 'unauthenticated') {
-      prevSessionRef.current = undefined;
-    }
-  }, [session, status]);
+    
+    prevConnectedRef.current = isTwitterConnected;
+  }, [isTwitterConnected, twitterUser]);
 
   // EVM 示例
   const EVMExamples = () => {
@@ -637,15 +605,15 @@ export default function Demo() {
 
   const handleConnectTwitter = async () => {
     // 首先检查配置
-    if (twitterConfigured === false) {
+    if (!envConfig.twitterConfigured) {
       addResult('❌ Twitter配置未完成，请先配置环境变量');
       message.error('请先配置Twitter API密钥和环境变量');
       return;
     }
 
-    setTwitterLoading(true);
+        setTwitterLoading(true);
     try {
-      if (session?.twitterUsername) {
+      if (isTwitterConnected) {
         // 如果已经连接，则断开连接
         await signOut({ redirect: false });
         addResult('❌ 已断开Twitter连接');
@@ -654,9 +622,9 @@ export default function Demo() {
         // 连接Twitter
         addResult('🔄 正在跳转到Twitter授权页面...');
         message.info('正在跳转到Twitter授权页面...');
-
+        
         // 使用signIn进行重定向
-        await signIn('twitter', {
+        await signIn('twitter', { 
           callbackUrl: window.location.href,
         });
       }
@@ -703,12 +671,12 @@ export default function Demo() {
         <TabPane tab="🔷 连接推特" key="1">
           <Card title="Twitter 连接">
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              {/* 配置状态检查 */}
-              {twitterConfigured === false && (
-                <div style={{
-                  padding: '10px',
-                  backgroundColor: '#fff2f0',
-                  border: '1px solid #ffccc7',
+                            {/* 配置状态检查 */}
+              {!envConfig.twitterConfigured && (
+                <div style={{ 
+                  padding: '10px', 
+                  backgroundColor: '#fff2f0', 
+                  border: '1px solid #ffccc7', 
                   borderRadius: '6px',
                   marginBottom: '10px'
                 }}>
@@ -716,7 +684,7 @@ export default function Demo() {
                     ⚠️ Twitter配置未完成，请先配置环境变量
                   </p>
                   <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>
-                    请参考 TWITTER_SETUP.md 文件进行配置
+                    请检查 .env.local 文件中的配置
                   </p>
                 </div>
               )}
@@ -724,7 +692,7 @@ export default function Demo() {
               {/* Twitter 连接状态 */}
               <div>
                 <h4>📱 Twitter 连接状态</h4>
-                {status === 'loading' || twitterLoading || twitterConfigured === null ? (
+                {status === 'loading' || twitterLoading ? (
                   <div style={{
                     padding: '10px',
                     backgroundColor: '#f0f9ff',
@@ -733,12 +701,10 @@ export default function Demo() {
                     marginBottom: '10px'
                   }}>
                     <p style={{ margin: 0, color: '#1890ff' }}>
-                      🔄 {status === 'loading' ? '正在检查连接状态...' :
-                        twitterLoading ? '正在处理Twitter连接...' :
-                          '正在检查配置...'}
-                    </p>
-                  </div>
-                ) : session?.twitterUsername ? (
+                                           🔄 {status === 'loading' ? '正在检查连接状态...' : '正在处理Twitter连接...'}
+                   </p>
+                 </div>
+               ) : isTwitterConnected ? (
                   <div style={{
                     padding: '10px',
                     backgroundColor: '#f6ffed',
@@ -749,12 +715,12 @@ export default function Demo() {
                     <p style={{ margin: 0, color: '#52c41a' }}>
                       ✅ 已连接到 Twitter
                     </p>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                      <strong>用户名:</strong> @{session.twitterUsername}
-                    </p>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                      <strong>用户ID:</strong> {session.twitterId}
-                    </p>
+                                       <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                     <strong>用户名:</strong> @{twitterUser?.username}
+                   </p>
+                   <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                     <strong>用户ID:</strong> {twitterUser?.id}
+                   </p>
                   </div>
                 ) : (
                   <div style={{
@@ -770,30 +736,31 @@ export default function Demo() {
                   </div>
                 )}
 
-                <Button
+                                <Button
                   onClick={handleConnectTwitter}
                   loading={twitterLoading}
-                  disabled={twitterConfigured === false}
-                  type={session?.twitterUsername ? 'default' : 'primary'}
-                  style={{
-                    backgroundColor: twitterConfigured === false ? '#d9d9d9' :
-                      session?.twitterUsername ? '#ff4d4f' : '#1da1f2',
-                    borderColor: twitterConfigured === false ? '#d9d9d9' :
-                      session?.twitterUsername ? '#ff4d4f' : '#1da1f2',
+                  disabled={!envConfig.twitterConfigured}
+                  type={isTwitterConnected ? 'default' : 'primary'}
+                  style={{ 
+                    backgroundColor: !envConfig.twitterConfigured ? '#d9d9d9' :
+                                   isTwitterConnected ? '#ff4d4f' : '#1da1f2',
+                    borderColor: !envConfig.twitterConfigured ? '#d9d9d9' :
+                                isTwitterConnected ? '#ff4d4f' : '#1da1f2',
                     color: 'white'
                   }}>
-                  {twitterConfigured === false ? '配置未完成' :
-                    session?.twitterUsername ? '断开 Twitter' : '连接 Twitter'}
+                  {!envConfig.twitterConfigured ? '配置未完成' :
+                   isTwitterConnected ? '断开 Twitter' : '连接 Twitter'}
                 </Button>
 
-                {session?.twitterUsername && (
+                                {isTwitterConnected && twitterUser && (
                   <div style={{ marginTop: '10px' }}>
                     <Button
                       onClick={() => {
-                        const shareText = createShareMessages.connected(session.twitterUsername!);
+                        const shareText = createShareMessages.connected(twitterUser.username);
                         shareOnTwitter(shareText);
+                        addResult(`🐦 发布推文分享`);
                       }}
-                      style={{
+                      style={{ 
                         backgroundColor: '#1da1f2',
                         borderColor: '#1da1f2',
                         color: 'white'

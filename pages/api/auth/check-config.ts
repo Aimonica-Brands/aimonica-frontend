@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { getCurrentEnv } from '@/utils/env';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -6,28 +7,21 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const hasTwitterConfig = !!(
-      process.env.TWITTER_CLIENT_ID &&
-      process.env.TWITTER_CLIENT_SECRET &&
-      process.env.NEXTAUTH_SECRET
-    );
-
-    const hasNextAuthUrl = process.env.NEXTAUTH_URL;
-
+    const env = getCurrentEnv();
+    
     res.status(200).json({
-      configured: hasTwitterConfig && hasNextAuthUrl,
-      details: {
-        twitterClientId: !!process.env.TWITTER_CLIENT_ID,
-        twitterClientSecret: !!process.env.TWITTER_CLIENT_SECRET,
-        nextAuthSecret: !!process.env.NEXTAUTH_SECRET,
-        nextAuthUrl: !!process.env.NEXTAUTH_URL
-      },
-      message: hasTwitterConfig && hasNextAuthUrl ? 'Twitter配置完整' : '请检查环境变量配置'
+      configured: env.twitterConfigured,
+      environment: env.isDev ? 'development' : 'production',
+      url: env.url,
+      defaultPage: env.defaultPage,
+      message: env.twitterConfigured 
+        ? 'Twitter配置完整' 
+        : '请检查环境变量配置'
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(500).json({ 
       error: '配置检查失败',
-      configured: false
+      configured: false 
     });
   }
 }
