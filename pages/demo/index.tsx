@@ -676,7 +676,7 @@ export default function Demo() {
                     ⚠️ Twitter配置未完成，请先配置环境变量
                   </p>
                   <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>
-                    请检查 .env.local 文件中的配置
+                    请检查 .env 文件中的配置
                   </p>
                 </div>
               )}

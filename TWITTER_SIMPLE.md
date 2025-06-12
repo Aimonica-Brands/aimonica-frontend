@@ -21,7 +21,7 @@
 
 ## ⚙️ 环境配置
 
-创建 `.env.local` 文件：
+创建 `.env` 文件：
 
 ```env
 NEXT_PUBLIC_AUTH_SECRET=your-secret-key

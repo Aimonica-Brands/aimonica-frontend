@@ -1,6 +1,6 @@
 {
   "name": "aimonica-frontend",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
     "dev": "cross-env NEXT_PUBLIC_APP_ENV=development next dev",
