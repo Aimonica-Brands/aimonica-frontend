@@ -592,42 +592,7 @@ export default function Demo() {
             <SolanaExamples />
           ) : (
             <Card>
-              <h4>🔗 Solana 网络连接指南</h4>
-              <div style={{ marginBottom: '15px' }}>
-                <p>
-                  <strong>当前状态:</strong> 未连接到 Solana 网络
-                </p>
-                <p>
-                  <strong>解决方案:</strong>
-                </p>
-                <ol style={{ paddingLeft: '20px', margin: '10px 0' }}>
-                  <li>点击右上角的钱包连接按钮</li>
-                  <li>选择支持 Solana 的钱包 (如 Phantom, Solflare)</li>
-                  <li>
-                    确保钱包连接到正确的网络：
-                    <ul style={{ paddingLeft: '20px', margin: '5px 0' }}>
-                      <li>
-                        开发环境: <strong>Solana Devnet</strong>
-                      </li>
-                      <li>
-                        生产环境: <strong>Solana Mainnet</strong>
-                      </li>
-                    </ul>
-                  </li>
-                  <li>连接成功后，此页面将显示 Solana 功能测试</li>
-                </ol>
-              </div>
-              <div
-                style={{
-                  padding: '10px',
-                  backgroundColor: '#f6ffed',
-                  border: '1px solid #b7eb8f',
-                  borderRadius: '6px'
-                }}>
-                <p style={{ margin: 0, fontSize: '12px', color: '#389e0d' }}>
-                  💡 <strong>提示:</strong> 如果连接后仍然看到错误，请使用网络诊断功能检查配置
-                </p>
-              </div>
+              <p>请切换到 Solana 网络 (Solana 或 Solana Devnet) 来测试 Solana 功能</p>
             </Card>
           )}
         </TabPane>
