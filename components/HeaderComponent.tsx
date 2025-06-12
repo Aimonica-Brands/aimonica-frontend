@@ -108,7 +108,7 @@ export default function HeaderComponent() {
           }))}
         />
 
-        {address && (
+        {isConnected && address && (
           <div className="number-box">
             <img src="/assets/images/img-3.png" alt="" /> 0
           </div>
