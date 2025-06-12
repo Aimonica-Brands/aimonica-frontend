@@ -45,7 +45,7 @@ export default function Demo() {
   // 环境配置
   const envConfig = getCurrentEnv();
 
-    // 同步NextAuth session到context
+  // 同步NextAuth session到context
   useEffect(() => {
     if (status === 'authenticated' && session?.twitterUsername) {
       const newTwitterUser: TwitterUser = {
@@ -73,7 +73,7 @@ export default function Demo() {
       // 刚刚连接成功
       addResult(`✅ Twitter连接成功！欢迎 @${twitterUser.username}`);
       message.success(`Twitter连接成功！欢迎 @${twitterUser.username}`);
-      
+
       // 清理URL参数
       const url = new URL(window.location.href);
       if (url.search) {
@@ -81,7 +81,7 @@ export default function Demo() {
         window.history.replaceState({}, document.title, cleanUrl);
       }
     }
-    
+
     prevConnectedRef.current = isTwitterConnected;
   }, [isTwitterConnected, twitterUser]);
 
@@ -611,7 +611,7 @@ export default function Demo() {
       return;
     }
 
-        setTwitterLoading(true);
+    setTwitterLoading(true);
     try {
       if (isTwitterConnected) {
         // 如果已经连接，则断开连接
@@ -622,10 +622,10 @@ export default function Demo() {
         // 连接Twitter
         addResult('🔄 正在跳转到Twitter授权页面...');
         message.info('正在跳转到Twitter授权页面...');
-        
+
         // 使用signIn进行重定向
-        await signIn('twitter', { 
-          callbackUrl: window.location.href,
+        await signIn('twitter', {
+          callbackUrl: envConfig.url
         });
       }
     } catch (error: any) {
@@ -671,12 +671,12 @@ export default function Demo() {
         <TabPane tab="🔷 连接推特" key="1">
           <Card title="Twitter 连接">
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                            {/* 配置状态检查 */}
+              {/* 配置状态检查 */}
               {!envConfig.twitterConfigured && (
-                <div style={{ 
-                  padding: '10px', 
-                  backgroundColor: '#fff2f0', 
-                  border: '1px solid #ffccc7', 
+                <div style={{
+                  padding: '10px',
+                  backgroundColor: '#fff2f0',
+                  border: '1px solid #ffccc7',
                   borderRadius: '6px',
                   marginBottom: '10px'
                 }}>
@@ -701,10 +701,10 @@ export default function Demo() {
                     marginBottom: '10px'
                   }}>
                     <p style={{ margin: 0, color: '#1890ff' }}>
-                                           🔄 {status === 'loading' ? '正在检查连接状态...' : '正在处理Twitter连接...'}
-                   </p>
-                 </div>
-               ) : isTwitterConnected ? (
+                      🔄 {status === 'loading' ? '正在检查连接状态...' : '正在处理Twitter连接...'}
+                    </p>
+                  </div>
+                ) : isTwitterConnected ? (
                   <div style={{
                     padding: '10px',
                     backgroundColor: '#f6ffed',
@@ -715,12 +715,12 @@ export default function Demo() {
                     <p style={{ margin: 0, color: '#52c41a' }}>
                       ✅ 已连接到 Twitter
                     </p>
-                                       <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                     <strong>用户名:</strong> @{twitterUser?.username}
-                   </p>
-                   <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                     <strong>用户ID:</strong> {twitterUser?.id}
-                   </p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                      <strong>用户名:</strong> @{twitterUser?.username}
+                    </p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                      <strong>用户ID:</strong> {twitterUser?.id}
+                    </p>
                   </div>
                 ) : (
                   <div style={{
@@ -736,23 +736,23 @@ export default function Demo() {
                   </div>
                 )}
 
-                                <Button
+                <Button
                   onClick={handleConnectTwitter}
                   loading={twitterLoading}
                   disabled={!envConfig.twitterConfigured}
                   type={isTwitterConnected ? 'default' : 'primary'}
-                  style={{ 
+                  style={{
                     backgroundColor: !envConfig.twitterConfigured ? '#d9d9d9' :
-                                   isTwitterConnected ? '#ff4d4f' : '#1da1f2',
+                      isTwitterConnected ? '#ff4d4f' : '#1da1f2',
                     borderColor: !envConfig.twitterConfigured ? '#d9d9d9' :
-                                isTwitterConnected ? '#ff4d4f' : '#1da1f2',
+                      isTwitterConnected ? '#ff4d4f' : '#1da1f2',
                     color: 'white'
                   }}>
                   {!envConfig.twitterConfigured ? '配置未完成' :
-                   isTwitterConnected ? '断开 Twitter' : '连接 Twitter'}
+                    isTwitterConnected ? '断开 Twitter' : '连接 Twitter'}
                 </Button>
 
-                                {isTwitterConnected && twitterUser && (
+                {isTwitterConnected && twitterUser && (
                   <div style={{ marginTop: '10px' }}>
                     <Button
                       onClick={() => {
@@ -760,7 +760,7 @@ export default function Demo() {
                         shareOnTwitter(shareText);
                         addResult(`🐦 发布推文分享`);
                       }}
-                      style={{ 
+                      style={{
                         backgroundColor: '#1da1f2',
                         borderColor: '#1da1f2',
                         color: 'white'
