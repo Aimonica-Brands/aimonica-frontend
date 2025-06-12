@@ -9,6 +9,8 @@ import { PageProvider } from '@/context';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import { SessionProvider } from 'next-auth/react';
+import type { Session } from 'next-auth';
 
 import { wagmiAdapter } from '@/wallet';
 import { WagmiProvider, type Config } from 'wagmi';
@@ -39,30 +41,32 @@ const antdTheme = {
   }
 };
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps }: AppProps & { pageProps: { session?: any } }) {
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig as Config}>
-      <QueryClientProvider client={queryClient}>
-        <ConfigProvider locale={enUS} theme={antdTheme}>
-          <AntdApp>
-            <PageProvider>
-              <Head>
-                <meta
-                  name="viewport"
-                  content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"
-                />
-                <title>AIMonica</title>
-              </Head>
-              <HeaderComponent />
-              <main>
-                <Component {...pageProps} />
-              </main>
-              <FooterComponent />
-              <div className="package_version">{packageJson.version}</div>
-            </PageProvider>
-          </AntdApp>
-        </ConfigProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <SessionProvider session={pageProps.session}>
+      <WagmiProvider config={wagmiAdapter.wagmiConfig as Config}>
+        <QueryClientProvider client={queryClient}>
+          <ConfigProvider locale={enUS} theme={antdTheme}>
+            <AntdApp>
+              <PageProvider>
+                <Head>
+                  <meta
+                    name="viewport"
+                    content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"
+                  />
+                  <title>AIMonica</title>
+                </Head>
+                <HeaderComponent />
+                <main>
+                  <Component {...pageProps} />
+                </main>
+                <FooterComponent />
+                <div className="package_version">{packageJson.version}</div>
+              </PageProvider>
+            </AntdApp>
+          </ConfigProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </SessionProvider>
   );
 }

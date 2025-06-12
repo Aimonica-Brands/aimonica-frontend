@@ -29,6 +29,7 @@
     "ethers": "^6.13.4",
     "graphql-request": "^7.1.2",
     "next": "^12.2.3",
+    "next-auth": "^4.24.11",
     "numeral": "^2.0.6",
     "react": "^18.2.0",
     "react-countup": "^6.5.3",

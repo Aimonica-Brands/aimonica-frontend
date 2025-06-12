@@ -6,11 +6,14 @@ import { ethers } from 'ethers';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { handleContractError } from '@/wallet/contracts';
+import { useSession, signIn, signOut } from 'next-auth/react';
+import { shareOnTwitter, createShareMessages } from '@/utils/twitter';
 
 const { TabPane } = Tabs;
 
 export default function Demo() {
   const { address, isConnected } = useAppKitAccount();
+  const { data: session, status } = useSession();
   const {
     provider,
     USDCContract,
@@ -22,6 +25,7 @@ export default function Demo() {
   } = usePageContext();
 
   const [loading, setLoading] = useState(false);
+  const [twitterLoading, setTwitterLoading] = useState(false);
   const [signMessage, setSignMessage] = useState('Hello from AIMonica DApp!');
   const [transferAmount, setTransferAmount] = useState('');
   const [transferTo, setTransferTo] = useState('');
@@ -34,9 +38,84 @@ export default function Demo() {
   const [nftLevel, setNftLevel] = useState('1');
   const [mintAccount, setMintAccount] = useState<anchor.web3.Keypair | null>(null);
 
+  // Twitter配置状态
+  const [twitterConfigured, setTwitterConfigured] = useState<boolean | null>(null);
+
+  // 检查Twitter配置
+  React.useEffect(() => {
+    const checkConfig = async () => {
+      try {
+        const response = await fetch('/api/auth/check-config');
+        const data = await response.json();
+        setTwitterConfigured(data.configured);
+        
+        if (!data.configured) {
+          console.warn('Twitter配置不完整:', data.details);
+        }
+      } catch (error) {
+        console.error('检查配置失败:', error);
+        setTwitterConfigured(false);
+      }
+    };
+    
+    checkConfig();
+  }, []);
+
   const addResult = (result: string) => {
     setResults((prev) => [`${new Date().toLocaleTimeString()}: ${result}`, ...prev.slice(0, 9)]);
   };
+
+  // 用于跟踪之前的session状态
+  const prevSessionRef = React.useRef<string | undefined>();
+
+  // 检查URL中的错误参数
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    
+    if (error) {
+      let errorMessage = 'Twitter连接发生错误';
+      
+      if (error === 'OAuthCallback') {
+        errorMessage = '❌ OAuth回调错误 - 请检查Twitter应用配置中的回调URL是否正确设置为: http://localhost:3000/api/auth/callback/twitter';
+      } else if (error === 'Configuration') {
+        errorMessage = '❌ 配置错误 - 请检查环境变量是否正确设置';
+      } else if (error === 'AccessDenied') {
+        errorMessage = '❌ 访问被拒绝 - 用户取消了授权';
+      }
+      
+      addResult(errorMessage);
+      message.error(errorMessage);
+      
+      // 清理URL中的错误参数
+      const cleanUrl = window.location.href.split('?')[0];
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, []);
+
+  // 监听session变化，处理Twitter授权成功后的状态
+  React.useEffect(() => {
+    // 如果从未认证状态变为已认证状态，说明刚刚完成授权
+    if (status === 'authenticated' && session?.twitterUsername) {
+      const wasUnauthenticated = prevSessionRef.current === undefined;
+      
+      if (wasUnauthenticated || prevSessionRef.current !== session.twitterUsername) {
+        addResult(`✅ Twitter连接成功！欢迎 @${session.twitterUsername}`);
+        message.success(`Twitter连接成功！欢迎 @${session.twitterUsername}`);
+        
+        // 清理URL参数（如果有的话）
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('callbackUrl') || url.searchParams.has('error')) {
+          const cleanUrl = `${url.origin}${url.pathname}`;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      }
+      
+      prevSessionRef.current = session.twitterUsername;
+    } else if (status === 'unauthenticated') {
+      prevSessionRef.current = undefined;
+    }
+  }, [session, status]);
 
   // EVM 示例
   const EVMExamples = () => {
@@ -556,6 +635,50 @@ export default function Demo() {
     );
   };
 
+  const handleConnectTwitter = async () => {
+    // 首先检查配置
+    if (twitterConfigured === false) {
+      addResult('❌ Twitter配置未完成，请先配置环境变量');
+      message.error('请先配置Twitter API密钥和环境变量');
+      return;
+    }
+
+    setTwitterLoading(true);
+    try {
+      if (session?.twitterUsername) {
+        // 如果已经连接，则断开连接
+        await signOut({ redirect: false });
+        addResult('❌ 已断开Twitter连接');
+        message.success('已断开Twitter连接');
+      } else {
+        // 连接Twitter
+        addResult('🔄 正在跳转到Twitter授权页面...');
+        message.info('正在跳转到Twitter授权页面...');
+        
+        // 使用signIn进行重定向
+        await signIn('twitter', { 
+          callbackUrl: window.location.href,
+        });
+      }
+    } catch (error: any) {
+      console.error('Twitter连接错误:', error);
+      
+      let errorMessage = 'Twitter连接发生错误';
+      if (error.message?.includes('Configuration')) {
+        errorMessage = '请先配置Twitter API密钥';
+      } else if (error.message?.includes('fetch')) {
+        errorMessage = '网络连接错误，请检查网络';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      addResult(`❌ ${errorMessage}`);
+      message.error(errorMessage);
+    } finally {
+      setTwitterLoading(false);
+    }
+  };
+
   if (!isConnected) {
     return (
       <div style={{ padding: '40px', textAlign: 'center' }}>
@@ -577,7 +700,114 @@ export default function Demo() {
       </p>
 
       <Tabs defaultActiveKey="1">
-        <TabPane tab="🔷 EVM 示例" key="1">
+        <TabPane tab="🔷 连接推特" key="1">
+          <Card title="Twitter 连接">
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              {/* 配置状态检查 */}
+              {twitterConfigured === false && (
+                <div style={{ 
+                  padding: '10px', 
+                  backgroundColor: '#fff2f0', 
+                  border: '1px solid #ffccc7', 
+                  borderRadius: '6px',
+                  marginBottom: '10px'
+                }}>
+                  <p style={{ margin: 0, color: '#ff4d4f' }}>
+                    ⚠️ Twitter配置未完成，请先配置环境变量
+                  </p>
+                  <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>
+                    请参考 TWITTER_SETUP.md 文件进行配置
+                  </p>
+                </div>
+              )}
+
+              {/* Twitter 连接状态 */}
+              <div>
+                <h4>📱 Twitter 连接状态</h4>
+                {status === 'loading' || twitterLoading || twitterConfigured === null ? (
+                  <div style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#f0f9ff', 
+                    border: '1px solid #91d5ff', 
+                    borderRadius: '6px',
+                    marginBottom: '10px'
+                  }}>
+                    <p style={{ margin: 0, color: '#1890ff' }}>
+                      🔄 {status === 'loading' ? '正在检查连接状态...' : 
+                          twitterLoading ? '正在处理Twitter连接...' : 
+                          '正在检查配置...'}
+                    </p>
+                  </div>
+                ) : session?.twitterUsername ? (
+                  <div style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#f6ffed', 
+                    border: '1px solid #b7eb8f', 
+                    borderRadius: '6px',
+                    marginBottom: '10px'
+                  }}>
+                    <p style={{ margin: 0, color: '#52c41a' }}>
+                      ✅ 已连接到 Twitter
+                    </p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                      <strong>用户名:</strong> @{session.twitterUsername}
+                    </p>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                      <strong>用户ID:</strong> {session.twitterId}
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ 
+                    padding: '10px', 
+                    backgroundColor: '#fff7e6', 
+                    border: '1px solid #ffd591', 
+                    borderRadius: '6px',
+                    marginBottom: '10px'
+                  }}>
+                    <p style={{ margin: 0, color: '#fa8c16' }}>
+                      ⚠️ 未连接到 Twitter
+                    </p>
+                  </div>
+                )}
+                
+                <Button
+                  onClick={handleConnectTwitter}
+                  loading={twitterLoading}
+                  disabled={twitterConfigured === false}
+                  type={session?.twitterUsername ? 'default' : 'primary'}
+                  style={{ 
+                    backgroundColor: twitterConfigured === false ? '#d9d9d9' :
+                                   session?.twitterUsername ? '#ff4d4f' : '#1da1f2',
+                    borderColor: twitterConfigured === false ? '#d9d9d9' :
+                                session?.twitterUsername ? '#ff4d4f' : '#1da1f2',
+                    color: 'white'
+                  }}>
+                  {twitterConfigured === false ? '配置未完成' :
+                   session?.twitterUsername ? '断开 Twitter' : '连接 Twitter'}
+                </Button>
+                
+                {session?.twitterUsername && (
+                  <div style={{ marginTop: '10px' }}>
+                                        <Button
+                       onClick={() => {
+                         const shareText = createShareMessages.connected(session.twitterUsername!);
+                         shareOnTwitter(shareText);
+                       }}
+                       style={{ 
+                         backgroundColor: '#1da1f2',
+                         borderColor: '#1da1f2',
+                         color: 'white'
+                       }}>
+                       📝 发推分享
+                     </Button>
+                  </div>
+                )}
+              </div>
+            </Space>
+          </Card>
+        </TabPane>
+
+        <TabPane tab="🔷 EVM 示例" key="2">
           {currentNetworkType === 'eip155' ? (
             <EVMExamples />
           ) : (
@@ -587,7 +817,7 @@ export default function Demo() {
           )}
         </TabPane>
 
-        <TabPane tab="⚡ Solana 示例" key="2">
+        <TabPane tab="⚡ Solana 示例" key="3">
           {currentNetworkType === 'solana' ? (
             <SolanaExamples />
           ) : (
