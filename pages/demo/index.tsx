@@ -11,14 +11,28 @@ const { TabPane } = Tabs;
 
 export default function Demo() {
   const { address, isConnected } = useAppKitAccount();
-  const { provider, USDCContract, GPDUSDCContract, solanaConnection, solanaReadProgram, solanaWriteProgram, currentNetworkType } =
-    usePageContext();
+  const {
+    provider,
+    USDCContract,
+    GPDUSDCContract,
+    solanaConnection,
+    solanaReadProgram,
+    solanaWriteProgram,
+    currentNetworkType
+  } = usePageContext();
 
   const [loading, setLoading] = useState(false);
   const [signMessage, setSignMessage] = useState('Hello from AIMonica DApp!');
   const [transferAmount, setTransferAmount] = useState('');
   const [transferTo, setTransferTo] = useState('');
   const [results, setResults] = useState<string[]>([]);
+
+  // NFT相关状态
+  const [nftName, setNftName] = useState('Test NFT');
+  const [nftSymbol, setNftSymbol] = useState('TNFT');
+  const [nftUri, setNftUri] = useState('https://example.com/metadata.json');
+  const [nftLevel, setNftLevel] = useState('1');
+  const [mintAccount, setMintAccount] = useState<anchor.web3.Keypair | null>(null);
 
   const addResult = (result: string) => {
     setResults((prev) => [`${new Date().toLocaleTimeString()}: ${result}`, ...prev.slice(0, 9)]);
@@ -259,8 +273,102 @@ export default function Demo() {
       }
     };
 
-    // 测试合约调用
-    const handleTestContract = async () => {
+
+
+    // 初始化 NFT (program.methods.initNft) - 标准Metaplex NFT
+    const handleInitNft = async () => {
+      if (!solanaWriteProgram) {
+        message.error('Solana 程序未初始化');
+        return;
+      }
+
+      if (!nftName || !nftSymbol || !nftUri) {
+        message.error('请填写 NFT 信息');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // 这是标准Metaplex NFT，需要安装额外依赖
+        // 如果你的程序使用idl.json，需要安装以下包：
+        // npm install @solana/spl-token @metaplex-foundation/mpl-token-metadata @metaplex-foundation/umi-bundle-defaults
+
+        message.warning('标准NFT功能需要额外依赖包，请参考控制台输出');
+        console.log('需要安装以下依赖包：');
+        console.log(
+          'npm install @solana/spl-token @metaplex-foundation/mpl-token-metadata @metaplex-foundation/umi-bundle-defaults @metaplex-foundation/umi @metaplex-foundation/umi-signer-wallet-adapters'
+        );
+
+        addResult('❌ 标准NFT功能需要额外依赖包');
+      } catch (error) {
+        console.error('initNft 错误:', error);
+        handleContractError(error);
+        addResult(`initNft 失败: ${error.message || error.toString()}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // 简化NFT铸造 (hgnft.json 合约)
+    const handleMintSimpleNft = async () => {
+      if (!solanaWriteProgram) {
+        message.error('Solana 程序未初始化');
+        return;
+      }
+
+      if (!nftName || !nftUri) {
+        message.error('请填写 NFT 名称和URI');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // 生成新的 mint 账户
+        const newMintAccount = anchor.web3.Keypair.generate();
+        setMintAccount(newMintAccount);
+
+        const provider = solanaWriteProgram.provider;
+        const level = parseInt(nftLevel) || 1; // 使用用户输入的等级
+
+        // 简化的账户结构（基于hgnft.json）
+        const accounts = {
+          mint: newMintAccount.publicKey,
+          user: provider.wallet.publicKey,
+          systemProgram: SystemProgram.programId
+        };
+
+        console.log('调用 mintnft（简化版），参数:', {
+          name: nftName,
+          uri: nftUri,
+          level,
+          accounts
+        });
+
+        // 调用简化合约的 mintnft 方法
+        const tx = await solanaWriteProgram.methods
+          .mintnft(nftName, nftUri, new anchor.BN(level))
+          .accounts(accounts)
+          .signers([newMintAccount])
+          .rpc();
+
+        addResult(`✅ 简化NFT铸造成功: ${tx}`);
+        addResult(`📦 Mint Account: ${newMintAccount.publicKey.toString()}`);
+        message.success('简化NFT铸造成功');
+        console.log('mintnft 交易:', tx);
+        console.log('Mint Account:', newMintAccount.publicKey.toString());
+      } catch (error) {
+        console.error('简化NFT铸造错误:', error);
+        handleContractError(error);
+        addResult(`❌ 简化NFT铸造失败: ${error.message || error.toString()}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+
+
+    // 测试完整的简化NFT流程
+    const handleTestSimpleNftFlow = async () => {
       if (!solanaWriteProgram) {
         message.error('Solana 程序未初始化');
         return;
@@ -268,24 +376,67 @@ export default function Demo() {
 
       setLoading(true);
       try {
-        // 生成测试账户
-        const testAccount = anchor.web3.Keypair.generate();
-        const tx = await solanaWriteProgram.methods
-          .initialize()
-          .accounts({
-            counter: testAccount.publicKey,
-            user: solanaWriteProgram.provider.wallet.publicKey,
-            systemProgram: SystemProgram.programId
-          })
-          .signers([testAccount])
+        addResult('🚀 开始简化NFT完整流程测试...');
+
+        // 步骤1: 铸造NFT
+        const newMintAccount = anchor.web3.Keypair.generate();
+        setMintAccount(newMintAccount);
+
+        const provider = solanaWriteProgram.provider;
+        const level = parseInt(nftLevel) || 1;
+
+        const mintAccounts = {
+          mint: newMintAccount.publicKey,
+          user: provider.wallet.publicKey,
+          systemProgram: SystemProgram.programId
+        };
+
+        const mintTx = await solanaWriteProgram.methods
+          .mintnft(nftName, nftUri, new anchor.BN(level))
+          .accounts(mintAccounts)
+          .signers([newMintAccount])
           .rpc();
 
-        addResult(`合约调用成功: ${tx}`);
-        message.success('合约调用成功');
+        addResult(`✅ 步骤1 - 铸造NFT成功: ${mintTx}`);
+
+        // 等待确认
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // 步骤2: 设置锁定者
+        const lockerAccounts = {
+          mint: newMintAccount.publicKey,
+          user: provider.wallet.publicKey
+        };
+
+        const lockerTx = await solanaWriteProgram.methods
+          .setlocker(provider.wallet.publicKey)
+          .accounts(lockerAccounts)
+          .rpc();
+
+        addResult(`✅ 步骤2 - 设置锁定者成功: ${lockerTx}`);
+
+        // 等待确认
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // 步骤3: 修改等级
+        const newLevel = (parseInt(nftLevel) || 1) + 1;
+        const setValueAccounts = {
+          mint: newMintAccount.publicKey,
+          locker: provider.wallet.publicKey
+        };
+
+        const setValueTx = await solanaWriteProgram.methods
+          .setvalue(new anchor.BN(newLevel))
+          .accounts(setValueAccounts)
+          .rpc();
+
+        addResult(`✅ 步骤3 - 修改等级成功: ${setValueTx}`);
+        addResult(`🎉 简化NFT完整流程测试成功!`);
+        message.success('简化NFT完整流程测试成功');
       } catch (error) {
-        console.log(error);
+        console.error('简化NFT流程测试错误:', error);
         handleContractError(error);
-        addResult(`合约调用失败: ${error.message}`);
+        addResult(`❌ 简化NFT流程测试失败: ${error.message || error.toString()}`);
       } finally {
         setLoading(false);
       }
@@ -321,22 +472,83 @@ export default function Demo() {
                 value={transferAmount}
                 onChange={(e) => setTransferAmount(e.target.value)}
               />
+              <Button onClick={handleCheckSOLBalance} loading={loading} type="primary" style={{ marginRight: '10px' }}>
+                查询 SOL 余额
+              </Button>
               <Button onClick={handleSendSOL} loading={loading} type="primary">
                 发送 SOL
               </Button>
             </div>
 
-            {/* 其他操作 */}
+            {/* NFT 操作 */}
             <div>
-              <h4>🔧 其他操作</h4>
-              <Space>
-                <Button onClick={handleCheckSOLBalance} loading={loading}>
-                  查询 SOL 余额
+              <h4>🎨 NFT 操作</h4>
+              <div style={{ marginBottom: '10px' }}>
+                <Input
+                  placeholder="NFT 名称"
+                  value={nftName}
+                  onChange={(e) => setNftName(e.target.value)}
+                  style={{ marginBottom: '5px' }}
+                />
+                <Input
+                  placeholder="NFT 符号"
+                  value={nftSymbol}
+                  onChange={(e) => setNftSymbol(e.target.value)}
+                  style={{ marginBottom: '5px' }}
+                />
+                <Input
+                  placeholder="元数据 URI"
+                  value={nftUri}
+                  onChange={(e) => setNftUri(e.target.value)}
+                  style={{ marginBottom: '5px' }}
+                />
+                <Input
+                  placeholder="NFT 等级 (数字)"
+                  value={nftLevel}
+                  onChange={(e) => setNftLevel(e.target.value)}
+                  style={{ marginBottom: '5px' }}
+                  type="number"
+                />
+              </div>
+              <div style={{ marginBottom: '10px' }}>
+                <strong>合约类型说明：</strong>
+                <p style={{ fontSize: '12px', color: '#666', margin: '5px 0' }}>
+                  📋 <strong>标准NFT (idl.json)</strong> - 需要额外依赖包，使用Metaplex标准
+                  <br />
+                  🎨 <strong>简化NFT (hgnft.json)</strong> - 无需额外依赖，自定义简单结构
+                </p>
+              </div>
+              <Space wrap>
+                <Button
+                  onClick={handleInitNft}
+                  loading={loading}
+                  style={{ backgroundColor: '#faad14', borderColor: '#faad14', color: 'white' }}>
+                  📋 标准initNft
                 </Button>
-                <Button onClick={handleTestContract} loading={loading}>
-                  测试合约调用
+                <Button onClick={handleMintSimpleNft} loading={loading} type="primary">
+                  🎨 简化mintnft
+                </Button>
+                <Button
+                  onClick={handleTestSimpleNftFlow}
+                  loading={loading}
+                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a', color: 'white' }}>
+                  🚀 完整流程测试
                 </Button>
               </Space>
+              {mintAccount && (
+                <div
+                  style={{
+                    marginTop: '10px',
+                    padding: '10px',
+                    backgroundColor: '#f6ffed',
+                    border: '1px solid #b7eb8f',
+                    borderRadius: '6px'
+                  }}>
+                  <p style={{ margin: 0, fontSize: '12px' }}>
+                    <strong>Mint Account:</strong> {mintAccount.publicKey.toString()}
+                  </p>
+                </div>
+              )}
             </div>
           </Space>
         </Card>
@@ -380,7 +592,42 @@ export default function Demo() {
             <SolanaExamples />
           ) : (
             <Card>
-              <p>请切换到 Solana 网络 (Solana 或 Solana Devnet) 来测试 Solana 功能</p>
+              <h4>🔗 Solana 网络连接指南</h4>
+              <div style={{ marginBottom: '15px' }}>
+                <p>
+                  <strong>当前状态:</strong> 未连接到 Solana 网络
+                </p>
+                <p>
+                  <strong>解决方案:</strong>
+                </p>
+                <ol style={{ paddingLeft: '20px', margin: '10px 0' }}>
+                  <li>点击右上角的钱包连接按钮</li>
+                  <li>选择支持 Solana 的钱包 (如 Phantom, Solflare)</li>
+                  <li>
+                    确保钱包连接到正确的网络：
+                    <ul style={{ paddingLeft: '20px', margin: '5px 0' }}>
+                      <li>
+                        开发环境: <strong>Solana Devnet</strong>
+                      </li>
+                      <li>
+                        生产环境: <strong>Solana Mainnet</strong>
+                      </li>
+                    </ul>
+                  </li>
+                  <li>连接成功后，此页面将显示 Solana 功能测试</li>
+                </ol>
+              </div>
+              <div
+                style={{
+                  padding: '10px',
+                  backgroundColor: '#f6ffed',
+                  border: '1px solid #b7eb8f',
+                  borderRadius: '6px'
+                }}>
+                <p style={{ margin: 0, fontSize: '12px', color: '#389e0d' }}>
+                  💡 <strong>提示:</strong> 如果连接后仍然看到错误，请使用网络诊断功能检查配置
+                </p>
+              </div>
             </Card>
           )}
         </TabPane>
@@ -397,7 +644,12 @@ export default function Demo() {
                   padding: '5px 0',
                   borderBottom: index < results.length - 1 ? '1px solid #f0f0f0' : 'none',
                   fontSize: '16px',
-                  color: result.includes('失败') ? '#ff4d4f' : '#52c41a'
+                  color:
+                    result.includes('失败') || result.includes('❌')
+                      ? '#ff4d4f'
+                      : result.includes('成功') || result.includes('✅') || result.includes('🎉')
+                        ? '#52c41a'
+                        : '#1890ff'
                 }}>
                 {result}
               </div>
