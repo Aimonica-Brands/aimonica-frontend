@@ -12,7 +12,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       process.env.NEXTAUTH_SECRET
     );
 
-    const hasNextAuthUrl = 'https://test.aimonica.dev';
+    const hasNextAuthUrl = process.env.NEXTAUTH_URL;
 
     res.status(200).json({
       configured: hasTwitterConfig && hasNextAuthUrl,
@@ -20,7 +20,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         twitterClientId: !!process.env.TWITTER_CLIENT_ID,
         twitterClientSecret: !!process.env.TWITTER_CLIENT_SECRET,
         nextAuthSecret: !!process.env.NEXTAUTH_SECRET,
-        nextAuthUrl: 'https://test.aimonica.dev'
+        nextAuthUrl: !!process.env.NEXTAUTH_URL
       },
       message: hasTwitterConfig && hasNextAuthUrl ? 'Twitter配置完整' : '请检查环境变量配置'
     });

@@ -18,12 +18,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     message,
     troubleshooting: {
       OAuthCallback: [
-        '1. 确认Twitter应用中的回调URL设置为: http://localhost:3000/api/auth/callback/twitter',
+        '1. 确认Twitter应用中的回调URL设置',
         '2. 检查NEXTAUTH_URL环境变量是否设置正确',
         '3. 确认Twitter应用已启用OAuth 2.0'
       ],
       Configuration: [
-        '1. 检查.env.local文件是否存在',
+        '1. 检查.env文件是否存在',
         '2. 确认所有必需的环境变量都已设置',
         '3. 重启开发服务器'
       ]

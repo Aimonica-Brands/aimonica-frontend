@@ -7,7 +7,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   
   const diagnosis = {
     environment: {
-      NODE_ENV: process.env.NODE_ENV,
+      NODE_ENV: process.env.NEXT_PUBLIC_APP_ENV,
       host: host,
       protocol: protocol,
       fullUrl: fullUrl,
