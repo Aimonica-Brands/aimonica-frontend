@@ -12,7 +12,11 @@ export const envConfig = {
   },
 
   twitter: {
-    configured: !!(process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET && process.env.NEXTAUTH_SECRET)
+    configured: !!(
+      process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID &&
+      process.env.NEXT_PUBLIC_TWITTER_CLIENT_SECRET &&
+      process.env.NEXT_PUBLIC_AUTH_SECRET
+    )
   },
 
   debug: isDevelopment

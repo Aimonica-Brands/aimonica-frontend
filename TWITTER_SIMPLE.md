@@ -24,11 +24,11 @@
 创建 `.env.local` 文件：
 
 ```env
-NEXTAUTH_SECRET=your-secret-key
+NEXT_PUBLIC_AUTH_SECRET=your-secret-key
 
 # Twitter API
-TWITTER_CLIENT_ID=your-client-id
-TWITTER_CLIENT_SECRET=your-client-secret
+NEXT_PUBLIC_TWITTER_CLIENT_ID=your-client-id
+NEXT_PUBLIC_TWITTER_CLIENT_SECRET=your-client-secret
 ```
 
 ## 🔧 Twitter 应用设置

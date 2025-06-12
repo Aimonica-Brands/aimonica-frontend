@@ -44,6 +44,7 @@ export default function Demo() {
 
   // 环境配置
   const envConfig = getCurrentEnv();
+  console.log(envConfig);
 
   // 同步NextAuth session到context
   useEffect(() => {
@@ -646,15 +647,6 @@ export default function Demo() {
       setTwitterLoading(false);
     }
   };
-
-  if (!isConnected) {
-    return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <h2>🔗 请先连接钱包</h2>
-        <p>连接钱包后即可测试各种功能</p>
-      </div>
-    );
-  }
 
   return (
     <div style={{ padding: '1.2rem', maxWidth: '1200px', margin: '0 auto' }}>

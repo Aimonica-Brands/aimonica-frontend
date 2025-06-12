@@ -18,8 +18,8 @@ interface TwitterProfile {
 export default NextAuth({
   providers: [
     TwitterProvider({
-      clientId: process.env.TWITTER_CLIENT_ID!,
-      clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+      clientId: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID!,
+      clientSecret: process.env.NEXT_PUBLIC_TWITTER_CLIENT_SECRET!,
       version: '2.0' // Twitter OAuth 2.0
     })
   ],
@@ -60,5 +60,5 @@ export default NextAuth({
   pages: {
     error: '/demo'
   },
-  secret: process.env.NEXTAUTH_SECRET
+  secret: process.env.NEXT_PUBLIC_AUTH_SECRET
 });
