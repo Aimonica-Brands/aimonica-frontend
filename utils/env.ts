@@ -6,7 +6,7 @@ export const envConfig = {
   environment: process.env.NEXT_PUBLIC_APP_ENV,
 
   app: {
-    url: process.env.NEXT_PUBLIC_AUTH_URL,
+    url: process.env.NEXTAUTH_URL,
     defaultPage: '/demo'
   },
 
