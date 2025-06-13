@@ -99,16 +99,8 @@ export default function DemoSol() {
     } catch (error) {
       console.error('Stake error:', error);
 
-      // 检查是否是账户已存在的错误
-      if (error.message.includes('already in use') || error.message.includes('custom program error: 0x0')) {
-        addResult(`❌ 质押失败: 你已经有一个活跃的质押记录`);
-        addResult(`💡 设计说明: 每个用户同时只能有一个质押，这防止重复质押`);
-        addResult(`🔄 如需重新质押: 先解质押 → 再质押`);
-        message.error('你已经有活跃质押记录。每个用户同时只能有一个质押，请先解质押再重新质押');
-      } else {
-        handleContractError(error);
-        addResult(`❌ 质押失败: ${error.message}`);
-      }
+      handleContractError(error);
+      addResult(`❌ 质押失败: ${error.message}`);
     } finally {
       setLoading(false);
     }
