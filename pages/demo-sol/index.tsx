@@ -15,8 +15,7 @@ export default function DemoSol() {
   const {
     solanaConnection,
     solanaProgram,
-    anchorProvider,
-    walletProvider,
+    solanaProvider,
   } = usePageContext();
 
   const [loading, setLoading] = useState(false);

@@ -27,10 +27,8 @@ export const CONTRACT_CONFIGS = {
   } as EVMTokenConfig,
 
   'solana-devnet': {
-    programId: 'HdBvhzMrhmdPyrbwL9ZR2ZFqhqVSKcDra7ggdWqCcwps',
-    aim_staking_program: idl
-    // programId: '5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD',
-    // aim_staking_program
+    programId: '5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD',
+    aim_staking_program
   } as SolanaTokenConfig
 };
 

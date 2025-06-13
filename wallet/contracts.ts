@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { Program, AnchorProvider } from '@project-serum/anchor';
+import { AnchorProvider, Program } from '@project-serum/anchor';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { getContractConfig, EVMTokenConfig, SolanaTokenConfig } from './config';
 import { message } from 'antd';
@@ -76,15 +76,13 @@ export const initSolanaContracts = (connection: Connection, walletProvider: any,
     const programId = new PublicKey(tokenConfig.programId);
     console.log('✅ Program ID 验证成功:', programId.toString());
 
-    const aimStakingProgram = new Program(tokenConfig.aim_staking_program, programId, anchorProvider);
-
+    const program = new Program(tokenConfig.aim_staking_program, programId, anchorProvider);
     console.log('✅ Solana 合约初始化成功');
 
     return {
-      connection,
-      program: aimStakingProgram,
-      anchorProvider,
-      walletProvider
+      solanaConnection: connection,
+      solanaProgram: program,
+      solanaProvider: anchorProvider
     };
   } catch (error) {
     console.error('❌ Solana contract initialization error:', error);

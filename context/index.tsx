@@ -32,10 +32,8 @@ interface PageContextType {
   setSolanaConnection: (connection: any) => void;
   solanaProgram: any;
   setSolanaProgram: (program: any) => void;
-  anchorProvider: any;
-  setAnchorProvider: (provider: any) => void;
-  walletProvider: any;
-  setWalletProvider: (provider: any) => void;
+  solanaProvider: any;
+  setSolanaProvider: (provider: any) => void;
 
   // 网络状态
   currentNetworkType: string | null;
@@ -66,8 +64,7 @@ export function PageProvider({ children }: PageProviderProps) {
   // Solana 状态
   const [solanaConnection, setSolanaConnection] = useState(null);
   const [solanaProgram, setSolanaProgram] = useState(null);
-  const [anchorProvider, setAnchorProvider] = useState(null);
-  const [walletProvider, setWalletProvider] = useState(null);
+  const [solanaProvider, setSolanaProvider] = useState(null);
 
   // 网络状态
   const [currentNetworkType, setCurrentNetworkType] = useState<string | null>(null);
@@ -94,11 +91,9 @@ export function PageProvider({ children }: PageProviderProps) {
     setSolanaConnection,
     solanaProgram,
     setSolanaProgram,
-    anchorProvider,
-    setAnchorProvider,
-    walletProvider,
-    setWalletProvider,
-
+    solanaProvider,
+    setSolanaProvider,
+ 
     currentNetworkType,
     setCurrentNetworkType,
     isLoading,
