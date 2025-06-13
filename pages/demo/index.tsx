@@ -7,8 +7,7 @@ import { PublicKey, SystemProgram } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { handleContractError } from '@/wallet/contracts';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { shareOnTwitter, createShareMessages } from '@/utils/twitter';
-import { getCurrentEnv } from '@/utils/env';
+import { getCurrentEnv, shareOnTwitter, createShareMessages } from '@/pages/api/auth/utils';
 
 const { TabPane } = Tabs;
 

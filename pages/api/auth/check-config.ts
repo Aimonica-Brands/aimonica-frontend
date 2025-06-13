@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getCurrentEnv } from '@/utils/env';
+import { getCurrentEnv } from '@/pages/api/auth/utils';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
