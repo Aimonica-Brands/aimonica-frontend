@@ -1,7 +1,7 @@
 import USDCABI from '@/wallet/abi/USDC.json';
 import GPDUSDCABI from '@/wallet/abi/gpdUSDC.json';
+import aim_staking_program from '@/wallet/idl/aim_staking_program.json';
 import idl from '@/wallet/idl/idl.json';
-import hgnft from '@/wallet/idl/hgnft.json';
 
 // EVM 代币配置
 export interface EVMTokenConfig {
@@ -13,10 +13,8 @@ export interface EVMTokenConfig {
 
 // Solana 程序配置
 export interface SolanaTokenConfig {
-  readProgramId: string;
-  writeProgramId: string;
-  idl: any;
-  hgnft: any;
+  programId: string;
+  aim_staking_program: any;
 }
 
 // 合约配置 - 使用 @reown/appkit/networks 的网络名称作为 key
@@ -29,10 +27,10 @@ export const CONTRACT_CONFIGS = {
   } as EVMTokenConfig,
 
   'solana-devnet': {
-    readProgramId: 'HdBvhzMrhmdPyrbwL9ZR2ZFqhqVSKcDra7ggdWqCcwps',
-    writeProgramId: '4WTUyXNcf6QCEj76b3aRDLPewkPGkXFZkkyf3A3vua1z',
-    idl,
-    hgnft
+    programId: 'HdBvhzMrhmdPyrbwL9ZR2ZFqhqVSKcDra7ggdWqCcwps',
+    aim_staking_program: idl
+    // programId: '5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD',
+    // aim_staking_program
   } as SolanaTokenConfig
 };
 

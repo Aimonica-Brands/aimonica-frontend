@@ -1,0 +1,56 @@
+aim_staking_program
+User public key: CDmUCaBAUVa7eERKFJr3PER1aeknpTLdkbmzuFR6MhJm
+Platform already initialized, skipping initialization
+    ✔ Initializes the platform
+registerProject accounts: {
+  "platformConfig": "Gn8xQoQJqZrgyd2fBfKJvByHJnYP2HeoPz5X6d3Jamzt",
+  "projectConfig": "3fHbTJKEyCYFvs1MsPfeoaNri5vGJTGvTNgvmhx2XoDh",
+  "tokenMint": "H9FHZyxzHg8drbfEornSpoUpuV4wnSdC6RTPf9C9HAC7",
+  "vault": "EMNYpHerzkid8JzqXxVNqodDu9HYX8AzJnj17LirR2Xm",
+  "vaultAuthority": "4pJRR7BNQVio5g37DxzkVUH3AGsNzME4oAwKG1iE3Qp9",
+  "authority": "EQbG6xoyY1sCEmH3JohA6LzNfew35eCGYj2PUtMwR8xS",
+  "systemProgram": "11111111111111111111111111111111",
+  "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  "rent": "SysvarRent111111111111111111111111111111111"
+}
+registerProject transaction: 3aQrupr3tuQZVTpSbPob2Mv51dhW8vp7ZLuudwwUpRkVwrzDfNrcNE9uSy4kYK6x23xsuF6LyaEubV9zZS3TnihE
+    ✔ Registers a project (632ms)
+stake accounts: {
+  "projectConfig": "3fHbTJKEyCYFvs1MsPfeoaNri5vGJTGvTNgvmhx2XoDh",
+  "stakeInfo": "CrVuKZHbAbB1xBoAMHAyePasAfDu1WBb8hbT24eFx9e2",
+  "user": "CDmUCaBAUVa7eERKFJr3PER1aeknpTLdkbmzuFR6MhJm",
+  "userTokenAccount": "9RxL2e3Xfy571X7wisRqoZv8Q9toNBukMU5JYFqyq2Eq",
+  "vault": "EMNYpHerzkid8JzqXxVNqodDu9HYX8AzJnj17LirR2Xm",
+  "systemProgram": "11111111111111111111111111111111",
+  "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+}
+stake transaction: 4nk9iKP1FFC86m1c3Q2zMpfTHiyyzS3UUTYRxUDi457cJnUiUjHnULkV9EHKy3JETTstwyWEuwbTyLPyp8fC4vBm
+    ✔ Stakes tokens (816ms)
+unstake accounts: {
+  "projectConfig": "3fHbTJKEyCYFvs1MsPfeoaNri5vGJTGvTNgvmhx2XoDh",
+  "stakeInfo": "CrVuKZHbAbB1xBoAMHAyePasAfDu1WBb8hbT24eFx9e2",
+  "user": "CDmUCaBAUVa7eERKFJr3PER1aeknpTLdkbmzuFR6MhJm",
+  "userTokenAccount": "9RxL2e3Xfy571X7wisRqoZv8Q9toNBukMU5JYFqyq2Eq",
+  "vault": "EMNYpHerzkid8JzqXxVNqodDu9HYX8AzJnj17LirR2Xm",
+  "vaultAuthority": "4pJRR7BNQVio5g37DxzkVUH3AGsNzME4oAwKG1iE3Qp9",
+  "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+}
+    ✔ Fails to unstake before lockup period ends
+Skipping successful unstake test due to time lock. Test emergency unstake instead.
+    ✔ Unstakes tokens after lockup period
+emergencyUnstake accounts: {
+  "projectConfig": "3fHbTJKEyCYFvs1MsPfeoaNri5vGJTGvTNgvmhx2XoDh",
+  "stakeInfo": "CrVuKZHbAbB1xBoAMHAyePasAfDu1WBb8hbT24eFx9e2",
+  "user": "CDmUCaBAUVa7eERKFJr3PER1aeknpTLdkbmzuFR6MhJm",
+  "userTokenAccount": "9RxL2e3Xfy571X7wisRqoZv8Q9toNBukMU5JYFqyq2Eq",
+  "vault": "EMNYpHerzkid8JzqXxVNqodDu9HYX8AzJnj17LirR2Xm",
+  "vaultAuthority": "4pJRR7BNQVio5g37DxzkVUH3AGsNzME4oAwKG1iE3Qp9",
+  "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+}
+emergencyUnstake transaction: 21ZTKhrMzmsFEMMarzXbpmQozcUTaAX31Sp4Kmshe5KDHoFnjYA4Y1pDfSPLh93tFh5KpGhQnChqwjU6qWRDbyuC
+    ✔ Emergency unstakes tokens (1056ms)
+
+
+  6 passing (6s)
+
+Done in 7.16s.

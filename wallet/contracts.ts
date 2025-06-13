@@ -46,6 +46,7 @@ export const initSolanaContracts = (connection: Connection, walletProvider: any,
     if (!tokenConfig) {
       throw new Error(`No token configuration found for network ${network}`);
     }
+    console.log('⚙️ 代币配置:', tokenConfig);
 
     if (!connection) {
       throw new Error('Solana connection not available');
@@ -55,22 +56,43 @@ export const initSolanaContracts = (connection: Connection, walletProvider: any,
       throw new Error('Solana wallet provider not available');
     }
 
+    if (!tokenConfig.aim_staking_program) {
+      throw new Error('aim_staking_program IDL not found in token configuration');
+    }
+
+    if (!tokenConfig.programId) {
+      throw new Error('programId not found in token configuration');
+    }
+
     // 创建 Anchor provider
-    const anchorProvider = new AnchorProvider(connection, walletProvider, { commitment: 'confirmed' });
+    console.log('🔧 创建 Anchor provider...');
+    const anchorProvider = new AnchorProvider(connection, walletProvider, {
+      commitment: 'confirmed'
+    });
 
     // 初始化程序
-    const readProgram = new Program(tokenConfig.idl, new PublicKey(tokenConfig.readProgramId), anchorProvider);
-    const writeProgram = new Program(tokenConfig.hgnft, new PublicKey(tokenConfig.writeProgramId), anchorProvider);
+    console.log('🚀 初始化程序...');
+
+    const programId = new PublicKey(tokenConfig.programId);
+    console.log('✅ Program ID 验证成功:', programId.toString());
+
+    const aimStakingProgram = new Program(tokenConfig.aim_staking_program, programId, anchorProvider);
+
+    console.log('✅ Solana 合约初始化成功');
 
     return {
       connection,
-      readProgram,
-      writeProgram,
+      program: aimStakingProgram,
       anchorProvider,
       walletProvider
     };
   } catch (error) {
-    console.error('Solana contract initialization error:', error);
+    console.error('❌ Solana contract initialization error:', error);
+    console.error('错误详情:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     throw error;
   }
 };

@@ -3,13 +3,9 @@ import { Button, message, Card, Input, Tabs, Divider, Space } from 'antd';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { usePageContext, TwitterUser } from '@/context';
 import { ethers } from 'ethers';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
-import * as anchor from '@project-serum/anchor';
 import { handleContractError } from '@/wallet/contracts';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { getCurrentEnv, shareOnTwitter, createShareMessages } from '@/pages/api/auth/utils';
-
-const { TabPane } = Tabs;
 
 export default function Demo() {
   const { address, isConnected } = useAppKitAccount();
@@ -18,9 +14,6 @@ export default function Demo() {
     provider,
     USDCContract,
     GPDUSDCContract,
-    solanaConnection,
-    solanaReadProgram,
-    solanaWriteProgram,
     currentNetworkType,
     twitterUser,
     setTwitterUser,
@@ -34,16 +27,8 @@ export default function Demo() {
   const [transferTo, setTransferTo] = useState('');
   const [results, setResults] = useState<string[]>([]);
 
-  // NFT相关状态
-  const [nftName, setNftName] = useState('Test NFT');
-  const [nftSymbol, setNftSymbol] = useState('TNFT');
-  const [nftUri, setNftUri] = useState('https://example.com/metadata.json');
-  const [nftLevel, setNftLevel] = useState('1');
-  const [mintAccount, setMintAccount] = useState<anchor.web3.Keypair | null>(null);
-
   // 环境配置
   const envConfig = getCurrentEnv();
-  console.log(envConfig);
 
   // 同步NextAuth session到context
   useEffect(() => {
@@ -238,370 +223,7 @@ export default function Demo() {
     );
   };
 
-  // Solana 示例
-  const SolanaExamples = () => {
-    // 签名消息
-    const handleSolanaSignMessage = async () => {
-      if (!solanaReadProgram || !solanaConnection) {
-        message.error('请先连接 Solana 钱包');
-        return;
-      }
 
-      setLoading(true);
-      try {
-        const messageBytes = new TextEncoder().encode(signMessage);
-        const signature = await solanaReadProgram.provider.wallet.signMessage(messageBytes);
-
-        addResult(`Solana 消息签名成功: ${Buffer.from(signature).toString('hex').slice(0, 20)}...`);
-        message.success('消息签名成功');
-        console.log('Solana 签名结果:', signature);
-      } catch (error) {
-        console.log(error);
-        handleContractError(error);
-        addResult(`Solana 签名失败: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // 查询 SOL 余额
-    const handleCheckSOLBalance = async () => {
-      if (!solanaConnection || !solanaReadProgram) {
-        message.error('Solana 连接未建立');
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const publicKey = solanaReadProgram.provider.wallet.publicKey;
-        const balance = await solanaConnection.getBalance(publicKey);
-        const solBalance = balance / 1000000000; // lamports to SOL
-
-        addResult(`SOL 余额: ${solBalance.toFixed(4)} SOL`);
-        message.success(`SOL 余额: ${solBalance.toFixed(4)} SOL`);
-      } catch (error) {
-        handleContractError(error);
-        addResult(`查询 SOL 余额失败: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // 发送 SOL
-    const handleSendSOL = async () => {
-      if (!solanaConnection || !solanaWriteProgram || !transferTo) {
-        message.error('请填写完整信息');
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const fromPubkey = solanaWriteProgram.provider.wallet.publicKey;
-        const toPubkey = new PublicKey(transferTo);
-        const lamports = parseFloat(transferAmount) * 1e9; // SOL to lamports
-
-        const transaction = new anchor.web3.Transaction().add(
-          SystemProgram.transfer({
-            fromPubkey,
-            toPubkey,
-            lamports
-          })
-        );
-
-        const signature = await solanaWriteProgram.provider.sendAndConfirm(transaction);
-
-        addResult(`SOL 转账成功: ${signature}`);
-        message.success('SOL 转账成功');
-      } catch (error) {
-        handleContractError(error);
-        addResult(`SOL 转账失败: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-
-
-    // 初始化 NFT (program.methods.initNft) - 标准Metaplex NFT
-    const handleInitNft = async () => {
-      if (!solanaWriteProgram) {
-        message.error('Solana 程序未初始化');
-        return;
-      }
-
-      if (!nftName || !nftSymbol || !nftUri) {
-        message.error('请填写 NFT 信息');
-        return;
-      }
-
-      setLoading(true);
-      try {
-        // 这是标准Metaplex NFT，需要安装额外依赖
-        // 如果你的程序使用idl.json，需要安装以下包：
-        // npm install @solana/spl-token @metaplex-foundation/mpl-token-metadata @metaplex-foundation/umi-bundle-defaults
-
-        message.warning('标准NFT功能需要额外依赖包，请参考控制台输出');
-        console.log('需要安装以下依赖包：');
-        console.log(
-          'npm install @solana/spl-token @metaplex-foundation/mpl-token-metadata @metaplex-foundation/umi-bundle-defaults @metaplex-foundation/umi @metaplex-foundation/umi-signer-wallet-adapters'
-        );
-
-        addResult('❌ 标准NFT功能需要额外依赖包');
-      } catch (error) {
-        console.error('initNft 错误:', error);
-        handleContractError(error);
-        addResult(`initNft 失败: ${error.message || error.toString()}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // 简化NFT铸造 (hgnft.json 合约)
-    const handleMintSimpleNft = async () => {
-      if (!solanaWriteProgram) {
-        message.error('Solana 程序未初始化');
-        return;
-      }
-
-      if (!nftName || !nftUri) {
-        message.error('请填写 NFT 名称和URI');
-        return;
-      }
-
-      setLoading(true);
-      try {
-        // 生成新的 mint 账户
-        const newMintAccount = anchor.web3.Keypair.generate();
-        setMintAccount(newMintAccount);
-
-        const provider = solanaWriteProgram.provider;
-        const level = parseInt(nftLevel) || 1; // 使用用户输入的等级
-
-        // 简化的账户结构（基于hgnft.json）
-        const accounts = {
-          mint: newMintAccount.publicKey,
-          user: provider.wallet.publicKey,
-          systemProgram: SystemProgram.programId
-        };
-
-        console.log('调用 mintnft（简化版），参数:', {
-          name: nftName,
-          uri: nftUri,
-          level,
-          accounts
-        });
-
-        // 调用简化合约的 mintnft 方法
-        const tx = await solanaWriteProgram.methods
-          .mintnft(nftName, nftUri, new anchor.BN(level))
-          .accounts(accounts)
-          .signers([newMintAccount])
-          .rpc();
-
-        addResult(`✅ 简化NFT铸造成功: ${tx}`);
-        addResult(`📦 Mint Account: ${newMintAccount.publicKey.toString()}`);
-        message.success('简化NFT铸造成功');
-        console.log('mintnft 交易:', tx);
-        console.log('Mint Account:', newMintAccount.publicKey.toString());
-      } catch (error) {
-        console.error('简化NFT铸造错误:', error);
-        handleContractError(error);
-        addResult(`❌ 简化NFT铸造失败: ${error.message || error.toString()}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-
-
-    // 测试完整的简化NFT流程
-    const handleTestSimpleNftFlow = async () => {
-      if (!solanaWriteProgram) {
-        message.error('Solana 程序未初始化');
-        return;
-      }
-
-      setLoading(true);
-      try {
-        addResult('🚀 开始简化NFT完整流程测试...');
-
-        // 步骤1: 铸造NFT
-        const newMintAccount = anchor.web3.Keypair.generate();
-        setMintAccount(newMintAccount);
-
-        const provider = solanaWriteProgram.provider;
-        const level = parseInt(nftLevel) || 1;
-
-        const mintAccounts = {
-          mint: newMintAccount.publicKey,
-          user: provider.wallet.publicKey,
-          systemProgram: SystemProgram.programId
-        };
-
-        const mintTx = await solanaWriteProgram.methods
-          .mintnft(nftName, nftUri, new anchor.BN(level))
-          .accounts(mintAccounts)
-          .signers([newMintAccount])
-          .rpc();
-
-        addResult(`✅ 步骤1 - 铸造NFT成功: ${mintTx}`);
-
-        // 等待确认
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // 步骤2: 设置锁定者
-        const lockerAccounts = {
-          mint: newMintAccount.publicKey,
-          user: provider.wallet.publicKey
-        };
-
-        const lockerTx = await solanaWriteProgram.methods
-          .setlocker(provider.wallet.publicKey)
-          .accounts(lockerAccounts)
-          .rpc();
-
-        addResult(`✅ 步骤2 - 设置锁定者成功: ${lockerTx}`);
-
-        // 等待确认
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // 步骤3: 修改等级
-        const newLevel = (parseInt(nftLevel) || 1) + 1;
-        const setValueAccounts = {
-          mint: newMintAccount.publicKey,
-          locker: provider.wallet.publicKey
-        };
-
-        const setValueTx = await solanaWriteProgram.methods
-          .setvalue(new anchor.BN(newLevel))
-          .accounts(setValueAccounts)
-          .rpc();
-
-        addResult(`✅ 步骤3 - 修改等级成功: ${setValueTx}`);
-        addResult(`🎉 简化NFT完整流程测试成功!`);
-        message.success('简化NFT完整流程测试成功');
-      } catch (error) {
-        console.error('简化NFT流程测试错误:', error);
-        handleContractError(error);
-        addResult(`❌ 简化NFT流程测试失败: ${error.message || error.toString()}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    return (
-      <div>
-        <Card title="Solana 功能示例">
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            {/* 消息签名 */}
-            <div>
-              <h4>📝 消息签名</h4>
-              <Input
-                placeholder="输入要签名的消息"
-                value={signMessage}
-                onChange={(e) => setSignMessage(e.target.value)}
-              />
-              <Button onClick={handleSolanaSignMessage} loading={loading}>
-                签名消息
-              </Button>
-            </div>
-
-            {/* SOL 转账 */}
-            <div>
-              <h4>💸 SOL 转账</h4>
-              <Input
-                placeholder="接收地址 (Solana 公钥)"
-                value={transferTo}
-                onChange={(e) => setTransferTo(e.target.value)}
-              />
-              <Input
-                placeholder="转账金额 (SOL)"
-                value={transferAmount}
-                onChange={(e) => setTransferAmount(e.target.value)}
-              />
-              <Button onClick={handleCheckSOLBalance} loading={loading} type="primary" style={{ marginRight: '10px' }}>
-                查询 SOL 余额
-              </Button>
-              <Button onClick={handleSendSOL} loading={loading} type="primary">
-                发送 SOL
-              </Button>
-            </div>
-
-            {/* NFT 操作 */}
-            <div>
-              <h4>🎨 NFT 操作</h4>
-              <div style={{ marginBottom: '10px' }}>
-                <Input
-                  placeholder="NFT 名称"
-                  value={nftName}
-                  onChange={(e) => setNftName(e.target.value)}
-                  style={{ marginBottom: '5px' }}
-                />
-                <Input
-                  placeholder="NFT 符号"
-                  value={nftSymbol}
-                  onChange={(e) => setNftSymbol(e.target.value)}
-                  style={{ marginBottom: '5px' }}
-                />
-                <Input
-                  placeholder="元数据 URI"
-                  value={nftUri}
-                  onChange={(e) => setNftUri(e.target.value)}
-                  style={{ marginBottom: '5px' }}
-                />
-                <Input
-                  placeholder="NFT 等级 (数字)"
-                  value={nftLevel}
-                  onChange={(e) => setNftLevel(e.target.value)}
-                  style={{ marginBottom: '5px' }}
-                  type="number"
-                />
-              </div>
-              <div style={{ marginBottom: '10px' }}>
-                <strong>合约类型说明：</strong>
-                <p style={{ fontSize: '12px', color: '#666', margin: '5px 0' }}>
-                  📋 <strong>标准NFT (idl.json)</strong> - 需要额外依赖包，使用Metaplex标准
-                  <br />
-                  🎨 <strong>简化NFT (hgnft.json)</strong> - 无需额外依赖，自定义简单结构
-                </p>
-              </div>
-              <Space wrap>
-                <Button
-                  onClick={handleInitNft}
-                  loading={loading}
-                  style={{ backgroundColor: '#faad14', borderColor: '#faad14', color: 'white' }}>
-                  📋 标准initNft
-                </Button>
-                <Button onClick={handleMintSimpleNft} loading={loading} type="primary">
-                  🎨 简化mintnft
-                </Button>
-                <Button
-                  onClick={handleTestSimpleNftFlow}
-                  loading={loading}
-                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a', color: 'white' }}>
-                  🚀 完整流程测试
-                </Button>
-              </Space>
-              {mintAccount && (
-                <div
-                  style={{
-                    marginTop: '10px',
-                    padding: '10px',
-                    backgroundColor: '#f6ffed',
-                    border: '1px solid #b7eb8f',
-                    borderRadius: '6px'
-                  }}>
-                  <p style={{ margin: 0, fontSize: '12px' }}>
-                    <strong>Mint Account:</strong> {mintAccount.publicKey.toString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          </Space>
-        </Card>
-      </div>
-    );
-  };
 
   const handleConnectTwitter = async () => {
     // 首先检查配置
@@ -658,133 +280,132 @@ export default function Demo() {
         ({currentNetworkType === 'eip155' ? 'EVM' : currentNetworkType === 'solana' ? 'Solana' : '未知网络'})
       </p>
 
-      <Tabs defaultActiveKey="1">
-        <TabPane tab="🔷 连接推特" key="1">
-          <Card title="Twitter 连接">
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              {/* 配置状态检查 */}
-              {!envConfig.twitterConfigured && (
-                <div style={{
-                  padding: '10px',
-                  backgroundColor: '#fff2f0',
-                  border: '1px solid #ffccc7',
-                  borderRadius: '6px',
-                  marginBottom: '10px'
-                }}>
-                  <p style={{ margin: 0, color: '#ff4d4f' }}>
-                    ⚠️ Twitter配置未完成，请先配置环境变量
-                  </p>
-                  <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>
-                    请检查 .env 文件中的配置
-                  </p>
-                </div>
-              )}
+      <Tabs
+        defaultActiveKey="1"
+        items={[
+          {
+            key: "1",
+            label: "🔷 连接推特",
+            children: (
+              <Card title="Twitter 连接">
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  {/* 配置状态检查 */}
+                  {!envConfig.twitterConfigured && (
+                    <div style={{
+                      padding: '10px',
+                      backgroundColor: '#fff2f0',
+                      border: '1px solid #ffccc7',
+                      borderRadius: '6px',
+                      marginBottom: '10px'
+                    }}>
+                      <p style={{ margin: 0, color: '#ff4d4f' }}>
+                        ⚠️ Twitter配置未完成，请先配置环境变量
+                      </p>
+                      <p style={{ margin: '5px 0 0 0', fontSize: '12px' }}>
+                        请检查 .env 文件中的配置
+                      </p>
+                    </div>
+                  )}
 
-              {/* Twitter 连接状态 */}
-              <div>
-                <h4>📱 Twitter 连接状态</h4>
-                {status === 'loading' || twitterLoading ? (
-                  <div style={{
-                    padding: '10px',
-                    backgroundColor: '#f0f9ff',
-                    border: '1px solid #91d5ff',
-                    borderRadius: '6px',
-                    marginBottom: '10px'
-                  }}>
-                    <p style={{ margin: 0, color: '#1890ff' }}>
-                      🔄 {status === 'loading' ? '正在检查连接状态...' : '正在处理Twitter连接...'}
-                    </p>
-                  </div>
-                ) : isTwitterConnected ? (
-                  <div style={{
-                    padding: '10px',
-                    backgroundColor: '#f6ffed',
-                    border: '1px solid #b7eb8f',
-                    borderRadius: '6px',
-                    marginBottom: '10px'
-                  }}>
-                    <p style={{ margin: 0, color: '#52c41a' }}>
-                      ✅ 已连接到 Twitter
-                    </p>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                      <strong>用户名:</strong> @{twitterUser?.username}
-                    </p>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                      <strong>用户ID:</strong> {twitterUser?.id}
-                    </p>
-                  </div>
-                ) : (
-                  <div style={{
-                    padding: '10px',
-                    backgroundColor: '#fff7e6',
-                    border: '1px solid #ffd591',
-                    borderRadius: '6px',
-                    marginBottom: '10px'
-                  }}>
-                    <p style={{ margin: 0, color: '#fa8c16' }}>
-                      ⚠️ 未连接到 Twitter
-                    </p>
-                  </div>
-                )}
+                  {/* Twitter 连接状态 */}
+                  <div>
+                    <h4>📱 Twitter 连接状态</h4>
+                    {status === 'loading' || twitterLoading ? (
+                      <div style={{
+                        padding: '10px',
+                        backgroundColor: '#f0f9ff',
+                        border: '1px solid #91d5ff',
+                        borderRadius: '6px',
+                        marginBottom: '10px'
+                      }}>
+                        <p style={{ margin: 0, color: '#1890ff' }}>
+                          🔄 {status === 'loading' ? '正在检查连接状态...' : '正在处理Twitter连接...'}
+                        </p>
+                      </div>
+                    ) : isTwitterConnected ? (
+                      <div style={{
+                        padding: '10px',
+                        backgroundColor: '#f6ffed',
+                        border: '1px solid #b7eb8f',
+                        borderRadius: '6px',
+                        marginBottom: '10px'
+                      }}>
+                        <p style={{ margin: 0, color: '#52c41a' }}>
+                          ✅ 已连接到 Twitter
+                        </p>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                          <strong>用户名:</strong> @{twitterUser?.username}
+                        </p>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                          <strong>用户ID:</strong> {twitterUser?.id}
+                        </p>
+                      </div>
+                    ) : (
+                      <div style={{
+                        padding: '10px',
+                        backgroundColor: '#fff7e6',
+                        border: '1px solid #ffd591',
+                        borderRadius: '6px',
+                        marginBottom: '10px'
+                      }}>
+                        <p style={{ margin: 0, color: '#fa8c16' }}>
+                          ⚠️ 未连接到 Twitter
+                        </p>
+                      </div>
+                    )}
 
-                <Button
-                  onClick={handleConnectTwitter}
-                  loading={twitterLoading}
-                  disabled={!envConfig.twitterConfigured}
-                  type={isTwitterConnected ? 'default' : 'primary'}
-                  style={{
-                    backgroundColor: !envConfig.twitterConfigured ? '#d9d9d9' :
-                      isTwitterConnected ? '#ff4d4f' : '#1da1f2',
-                    borderColor: !envConfig.twitterConfigured ? '#d9d9d9' :
-                      isTwitterConnected ? '#ff4d4f' : '#1da1f2',
-                    color: 'white'
-                  }}>
-                  {!envConfig.twitterConfigured ? '配置未完成' :
-                    isTwitterConnected ? '断开 Twitter' : '连接 Twitter'}
-                </Button>
-
-                {isTwitterConnected && twitterUser && (
-                  <div style={{ marginTop: '10px' }}>
                     <Button
-                      onClick={() => {
-                        const shareText = createShareMessages.connected(twitterUser.username);
-                        shareOnTwitter(shareText);
-                        addResult(`🐦 发布推文分享`);
-                      }}
+                      onClick={handleConnectTwitter}
+                      loading={twitterLoading}
+                      disabled={!envConfig.twitterConfigured}
+                      type={isTwitterConnected ? 'default' : 'primary'}
                       style={{
-                        backgroundColor: '#1da1f2',
-                        borderColor: '#1da1f2',
+                        backgroundColor: !envConfig.twitterConfigured ? '#d9d9d9' :
+                          isTwitterConnected ? '#ff4d4f' : '#1da1f2',
+                        borderColor: !envConfig.twitterConfigured ? '#d9d9d9' :
+                          isTwitterConnected ? '#ff4d4f' : '#1da1f2',
                         color: 'white'
                       }}>
-                      📝 发推分享
+                      {!envConfig.twitterConfigured ? '配置未完成' :
+                        isTwitterConnected ? '断开 Twitter' : '连接 Twitter'}
                     </Button>
+
+                    {isTwitterConnected && twitterUser && (
+                      <div style={{ marginTop: '10px' }}>
+                        <Button
+                          onClick={() => {
+                            const shareText = createShareMessages.connected(twitterUser.username);
+                            shareOnTwitter(shareText);
+                            addResult(`🐦 发布推文分享`);
+                          }}
+                          style={{
+                            backgroundColor: '#1da1f2',
+                            borderColor: '#1da1f2',
+                            color: 'white'
+                          }}>
+                          📝 发推分享
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </Space>
-          </Card>
-        </TabPane>
+                </Space>
+              </Card>
+            )
+          },
+          {
+            key: "2",
+            label: "🔷 EVM 示例",
+            children: currentNetworkType === 'eip155' ? (
+              <EVMExamples />
+            ) : (
+              <Card>
+                <p>请切换到 EVM 网络 (Base 或 Base Sepolia) 来测试 EVM 功能</p>
+              </Card>
+            )
+          },
 
-        <TabPane tab="🔷 EVM 示例" key="2">
-          {currentNetworkType === 'eip155' ? (
-            <EVMExamples />
-          ) : (
-            <Card>
-              <p>请切换到 EVM 网络 (Base 或 Base Sepolia) 来测试 EVM 功能</p>
-            </Card>
-          )}
-        </TabPane>
-
-        <TabPane tab="⚡ Solana 示例" key="3">
-          {currentNetworkType === 'solana' ? (
-            <SolanaExamples />
-          ) : (
-            <Card>
-              <p>请切换到 Solana 网络 (Solana 或 Solana Devnet) 来测试 Solana 功能</p>
-            </Card>
-          )}
-        </TabPane>
-      </Tabs>
+        ]}
+      />
 
       {/* 操作结果显示 */}
       {results.length > 0 && (
