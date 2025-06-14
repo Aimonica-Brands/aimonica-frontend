@@ -67,8 +67,12 @@ export const initSolanaContracts = (connection: Connection, walletProvider: any,
     // const programId = new PublicKey(tokenConfig.programId);
     // console.log('✅ Program ID 验证成功:', programId.toString());
 
+    const newEndpoint = 'https://api.devnet.solana.com'; // Official devnet RPC
+
+    const newConnection = new Connection(newEndpoint);
+
     // 创建 Anchor provider
-    const provider = new anchor.AnchorProvider(connection, walletProvider, { commitment: 'confirmed' });
+    const provider = new anchor.AnchorProvider(newConnection, walletProvider, { commitment: 'confirmed' });
 
     // 设置提供者
     anchor.setProvider(provider);
@@ -77,7 +81,7 @@ export const initSolanaContracts = (connection: Connection, walletProvider: any,
     const program = new anchor.Program(tokenConfig.aim_staking_program, provider);
 
     return {
-      solanaConnection: connection,
+      solanaConnection: newConnection,
       solanaProgram: program,
       solanaProvider: provider
     };
