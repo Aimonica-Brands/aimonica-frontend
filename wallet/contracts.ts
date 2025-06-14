@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import * as anchor from '@coral-xyz/anchor';
-import { Connection } from '@solana/web3.js';
+import { clusterApiUrl, Connection } from '@solana/web3.js';
 import { getContractConfig } from './index';
 import { message } from 'antd';
 
@@ -50,7 +50,8 @@ export const initSolanaContracts = (network: string, walletProvider: any) => {
       throw new Error('Solana wallet provider not available');
     }
 
-    const newConnection = new Connection(tokenConfig.endpoint);
+    const endpoint = clusterApiUrl(tokenConfig.cluster);
+    const newConnection = new Connection(endpoint);
 
     const provider = new anchor.AnchorProvider(newConnection, walletProvider, { commitment: 'confirmed' });
 

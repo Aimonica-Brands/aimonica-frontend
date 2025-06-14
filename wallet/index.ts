@@ -43,7 +43,6 @@ export const modal = createAppKit({
 import USDCABI from '@/wallet/abi/USDC.json';
 import GPDUSDCABI from '@/wallet/abi/gpdUSDC.json';
 import aim_staking_program from '@/wallet/idl/aim_staking_program.json';
-import { clusterApiUrl } from '@solana/web3.js';
 
 // 合约配置 - 使用 @reown/appkit/networks 的网络名称作为 key
 export const contractConfig = {
@@ -55,7 +54,7 @@ export const contractConfig = {
   },
 
   'solana-devnet': {
-    endpoint: clusterApiUrl('devnet'),
+    cluster: 'devnet',
     programId: '5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD',
     aim_staking_program
   }

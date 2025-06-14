@@ -1,26 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Button, message, Card, Input, Tabs, Divider, Space, Select, InputNumber, Table, Tag } from 'antd';
-import { useAppKitAccount } from '@reown/appkit/react';
 import { handleContractError } from '@/wallet/contracts';
-import { Keypair, PublicKey, SystemProgram, Connection } from '@solana/web3.js';
+import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import bs58 from 'bs58';
 import { usePageContext } from '@/context';
 import * as anchor from '@coral-xyz/anchor';
-
-
-const { Option } = Select;
-
+import { useAppKitNetwork } from '@reown/appkit/react';
+import { getContractConfig } from '@/wallet';
 
 
 export default function DemoSol() {
-  const { address, isConnected } = useAppKitAccount();
-  const { solanaConnection, solanaProgram, } = usePageContext();
+  const { Option } = Select;
+  const { caipNetwork } = useAppKitNetwork();
+  const { solanaConnection, solanaProgram } = usePageContext();
 
   const [loading, setLoading] = useState(false);
   const [signMessage, setSignMessage] = useState('Hello from AIMonica DApp!');
   const [results, setResults] = useState<string[]>([]);
-
+  const [solanaBalance, setSolanaBalance] = useState<number>(0);
+  const [tokenBalance, setTokenBalance] = useState<number>(0);
   // Stake related state
   const [stakeAmount, setStakeAmount] = useState<number>(10);
   const [stakeDuration, setStakeDuration] = useState<number>(7);
@@ -33,13 +32,118 @@ export default function DemoSol() {
   const VAULT = "6r9FaxNxJzkRtm9cj5ym3nVWu9dL2pNHHBhU99DVZiwA";
 
   useEffect(() => {
-    const fetchStakeRecords = async () => {
-      await refreshStakeRecords();
-    };
     if (solanaProgram && solanaConnection) {
-      fetchStakeRecords();
+      updateData();
     }
   }, [solanaConnection, solanaProgram]);
+
+  const updateData = () => {
+    getSOLBalance();
+    getTokenBalance();
+    getStakeRecords();
+  }
+
+  // 签名消息
+  const handleSolanaSignMessage = async () => {
+    if (!solanaProgram || !solanaConnection) {
+      message.error('请先连接 Solana 钱包');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const messageBytes = new TextEncoder().encode(signMessage);
+      const signature = await solanaProgram.provider.wallet.signMessage(messageBytes);
+
+      addResult(`Solana 消息签名成功: ${Buffer.from(signature).toString('hex').slice(0, 20)}...`);
+      message.success('消息签名成功');
+      console.log('Solana 签名结果:', signature);
+    } catch (error) {
+      console.log(error);
+      handleContractError(error);
+      addResult(`Solana 签名失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 查询 SOL 余额
+  const getSOLBalance = async () => {
+    if (!solanaConnection || !solanaProgram) {
+      message.error('Solana 连接未建立');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const publicKey = solanaProgram.provider.wallet.publicKey;
+
+      if (!publicKey) {
+        message.error('钱包未连接或无法获取用户公钥');
+        return;
+      }
+
+      const balance = await solanaConnection.getBalance(publicKey);
+      const solBalance = balance / 1000000000; // lamports to SOL
+      setSolanaBalance(solBalance);
+      addResult(`SOL 余额: ${solBalance.toFixed(4)} SOL`);
+    } catch (error) {
+      handleContractError(error);
+      addResult(`查询 SOL 余额失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 查询代币余额
+  const getTokenBalance = async () => {
+    if (!solanaConnection || !solanaProgram) {
+      message.error('Solana 连接未建立');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const userPublicKey = solanaProgram.provider.wallet.publicKey;
+      if (!userPublicKey) {
+        message.error('钱包未连接或无法获取用户公钥');
+        return;
+      }
+
+      const tokenMintPubkey = new PublicKey(TOKEN_MINT);
+      const userTokenAccount = getUserTokenAccount(userPublicKey, tokenMintPubkey);
+
+      try {
+        const tokenAccount = await solanaConnection.getTokenAccountBalance(userTokenAccount);
+        const balance = tokenAccount.value.uiAmount || 0;
+        setTokenBalance(balance);
+        addResult(`代币余额: ${balance.toFixed(2)} tokens`);
+      } catch (error) {
+        // 如果代币账户不存在，余额为0
+        setTokenBalance(0);
+        addResult('代币余额: 0 tokens (账户未创建)');
+      }
+    } catch (error) {
+      handleContractError(error);
+      addResult(`查询代币余额失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getPrivateKey = () => {
+    // 您的私钥数组
+    const privateKeyArray = new Uint8Array([104, 6, 27, 155, 224, 174, 1, 74, 31, 122, 9, 169, 139, 243, 245, 178, 51, 62, 178, 251, 223, 165, 114, 130, 221, 223, 189, 211, 211, 108, 114, 234, 166, 181, 206, 158, 177, 135, 230, 10, 6, 143, 200, 153, 178, 235, 105, 165, 170, 148, 170, 169, 97, 108, 202, 97, 159, 84, 49, 207, 127, 17, 47, 150]);
+
+    // 方法1: 创建 Keypair 对象
+    const keypair = Keypair.fromSecretKey(privateKeyArray);
+    // 方法2: 转换为 Base58 格式（大多数钱包使用的格式）
+    const base58PrivateKey = bs58.encode(privateKeyArray);
+    console.log('Base58 私钥:', base58PrivateKey);
+
+    // 获取公钥地址
+    console.log('钱包地址:', keypair.publicKey.toString());
+  }
 
   // Utility function to generate user token account address
   const getUserTokenAccount = (userPublicKey: PublicKey, tokenMint: PublicKey): PublicKey => {
@@ -69,7 +173,7 @@ export default function DemoSol() {
   };
 
   // Combined function to fetch stake records and get next stake ID
-  const refreshStakeRecords = async (options?: {
+  const getStakeRecords = async (options?: {
     stakeId: number;
     amount: number;
   }) => {
@@ -231,25 +335,22 @@ export default function DemoSol() {
         return;
       }
 
-      addResult(`✅ 使用 RPC: ${solanaConnection.rpcEndpoint}`);
-
       const projectConfigPubkey = new PublicKey(PROJECT_CONFIG);
       const tokenMintPubkey = new PublicKey(TOKEN_MINT);
       const vault = new PublicKey(VAULT);
 
       // Use the next stake ID from state
-      const availableStakeId = nextStakeId;
-      console.log('Using stake ID:', availableStakeId);
+      console.log('Using stake ID:', nextStakeId);
 
       // Generate user token account
       const userTokenAccount = getUserTokenAccount(userPublicKey, tokenMintPubkey);
       console.log('User token account:', userTokenAccount.toString());
 
       // Generate stake info PDA
-      const stakeInfoPda = await getStakeInfoPda(userPublicKey, projectConfigPubkey, availableStakeId);
+      const stakeInfoPda = await getStakeInfoPda(userPublicKey, projectConfigPubkey, nextStakeId);
 
       const stakeAmountLamports = new anchor.BN(stakeAmount * Math.pow(10, 9));
-      const stakeIdBN = new anchor.BN(availableStakeId);
+      const stakeIdBN = new anchor.BN(nextStakeId);
 
       const stakeAccounts = {
         projectConfig: projectConfigPubkey,
@@ -270,25 +371,27 @@ export default function DemoSol() {
         .accounts(stakeAccounts)
         .rpc();
 
-      console.log("✅ Transaction sent! Hash:", tx);
-      addResult(`🚀 交易已发送! Hash: ${tx}`);
-      addResult(`🔗 查看交易: https://explorer.solana.com/tx/${tx}?cluster=devnet`);
+      console.log("✅ 质押交易已发送! Hash:", tx);
+      const contractConfig = getContractConfig((caipNetwork as any).network);
+      const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
+      addResult(`🔗 查看质押交易: ${txLink}`);
+
 
       // Wait for the new stake to be confirmed
-      const userStakes = await refreshStakeRecords({
-        stakeId: availableStakeId,
+      const userStakes = await getStakeRecords({
+        stakeId: nextStakeId,
         amount: stakeAmount
       });
 
       if (userStakes) {
         const newStake = userStakes.find(stake =>
-          stake.account.stakeId.toNumber() === availableStakeId &&
+          stake.account.stakeId.toNumber() === nextStakeId &&
           stake.account.amount.toNumber() / Math.pow(10, 9) === stakeAmount
         );
 
         if (newStake) {
-          addResult(`✅ 质押成功: ${stakeAmount} tokens for ${stakeDuration} days (Stake ID: ${availableStakeId})`);
-          message.success(`质押成功！Stake ID: ${availableStakeId}`);
+          addResult(`✅ 质押成功: ${stakeAmount} tokens for ${stakeDuration} days (Stake ID: ${nextStakeId})`);
+          message.success(`质押成功！Stake ID: ${nextStakeId}`);
         } else {
           addResult(`⚠️ 交易可能已成功，但未及时确认`);
           message.warning('交易已发送，但确认超时。请检查 Solana Explorer 确认状态。');
@@ -304,72 +407,223 @@ export default function DemoSol() {
     }
   };
 
-  // 签名消息
-  const handleSolanaSignMessage = async () => {
+  // Unstake specific stake by ID
+  const handleUnstake = async (stakeId: number) => {
     if (!solanaProgram || !solanaConnection) {
       message.error('请先连接 Solana 钱包');
       return;
     }
 
-    setLoading(true);
-    try {
-      const messageBytes = new TextEncoder().encode(signMessage);
-      const signature = await solanaProgram.provider.wallet.signMessage(messageBytes);
-
-      addResult(`Solana 消息签名成功: ${Buffer.from(signature).toString('hex').slice(0, 20)}...`);
-      message.success('消息签名成功');
-      console.log('Solana 签名结果:', signature);
-    } catch (error) {
-      console.log(error);
-      handleContractError(error);
-      addResult(`Solana 签名失败: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 查询 SOL 余额
-  const handleCheckSOLBalance = async () => {
-    if (!solanaConnection || !solanaProgram) {
-      message.error('Solana 连接未建立');
+    if (loading) {
+      message.warning('操作正在进行中，请勿重复点击');
       return;
     }
 
     setLoading(true);
     try {
-      const publicKey = solanaProgram.provider.wallet.publicKey;
-
-      if (!publicKey) {
+      const userPublicKey = solanaProgram.provider.wallet.publicKey;
+      if (!userPublicKey) {
         message.error('钱包未连接或无法获取用户公钥');
         return;
       }
 
-      const balance = await solanaConnection.getBalance(publicKey);
-      const solBalance = balance / 1000000000; // lamports to SOL
+      const projectConfigPubkey = new PublicKey(PROJECT_CONFIG);
+      const tokenMintPubkey = new PublicKey(TOKEN_MINT);
+      const vault = new PublicKey(VAULT);
 
-      addResult(`SOL 余额: ${solBalance.toFixed(4)} SOL`);
-      message.success(`SOL 余额: ${solBalance.toFixed(4)} SOL`);
+      // 获取用户的质押记录
+      const stakeRecord = stakeRecords.find(record => record.stakeId === stakeId);
+      if (!stakeRecord) {
+        message.error('未找到对应的质押记录');
+        return;
+      }
+
+      // 检查是否可以解质押
+      if (!stakeRecord.canUnstake) {
+        message.error('质押期限未到，无法解质押');
+        return;
+      }
+
+      // 生成用户代币账户
+      const userTokenAccount = getUserTokenAccount(userPublicKey, tokenMintPubkey);
+      console.log('User token account:', userTokenAccount.toString());
+
+      // 生成质押信息 PDA
+      const stakeInfoPda = await getStakeInfoPda(userPublicKey, projectConfigPubkey, stakeId);
+      console.log('Stake info PDA:', stakeInfoPda.toString());
+
+      // 获取项目配置
+      const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
+      console.log('Project config:', projectConfig);
+
+      // 生成 vault authority PDA
+      const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
+        [
+          Buffer.from("vault-authority"),
+          projectConfig.projectId.toArrayLike(Buffer, 'le', 8)
+        ],
+        solanaProgram.programId
+      );
+      console.log('Vault authority PDA:', vaultAuthorityPda.toString());
+
+      const unstakeAccounts = {
+        projectConfig: projectConfigPubkey,
+        stakeInfo: stakeInfoPda,
+        user: userPublicKey,
+        userTokenAccount: userTokenAccount,
+        vault: vault,
+        vaultAuthority: vaultAuthorityPda,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      };
+
+      console.log("Unstake accounts:", JSON.stringify(unstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
+
+      // 发送解质押交易
+      console.log('Sending unstake transaction...');
+      const tx = await solanaProgram.methods
+        .unstake(new anchor.BN(stakeId))
+        .accounts(unstakeAccounts)
+        .rpc();
+
+      console.log("✅ 解质押交易已发送! Hash:", tx);
+      const contractConfig = getContractConfig((caipNetwork as any).network);
+      const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
+      addResult(`🔗 查看解质押交易: ${txLink}`);
+
+      // 等待交易确认并刷新记录
+      const userStakes = await getStakeRecords({
+        stakeId,
+        amount: stakeRecord.amount
+      });
+
+      if (userStakes) {
+        const updatedStake = userStakes.find(stake =>
+          stake.account.stakeId.toNumber() === stakeId
+        );
+
+        if (updatedStake && !updatedStake.account.isStaked) {
+          addResult(`✅ 解质押成功: ${stakeRecord.amount} tokens (Stake ID: ${stakeId})`);
+          message.success(`解质押成功！Stake ID: ${stakeId}`);
+        } else {
+          addResult(`⚠️ 交易可能已成功，但未及时确认`);
+          message.warning('交易已发送，但确认超时。请检查 Solana Explorer 确认状态。');
+        }
+      }
+
     } catch (error) {
+      console.error('Unstake error:', error);
       handleContractError(error);
-      addResult(`查询 SOL 余额失败: ${error.message}`);
+      addResult(`❌ 解质押失败: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const toPrivateKey = () => {
-    // 您的私钥数组
-    const privateKeyArray = new Uint8Array([104, 6, 27, 155, 224, 174, 1, 74, 31, 122, 9, 169, 139, 243, 245, 178, 51, 62, 178, 251, 223, 165, 114, 130, 221, 223, 189, 211, 211, 108, 114, 234, 166, 181, 206, 158, 177, 135, 230, 10, 6, 143, 200, 153, 178, 235, 105, 165, 170, 148, 170, 169, 97, 108, 202, 97, 159, 84, 49, 207, 127, 17, 47, 150]);
+  // Emergency unstake specific stake by ID
+  const handleEmergencyUnstake = async (stakeId: number) => {
+    if (!solanaProgram || !solanaConnection) {
+      message.error('请先连接 Solana 钱包');
+      return;
+    }
 
-    // 方法1: 创建 Keypair 对象
-    const keypair = Keypair.fromSecretKey(privateKeyArray);
-    // 方法2: 转换为 Base58 格式（大多数钱包使用的格式）
-    const base58PrivateKey = bs58.encode(privateKeyArray);
-    console.log('Base58 私钥:', base58PrivateKey);
+    if (loading) {
+      message.warning('操作正在进行中，请勿重复点击');
+      return;
+    }
 
-    // 获取公钥地址
-    console.log('钱包地址:', keypair.publicKey.toString());
-  }
+    setLoading(true);
+    try {
+      const userPublicKey = solanaProgram.provider.wallet.publicKey;
+      if (!userPublicKey) {
+        message.error('钱包未连接或无法获取用户公钥');
+        return;
+      }
+
+      const projectConfigPubkey = new PublicKey(PROJECT_CONFIG);
+      const tokenMintPubkey = new PublicKey(TOKEN_MINT);
+      const vault = new PublicKey(VAULT);
+
+      // 获取用户的质押记录
+      const stakeRecord = stakeRecords.find(record => record.stakeId === stakeId);
+      if (!stakeRecord) {
+        message.error('未找到对应的质押记录');
+        return;
+      }
+
+      // 生成用户代币账户
+      const userTokenAccount = getUserTokenAccount(userPublicKey, tokenMintPubkey);
+      console.log('User token account:', userTokenAccount.toString());
+
+      // 生成质押信息 PDA
+      const stakeInfoPda = await getStakeInfoPda(userPublicKey, projectConfigPubkey, stakeId);
+      console.log('Stake info PDA:', stakeInfoPda.toString());
+
+      // 获取项目配置
+      const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
+      console.log('Project config:', projectConfig);
+
+      // 生成 vault authority PDA
+      const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
+        [
+          Buffer.from("vault-authority"),
+          projectConfig.projectId.toArrayLike(Buffer, 'le', 8)
+        ],
+        solanaProgram.programId
+      );
+      console.log('Vault authority PDA:', vaultAuthorityPda.toString());
+
+      const emergencyUnstakeAccounts = {
+        projectConfig: projectConfigPubkey,
+        stakeInfo: stakeInfoPda,
+        user: userPublicKey,
+        userTokenAccount: userTokenAccount,
+        vault: vault,
+        vaultAuthority: vaultAuthorityPda,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      };
+
+      console.log("Emergency unstake accounts:", JSON.stringify(emergencyUnstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
+
+      // 发送紧急解质押交易
+      console.log('Sending emergency unstake transaction...');
+      const tx = await solanaProgram.methods
+        .emergencyUnstake(new anchor.BN(stakeId))
+        .accounts(emergencyUnstakeAccounts)
+        .rpc();
+
+      console.log("✅ 紧急解质押交易已发送! Hash:", tx);
+      const contractConfig = getContractConfig((caipNetwork as any).network);
+      const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
+      addResult(`🔗 查看紧急解质押交易: ${txLink}`);
+
+      // 等待交易确认并刷新记录
+      const userStakes = await getStakeRecords({
+        stakeId,
+        amount: stakeRecord.amount
+      });
+
+      if (userStakes) {
+        const updatedStake = userStakes.find(stake =>
+          stake.account.stakeId.toNumber() === stakeId
+        );
+
+        if (updatedStake && !updatedStake.account.isStaked) {
+          addResult(`✅ 紧急解质押成功: ${stakeRecord.amount} tokens (Stake ID: ${stakeId})`);
+          message.success(`紧急解质押成功！Stake ID: ${stakeId}`);
+        } else {
+          addResult(`⚠️ 交易可能已成功，但未及时确认`);
+          message.warning('交易已发送，但确认超时。请检查 Solana Explorer 确认状态。');
+        }
+      }
+
+    } catch (error) {
+      console.error('Emergency unstake error:', error);
+      handleContractError(error);
+      addResult(`❌ 紧急解质押失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Table columns for stake records
   const stakeColumns = [
@@ -403,6 +657,32 @@ export default function DemoSol() {
       key: 'endTimestamp',
       render: (endTimestamp: Date) => endTimestamp.toLocaleString()
     },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_, record: any) => (
+        <Space>
+          <Button
+            type="primary"
+            size="small"
+            onClick={() => handleUnstake(record.stakeId)}
+            loading={loading}
+            disabled={!record.canUnstake}
+          >
+            解质押
+          </Button>
+          <Button
+            type="primary"
+            danger
+            size="small"
+            onClick={() => handleEmergencyUnstake(record.stakeId)}
+            loading={loading}
+          >
+            紧急解质押
+          </Button>
+        </Space>
+      ),
+    },
   ];
 
 
@@ -410,30 +690,6 @@ export default function DemoSol() {
   return (
     <div style={{ padding: '1.2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1>🧪 AIMonica Demo</h1>
-      <p>
-        当前连接:{' '}
-        <strong>
-          {address?.slice(0, 6)}...{address?.slice(-4)}
-        </strong>
-      </p>
-
-      {/* RPC 状态显示 */}
-      {solanaConnection && (
-        <div style={{
-          padding: '8px 12px',
-          backgroundColor: '#f6ffed',
-          border: `1px solid #b7eb8f`,
-          borderRadius: '4px',
-          margin: '10px 0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div>
-            🔗 当前 RPC: <code>{solanaConnection.rpcEndpoint}</code>
-          </div>
-        </div>
-      )}
 
       <Tabs
         defaultActiveKey="1"
@@ -444,10 +700,10 @@ export default function DemoSol() {
             children: <div>
               <Card title="Solana 功能示例">
                 <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                  <Button onClick={toPrivateKey}>转成私钥</Button>
+                  <Button onClick={getPrivateKey}>获取私钥</Button>
 
                   {/* 消息签名 */}
-                  <div>
+                  {/* <div>
                     <h4>📝 消息签名</h4>
                     <Input
                       placeholder="输入要签名的消息"
@@ -457,14 +713,37 @@ export default function DemoSol() {
                     <Button onClick={handleSolanaSignMessage} loading={loading}>
                       签名消息
                     </Button>
-                  </div>
+                  </div> */}
 
-                  {/* SOL 余额 */}
+                  {/* 余额显示 */}
                   <div>
-                    <h4>💸 SOL 余额</h4>
-                    <Button onClick={handleCheckSOLBalance} loading={loading} type="primary" style={{ marginRight: '10px' }}>
-                      查询 SOL 余额
-                    </Button>
+                    <h4>💸 余额信息</h4>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <div>
+                        <label>SOL 余额: </label>
+                        <Tag color="blue">{solanaBalance.toFixed(4)} SOL</Tag>
+                      </div>
+                      <div>
+                        <label>代币余额: </label>
+                        <Tag color="green">{tokenBalance.toFixed(2)} tokens</Tag>
+                      </div>
+                      <Space>
+                        <Button
+                          onClick={getSOLBalance}
+                          loading={loading}
+                          type="primary"
+                        >
+                          刷新 SOL 余额
+                        </Button>
+                        <Button
+                          onClick={getTokenBalance}
+                          loading={loading}
+                          type="primary"
+                        >
+                          刷新代币余额
+                        </Button>
+                      </Space>
+                    </Space>
                   </div>
 
                   <Divider />
@@ -500,7 +779,7 @@ export default function DemoSol() {
                       </div>
 
                       <div>
-                        <label>预估下一个 Stake ID: </label>
+                        <label>下一个 Stake ID: </label>
                         <Tag color="green">#{nextStakeId}</Tag>
                         <span style={{ marginLeft: 8, fontSize: '12px', color: '#666' }}>
                           (自动检测可用ID)
@@ -515,9 +794,8 @@ export default function DemoSol() {
                         >
                           创建新质押 (自动检测 ID)
                         </Button>
-
                         <Button
-                          onClick={() => refreshStakeRecords()}
+                          onClick={() => getStakeRecords()}
                           loading={loading}
                         >
                           刷新质押记录
