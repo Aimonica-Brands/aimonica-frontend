@@ -1,7 +1,5 @@
 import { ethers } from 'ethers';
-// import { AnchorProvider, Program } from '@project-serum/anchor';
 import * as anchor from '@coral-xyz/anchor';
-import { Program } from '@coral-xyz/anchor';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { getContractConfig, EVMTokenConfig, SolanaTokenConfig } from './config';
 import { message } from 'antd';
@@ -66,13 +64,10 @@ export const initSolanaContracts = (connection: Connection, walletProvider: any,
       throw new Error('programId not found in token configuration');
     }
 
+    // const programId = new PublicKey(tokenConfig.programId);
+    // console.log('✅ Program ID 验证成功:', programId.toString());
+
     // 创建 Anchor provider
-    console.log('🔧 创建 Anchor provider...');
-
-    const programId = new PublicKey(tokenConfig.programId);
-    console.log('✅ Program ID 验证成功:', programId.toString());
-
-    // 在浏览器环境中创建 provider，不使用 env()
     const provider = new anchor.AnchorProvider(connection, walletProvider, { commitment: 'confirmed' });
 
     // 设置提供者
@@ -80,8 +75,6 @@ export const initSolanaContracts = (connection: Connection, walletProvider: any,
 
     // 创建程序实例
     const program = new anchor.Program(tokenConfig.aim_staking_program, provider);
-
-    console.log('✅ 初始化程序成功:');
 
     return {
       solanaConnection: connection,

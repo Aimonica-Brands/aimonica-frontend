@@ -1,10 +1,10 @@
 import { createAppKit } from '@reown/appkit';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { solana, solanaDevnet, base, baseSepolia } from '@reown/appkit/networks';
+import { solana, base, baseSepolia, solanaDevnet } from '@reown/appkit/networks';
 
 export const networks: any =
-  process.env.NEXT_PUBLIC_APP_ENV === 'production' ? [base, solana] : [baseSepolia, solanaDevnet];
+  process.env.NEXT_PUBLIC_APP_ENV === 'production' ? [base, solana] : [solanaDevnet, baseSepolia];
 
 // 0. Get projectId from https://cloud.reown.com
 export const projectId = 'b5863416c73906526923f5c4d6db20c8';
@@ -31,7 +31,6 @@ const metadata = {
 export const modal = createAppKit({
   adapters: [wagmiAdapter, solanaWeb3JsAdapter],
   networks,
-  defaultNetwork: networks[0],
   metadata,
   projectId,
   features: {

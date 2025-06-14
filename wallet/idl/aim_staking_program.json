@@ -1,5 +1,5 @@
 {
-  "address": "5hjhdxLDM57eUmaC5Nih6jNeLW1bMamYGkFpRqhd7dN9",
+  "address": "5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD",
   "metadata": {
     "name": "aim_staking_program",
     "version": "0.1.0",
@@ -45,6 +45,10 @@
               {
                 "kind": "account",
                 "path": "user"
+              },
+              {
+                "kind": "arg",
+                "path": "stake_id"
               }
             ]
           }
@@ -121,7 +125,12 @@
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "stake_id",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "initialize_platform",
@@ -347,6 +356,10 @@
               {
                 "kind": "account",
                 "path": "user"
+              },
+              {
+                "kind": "arg",
+                "path": "stake_id"
               }
             ]
           }
@@ -384,6 +397,10 @@
         {
           "name": "duration_days",
           "type": "u32"
+        },
+        {
+          "name": "stake_id",
+          "type": "u64"
         }
       ]
     },
@@ -425,6 +442,10 @@
               {
                 "kind": "account",
                 "path": "user"
+              },
+              {
+                "kind": "arg",
+                "path": "stake_id"
               }
             ]
           }
@@ -501,7 +522,12 @@
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "stake_id",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -613,6 +639,10 @@
             "type": "u64"
           },
           {
+            "name": "stake_id",
+            "type": "u64"
+          },
+          {
             "name": "amount",
             "type": "u64"
           }
@@ -673,6 +703,10 @@
             "type": "u64"
           },
           {
+            "name": "stake_id",
+            "type": "u64"
+          },
+          {
             "name": "amount",
             "type": "u64"
           },
@@ -697,6 +731,10 @@
             "type": "u64"
           },
           {
+            "name": "stake_id",
+            "type": "u64"
+          },
+          {
             "name": "amount",
             "type": "u64"
           }
@@ -718,6 +756,10 @@
           },
           {
             "name": "project_id",
+            "type": "u64"
+          },
+          {
+            "name": "stake_id",
             "type": "u64"
           },
           {
