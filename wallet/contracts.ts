@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import * as anchor from '@coral-xyz/anchor';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { getContractConfig, EVMTokenConfig, SolanaTokenConfig } from './config';
+import { Connection } from '@solana/web3.js';
+import { getContractConfig } from './index';
 import { message } from 'antd';
 
 /**
@@ -9,7 +9,7 @@ import { message } from 'antd';
  */
 export const initEVMContracts = async (network: string) => {
   try {
-    const tokenConfig = getContractConfig(network) as EVMTokenConfig;
+    const tokenConfig = getContractConfig(network);
     if (!tokenConfig) {
       throw new Error(`No token configuration found for network ${network}`);
     }
@@ -27,7 +27,6 @@ export const initEVMContracts = async (network: string) => {
 
     return {
       provider,
-      signer,
       usdcContract,
       gpdUsdcContract
     };
@@ -40,50 +39,28 @@ export const initEVMContracts = async (network: string) => {
 /**
  * 初始化 Solana 合约
  */
-export const initSolanaContracts = (connection: Connection, walletProvider: any, network: string) => {
+export const initSolanaContracts = (network: string, walletProvider: any) => {
   try {
-    const tokenConfig = getContractConfig(network) as SolanaTokenConfig;
+    const tokenConfig = getContractConfig(network);
     if (!tokenConfig) {
       throw new Error(`No token configuration found for network ${network}`);
-    }
-    console.log('⚙️ 代币配置:', tokenConfig);
-
-    if (!connection) {
-      throw new Error('Solana connection not available');
     }
 
     if (!walletProvider) {
       throw new Error('Solana wallet provider not available');
     }
 
-    if (!tokenConfig.aim_staking_program) {
-      throw new Error('aim_staking_program IDL not found in token configuration');
-    }
+    const newConnection = new Connection(tokenConfig.endpoint);
 
-    if (!tokenConfig.programId) {
-      throw new Error('programId not found in token configuration');
-    }
-
-    // const programId = new PublicKey(tokenConfig.programId);
-    // console.log('✅ Program ID 验证成功:', programId.toString());
-
-    const newEndpoint = 'https://api.devnet.solana.com'; // Official devnet RPC
-
-    const newConnection = new Connection(newEndpoint);
-
-    // 创建 Anchor provider
     const provider = new anchor.AnchorProvider(newConnection, walletProvider, { commitment: 'confirmed' });
 
-    // 设置提供者
     anchor.setProvider(provider);
 
-    // 创建程序实例
     const program = new anchor.Program(tokenConfig.aim_staking_program, provider);
 
     return {
       solanaConnection: newConnection,
-      solanaProgram: program,
-      solanaProvider: provider
+      solanaProgram: program
     };
   } catch (error) {
     console.error('❌ Solana contract initialization error:', error);

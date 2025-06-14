@@ -39,3 +39,29 @@ export const modal = createAppKit({
   themeMode: 'light',
   themeVariables: { '--w3m-accent': '#50B4FF' }
 });
+
+import USDCABI from '@/wallet/abi/USDC.json';
+import GPDUSDCABI from '@/wallet/abi/gpdUSDC.json';
+import aim_staking_program from '@/wallet/idl/aim_staking_program.json';
+import { clusterApiUrl } from '@solana/web3.js';
+
+// 合约配置 - 使用 @reown/appkit/networks 的网络名称作为 key
+export const contractConfig = {
+  'base-sepolia': {
+    USDC: '0x7964F8a00B49Ce5c6fc51A1b6800196E96376c62',
+    GPDUSDC: '0x4733FA9d295973C53Eaa027894998B7CC364F0ca',
+    USDCABI,
+    GPDUSDCABI
+  },
+
+  'solana-devnet': {
+    endpoint: clusterApiUrl('devnet'),
+    programId: '5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD',
+    aim_staking_program
+  }
+};
+
+// 工具函数
+export const getContractConfig = (networkName: string) => {
+  return contractConfig[networkName] || null;
+};

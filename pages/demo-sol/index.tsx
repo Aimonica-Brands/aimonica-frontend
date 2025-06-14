@@ -11,25 +11,11 @@ import * as anchor from '@coral-xyz/anchor';
 
 const { Option } = Select;
 
-// Stake record interface
-interface StakeRecord {
-  stakeId: number;
-  amount: number;
-  duration: number;
-  stakeTimestamp: Date;
-  endTimestamp: Date;
-  isStaked: boolean;
-  canUnstake: boolean;
-  stakeInfoPda: string;
-}
+
 
 export default function DemoSol() {
   const { address, isConnected } = useAppKitAccount();
-  const {
-    solanaConnection,
-    solanaProgram,
-    solanaProvider,
-  } = usePageContext();
+  const { solanaConnection, solanaProgram, } = usePageContext();
 
   const [loading, setLoading] = useState(false);
   const [signMessage, setSignMessage] = useState('Hello from AIMonica DApp!');
@@ -38,8 +24,8 @@ export default function DemoSol() {
   // Stake related state
   const [stakeAmount, setStakeAmount] = useState<number>(10);
   const [stakeDuration, setStakeDuration] = useState<number>(7);
-  const [nextStakeId, setNextStakeId] = useState<number>(2);
-  const [stakeRecords, setStakeRecords] = useState<StakeRecord[]>([]);
+  const [nextStakeId, setNextStakeId] = useState<number>(1);
+  const [stakeRecords, setStakeRecords] = useState([]);
 
   // Test account data from logs (updated with new addresses)
   const PROJECT_CONFIG = "57cN6zv7kJ8w2y28zk9EHbLpGwpN2TaRLYcQwbUZJjpA";
@@ -161,8 +147,8 @@ export default function DemoSol() {
           console.log(`📊 当前质押记录数: ${currentStakeCount}, 之前: ${previousStakeCount}`);
 
           if (currentStakeCount > previousStakeCount) {
-            const newStake = currentStakes.find(stake => 
-              stake.account.stakeId.toNumber() === stakeId && 
+            const newStake = currentStakes.find(stake =>
+              stake.account.stakeId.toNumber() === stakeId &&
               stake.account.amount.toNumber() / Math.pow(10, 9) === amount
             );
 
@@ -181,7 +167,7 @@ export default function DemoSol() {
       }
 
       // Process stake records
-      const records: StakeRecord[] = [];
+      const records: any[] = [];
       for (const stake of userStakes) {
         const stakeInfo = stake.account;
         const amount = stakeInfo.amount.toNumber() / Math.pow(10, 9);
@@ -205,11 +191,11 @@ export default function DemoSol() {
       // Sort records by stake ID and update state
       const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
       setStakeRecords(sortedRecords);
-      
+
       // Set next stake ID (current count + 1)
       const nextId = userStakes.length + 1;
       setNextStakeId(nextId);
-      
+
       addResult(`📊 查询到 ${sortedRecords.length} 个质押记录，下一个可用 ID: ${nextId}`);
 
       return userStakes;

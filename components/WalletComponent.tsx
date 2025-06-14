@@ -19,7 +19,6 @@ export const WalletComponent = () => {
     setSolanaConnection,
     setSolanaProgram,
     setCurrentNetworkType,
-    setSolanaProvider
   } = usePageContext();
 
   useEffect(() => {
@@ -59,12 +58,11 @@ export const WalletComponent = () => {
 
       if (connection && walletProvider) {
         try {
-          const result = initSolanaContracts(connection, walletProvider, network);
+          const result = initSolanaContracts(network, walletProvider);
           console.log(`✅ ${network} 合约初始化成功`, result);
 
           setSolanaConnection(result.solanaConnection);
           setSolanaProgram(result.solanaProgram);
-          setSolanaProvider(result.solanaProvider);
         } catch (error) {
           console.error(`❌ ${network} 合约初始化失败`, error);
         }
@@ -80,7 +78,6 @@ export const WalletComponent = () => {
     setGPDUSDCContract(null);
     setSolanaConnection(null);
     setSolanaProgram(null);
-    setSolanaProvider(null);
     setCurrentNetworkType(null);
   };
 
