@@ -15,7 +15,7 @@ export default function TwitterComponent() {
   // 用于跟踪之前的连接状态
   const prevConnectedRef = React.useRef<boolean>(false);
 
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 环境配置
   const envConfig = getCurrentEnv();
