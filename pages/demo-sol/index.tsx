@@ -8,12 +8,14 @@ import { usePageContext } from '@/context';
 import * as anchor from '@coral-xyz/anchor';
 import { useAppKitNetwork } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
+import { useAppKitAccount } from '@reown/appkit/react';
 
 
 export default function DemoSol() {
   const { Option } = Select;
+  const { address, isConnected } = useAppKitAccount();
   const { caipNetwork } = useAppKitNetwork();
-  const { solanaConnection, solanaProgram } = usePageContext();
+  const { solanaConnection, solanaProgram, currentNetworkType } = usePageContext();
 
   const [loading, setLoading] = useState(false);
   const [signMessage, setSignMessage] = useState('Hello from AIMonica DApp!');
@@ -636,140 +638,142 @@ export default function DemoSol() {
   return (
     <div style={{ padding: '1.2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1>🧪 AIMonica Demo</h1>
+      <p>
+        当前连接:{' '}
+        <strong>
+          {address?.slice(0, 6)}...{address?.slice(-4)}
+        </strong>
+        ({currentNetworkType === 'eip155' ? 'EVM' : currentNetworkType === 'solana' ? 'Solana' : '未知网络'})
+      </p>
 
-      <Tabs
-        defaultActiveKey="1"
-        items={[
-          {
-            key: "1",
-            label: "⚡ Solana 示例",
-            children: <div>
-              <Card title="Solana 功能示例">
-                <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                  <Button onClick={getPrivateKey}>获取私钥</Button>
+      {
+        currentNetworkType === 'solana' ? <Card title="Solana 功能示例">
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            <Button onClick={getPrivateKey}>获取私钥</Button>
 
-                  {/* 消息签名 */}
-                  {/* <div>
-                    <h4>📝 消息签名</h4>
-                    <Input
-                      placeholder="输入要签名的消息"
-                      value={signMessage}
-                      onChange={(e) => setSignMessage(e.target.value)}
-                    />
-                    <Button onClick={handleSolanaSignMessage} loading={loading}>
-                      签名消息
-                    </Button>
-                  </div> */}
+            {/* 消息签名 */}
+            {/* <div>
+            <h4>📝 消息签名</h4>
+            <Input
+              placeholder="输入要签名的消息"
+              value={signMessage}
+              onChange={(e) => setSignMessage(e.target.value)}
+            />
+            <Button onClick={handleSolanaSignMessage} loading={loading}>
+              签名消息
+            </Button>
+          </div> */}
 
-                  {/* 余额显示 */}
-                  <div>
-                    <h4>💸 余额信息</h4>
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      <div>
-                        <label>SOL 余额: </label>
-                        <Tag color="blue">{solanaBalance.toFixed(4)} SOL</Tag>
-                      </div>
-                      <div>
-                        <label>代币余额: </label>
-                        <Tag color="green">{tokenBalance.toFixed(2)} tokens</Tag>
-                      </div>
-                      <Space>
-                        <Button
-                          onClick={getSOLBalance}
-                          loading={loading}
-                          type="primary"
-                        >
-                          刷新 SOL 余额
-                        </Button>
-                        <Button
-                          onClick={getTokenBalance}
-                          loading={loading}
-                          type="primary"
-                        >
-                          刷新代币余额
-                        </Button>
-                      </Space>
-                    </Space>
-                  </div>
-
-                  <Divider />
-
-                  {/* 质押功能 */}
-                  <div>
-                    <h4>🥩 多次质押功能 (支持 Stake ID)</h4>
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      <div>
-                        <label>质押数量: </label>
-                        <InputNumber
-                          value={stakeAmount}
-                          onChange={(value) => setStakeAmount(value || 0)}
-                          min={1}
-                          max={1000}
-                          step={1}
-                          style={{ width: 120 }}
-                        />
-                        <span style={{ marginLeft: 8 }}>tokens</span>
-                      </div>
-
-                      <div>
-                        <label>质押期限: </label>
-                        <Select
-                          value={stakeDuration}
-                          onChange={setStakeDuration}
-                          style={{ width: 120 }}
-                        >
-                          <Option value={7}>7 天</Option>
-                          <Option value={14}>14 天</Option>
-                          <Option value={30}>30 天</Option>
-                        </Select>
-                      </div>
-
-                      <div>
-                        <label>下一个 Stake ID: </label>
-                        <Tag color="green">#{nextStakeId}</Tag>
-                        <span style={{ marginLeft: 8, fontSize: '12px', color: '#666' }}>
-                          (自动检测可用ID)
-                        </span>
-                      </div>
-
-                      <Space wrap>
-                        <Button
-                          onClick={handleStake}
-                          loading={loading}
-                          type="primary"
-                        >
-                          创建新质押 (自动检测 ID)
-                        </Button>
-                        <Button
-                          onClick={() => refreshStakeRecords()}
-                          loading={loading}
-                        >
-                          刷新质押记录
-                        </Button>
-                      </Space>
-                    </Space>
-                  </div>
-
-                  <Divider />
-
-                  {/* 质押记录表格 */}
-                  <div>
-                    <h4>📋 我的质押记录</h4>
-                    <Table
-                      columns={stakeColumns}
-                      dataSource={stakeRecords}
-                      rowKey="stakeId"
-                      size="small"
-                      pagination={false}
-                      locale={{ emptyText: '暂无质押记录，请先创建质押' }}
-                    />
-                  </div>
+            {/* 余额显示 */}
+            <div>
+              <h4>💸 余额信息</h4>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <div>
+                  <label>SOL 余额: </label>
+                  <Tag color="blue">{solanaBalance.toFixed(4)} SOL</Tag>
+                </div>
+                <div>
+                  <label>代币余额: </label>
+                  <Tag color="green">{tokenBalance.toFixed(2)} tokens</Tag>
+                </div>
+                <Space>
+                  <Button
+                    onClick={getSOLBalance}
+                    loading={loading}
+                    type="primary"
+                  >
+                    刷新 SOL 余额
+                  </Button>
+                  <Button
+                    onClick={getTokenBalance}
+                    loading={loading}
+                    type="primary"
+                  >
+                    刷新代币余额
+                  </Button>
                 </Space>
-              </Card>
+              </Space>
             </div>
-          }
-        ]}
-      />
+
+            <Divider />
+
+            {/* 质押功能 */}
+            <div>
+              <h4>🥩 多次质押功能 (支持 Stake ID)</h4>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <div>
+                  <label>质押数量: </label>
+                  <InputNumber
+                    value={stakeAmount}
+                    onChange={(value) => setStakeAmount(value || 0)}
+                    min={1}
+                    max={1000}
+                    step={1}
+                    style={{ width: 120 }}
+                  />
+                  <span style={{ marginLeft: 8 }}>tokens</span>
+                </div>
+
+                <div>
+                  <label>质押期限: </label>
+                  <Select
+                    value={stakeDuration}
+                    onChange={setStakeDuration}
+                    style={{ width: 120 }}
+                  >
+                    <Option value={7}>7 天</Option>
+                    <Option value={14}>14 天</Option>
+                    <Option value={30}>30 天</Option>
+                  </Select>
+                </div>
+
+                <div>
+                  <label>下一个 Stake ID: </label>
+                  <Tag color="green">#{nextStakeId}</Tag>
+                  <span style={{ marginLeft: 8, fontSize: '12px', color: '#666' }}>
+                    (自动检测可用ID)
+                  </span>
+                </div>
+
+                <Space wrap>
+                  <Button
+                    onClick={handleStake}
+                    loading={loading}
+                    type="primary"
+                  >
+                    创建新质押 (自动检测 ID)
+                  </Button>
+                  <Button
+                    onClick={() => refreshStakeRecords()}
+                    loading={loading}
+                  >
+                    刷新质押记录
+                  </Button>
+                </Space>
+              </Space>
+            </div>
+
+            <Divider />
+
+            {/* 质押记录表格 */}
+            <div>
+              <h4>📋 我的质押记录</h4>
+              <Table
+                columns={stakeColumns}
+                dataSource={stakeRecords}
+                rowKey="stakeId"
+                size="small"
+                pagination={false}
+                locale={{ emptyText: '暂无质押记录，请先创建质押' }}
+              />
+            </div>
+          </Space>
+        </Card> :
+          <Card>
+            <p>请切换到 Solana 网络 (Solana 或 Solana Sepolia) 来测试 Solana 功能</p>
+          </Card>
+      }
+
 
       {/* 操作结果显示 */}
       {results.length > 0 && (
