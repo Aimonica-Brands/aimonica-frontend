@@ -40,7 +40,7 @@ export default function DemoSol() {
   const updateData = () => {
     getSOLBalance();
     getTokenBalance();
-    getStakeRecords();
+    refreshStakeRecords();
   }
 
   // 签名消息
@@ -172,46 +172,82 @@ export default function DemoSol() {
     setResults((prev) => [`${new Date().toLocaleTimeString()}: ${result}`, ...prev.slice(0, 9)]);
   };
 
+
+  const refreshStakeRecords = async () => {
+    if (!solanaProgram || !solanaConnection) return null;
+
+    const userPublicKey = solanaProgram.provider.wallet.publicKey;
+    if (!userPublicKey) return null;
+
+    const projectConfigPubkey = new PublicKey(PROJECT_CONFIG);
+
+    // Use memcmp filters to efficiently query stake records
+    const userFilter = {
+      memcmp: {
+        offset: 8,
+        bytes: userPublicKey.toBase58(),
+      }
+    };
+
+    const projectFilter = {
+      memcmp: {
+        offset: 8 + 32,
+        bytes: projectConfigPubkey.toBase58(),
+      }
+    };
+
+    const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
+    if (!userStakes) return null;
+
+    // Process stake records
+    const records: any[] = [];
+    for (const stake of userStakes) {
+      const stakeInfo = stake.account;
+      const amount = stakeInfo.amount.toNumber() / Math.pow(10, 9);
+      const stakeDate = new Date(stakeInfo.stakeTimestamp.toNumber() * 1000);
+      const endDate = new Date(stakeDate.getTime() + (stakeInfo.durationDays * 24 * 60 * 60 * 1000));
+      const now = new Date();
+      const canUnstake = now >= endDate;
+
+      records.push({
+        stakeId: stakeInfo.stakeId.toNumber(),
+        amount,
+        duration: stakeInfo.durationDays,
+        stakeTimestamp: stakeDate,
+        endTimestamp: endDate,
+        isStaked: stakeInfo.isStaked,
+        canUnstake,
+        stakeInfoPda: stake.publicKey.toString()
+      });
+    }
+
+    // Sort records by stake ID and update state
+    const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
+    setStakeRecords(sortedRecords);
+
+    const nextId = sortedRecords[0].stakeId + 1;
+    setNextStakeId(nextId);
+
+    addResult(`📊 查询到 ${sortedRecords.length} 个质押记录，下一个可用 ID: ${nextId}`);
+    console.log(`📊 查询到 ${sortedRecords.length} 个质押记录，下一个可用 ID: ${nextId}`)
+    return sortedRecords;
+  }
+
   // Combined function to fetch stake records and get next stake ID
-  const getStakeRecords = async (options?: {
-    stakeId: number;
-    amount: number;
-  }) => {
+  const getStakeRecords = async (stakeType: string, stakeId: number, stakeAmount: number) => {
     if (!solanaProgram || !solanaConnection) return null;
 
     try {
-      const userPublicKey = solanaProgram.provider.wallet.publicKey;
-      if (!userPublicKey) return null;
-
-      const projectConfigPubkey = new PublicKey(PROJECT_CONFIG);
-
-      // Use memcmp filters to efficiently query stake records
-      const userFilter = {
-        memcmp: {
-          offset: 8,
-          bytes: userPublicKey.toBase58(),
-        }
-      };
-
-      const projectFilter = {
-        memcmp: {
-          offset: 8 + 32,
-          bytes: projectConfigPubkey.toBase58(),
-        }
-      };
-
       // Retry logic for fetching stake records
-      let userStakes;
+      let records;
       const maxRetries = 10;
       let retryCount = 0;
-      let previousStakeCount = 0;
 
       const fetchStakes = async () => {
         try {
           console.log(`🔍 查询质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
-          userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
-          console.log(`✅ 查询成功！Found ${userStakes.length} existing stakes`);
-          return userStakes;
+          records = await refreshStakeRecords()
+          return records;
         } catch (error) {
           console.error(`❌ 第 ${retryCount + 1} 次查询失败:`, error);
           if (retryCount >= maxRetries - 1) {
@@ -224,85 +260,49 @@ export default function DemoSol() {
         }
       };
 
-      // Initial fetch
-      userStakes = await fetchStakes();
-      if (!userStakes) return null;
-
       // If we're waiting for a new stake, start polling
-      if (options?.stakeId && options?.amount) {
-        const { stakeId, amount } = options;
-        const pollInterval = 3000;
-        previousStakeCount = userStakes.length;
+      if (stakeId && stakeAmount) {
+        const pollInterval = 5000;
 
-        const pollForNewStake = async (): Promise<typeof userStakes> => {
+        const pollForNewStake = async (): Promise<typeof records> => {
           retryCount++;
           if (retryCount >= maxRetries) {
             console.log('⚠️ 达到最大重试次数，但交易可能已成功');
-            return userStakes;
+            return records;
           }
 
           console.log(`⏳ 等待交易确认 (${retryCount}/${maxRetries})...`);
           await new Promise(resolve => setTimeout(resolve, pollInterval));
 
-          const currentStakes = await fetchStakes();
-          if (!currentStakes) return null;
+          const currentRecords = await fetchStakes();
+          if (!currentRecords) return null;
 
-          const currentStakeCount = currentStakes.length;
-          console.log(`📊 当前质押记录数: ${currentStakeCount}, 之前: ${previousStakeCount}`);
-
-          if (currentStakeCount > previousStakeCount) {
-            const newStake = currentStakes.find(stake =>
-              stake.account.stakeId.toNumber() === stakeId &&
-              stake.account.amount.toNumber() / Math.pow(10, 9) === amount
+          if (stakeType === "stake") {
+            const newStake = currentRecords.find(stake =>
+              stake.stakeId === stakeId
             );
-
             if (newStake) {
               console.log('✅ 新质押记录已确认:', newStake);
-              return currentStakes;
+              return currentRecords;
+            }
+          } else if (stakeType === "unstake" || stakeType === "emergencyUnstake") {
+            const existingStake = currentRecords.find(stake =>
+              stake.stakeId === stakeId
+            );
+            if (!existingStake) {
+              console.log('✅ 解质押记录已确认: 原质押记录已移除');
+              return currentRecords;
             }
           }
 
-          previousStakeCount = currentStakeCount;
           return pollForNewStake();
         };
 
-        userStakes = await pollForNewStake();
-        if (!userStakes) return null;
+        records = await pollForNewStake();
+        if (!records) return null;
       }
 
-      // Process stake records
-      const records: any[] = [];
-      for (const stake of userStakes) {
-        const stakeInfo = stake.account;
-        const amount = stakeInfo.amount.toNumber() / Math.pow(10, 9);
-        const stakeDate = new Date(stakeInfo.stakeTimestamp.toNumber() * 1000);
-        const endDate = new Date(stakeDate.getTime() + (stakeInfo.durationDays * 24 * 60 * 60 * 1000));
-        const now = new Date();
-        const canUnstake = now >= endDate;
-
-        records.push({
-          stakeId: stakeInfo.stakeId.toNumber(),
-          amount,
-          duration: stakeInfo.durationDays,
-          stakeTimestamp: stakeDate,
-          endTimestamp: endDate,
-          isStaked: stakeInfo.isStaked,
-          canUnstake,
-          stakeInfoPda: stake.publicKey.toString()
-        });
-      }
-
-      // Sort records by stake ID and update state
-      const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
-      setStakeRecords(sortedRecords);
-
-      // Set next stake ID (current count + 1)
-      const nextId = userStakes.length + 1;
-      setNextStakeId(nextId);
-
-      addResult(`📊 查询到 ${sortedRecords.length} 个质押记录，下一个可用 ID: ${nextId}`);
-
-      return userStakes;
+      return records;
     } catch (error) {
       console.error('Refresh stake records error:', error);
       addResult(`❌ 刷新质押记录失败: ${error.message}`);
@@ -340,11 +340,11 @@ export default function DemoSol() {
       const vault = new PublicKey(VAULT);
 
       // Use the next stake ID from state
-      console.log('Using stake ID:', nextStakeId);
+      console.log('质押ID:', nextStakeId, '数量:', stakeAmount);
 
       // Generate user token account
       const userTokenAccount = getUserTokenAccount(userPublicKey, tokenMintPubkey);
-      console.log('User token account:', userTokenAccount.toString());
+      console.log('用户代币账户:', userTokenAccount.toString());
 
       // Generate stake info PDA
       const stakeInfoPda = await getStakeInfoPda(userPublicKey, projectConfigPubkey, nextStakeId);
@@ -362,44 +362,24 @@ export default function DemoSol() {
         tokenProgram: TOKEN_PROGRAM_ID,
       };
 
-      console.log("Stake accounts:", JSON.stringify(stakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
+      console.log("质押账户:", JSON.stringify(stakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
 
       // Send stake transaction
-      console.log('Sending stake transaction...');
+      console.log('发送质押交易...');
       const tx = await solanaProgram.methods
         .stake(stakeAmountLamports, stakeDuration, stakeIdBN)
         .accounts(stakeAccounts)
         .rpc();
 
-      console.log("✅ 质押交易已发送! Hash:", tx);
       const contractConfig = getContractConfig((caipNetwork as any).network);
       const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
-      addResult(`🔗 查看质押交易: ${txLink}`);
-
+      addResult(`🔗 质押交易已发送: ${txLink}`);
+      message.success(`质押成功，请等待交易确认`);
 
       // Wait for the new stake to be confirmed
-      const userStakes = await getStakeRecords({
-        stakeId: nextStakeId,
-        amount: stakeAmount
-      });
-
-      if (userStakes) {
-        const newStake = userStakes.find(stake =>
-          stake.account.stakeId.toNumber() === nextStakeId &&
-          stake.account.amount.toNumber() / Math.pow(10, 9) === stakeAmount
-        );
-
-        if (newStake) {
-          addResult(`✅ 质押成功: ${stakeAmount} tokens for ${stakeDuration} days (Stake ID: ${nextStakeId})`);
-          message.success(`质押成功！Stake ID: ${nextStakeId}`);
-        } else {
-          addResult(`⚠️ 交易可能已成功，但未及时确认`);
-          message.warning('交易已发送，但确认超时。请检查 Solana Explorer 确认状态。');
-        }
-      }
-
+      await getStakeRecords("stake", nextStakeId, stakeAmount);
     } catch (error) {
-      console.error('Stake error:', error);
+      console.error('质押失败:', error);
       handleContractError(error);
       addResult(`❌ 质押失败: ${error.message}`);
     } finally {
@@ -444,17 +424,19 @@ export default function DemoSol() {
         return;
       }
 
+      console.log('解质押ID:', stakeId, '数量:', stakeRecord.amount);
+
       // 生成用户代币账户
       const userTokenAccount = getUserTokenAccount(userPublicKey, tokenMintPubkey);
-      console.log('User token account:', userTokenAccount.toString());
+      console.log('用户代币账户:', userTokenAccount.toString());
 
       // 生成质押信息 PDA
       const stakeInfoPda = await getStakeInfoPda(userPublicKey, projectConfigPubkey, stakeId);
-      console.log('Stake info PDA:', stakeInfoPda.toString());
+      console.log('质押信息 PDA:', stakeInfoPda.toString());
 
       // 获取项目配置
       const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
-      console.log('Project config:', projectConfig);
+      console.log('项目配置:', projectConfig);
 
       // 生成 vault authority PDA
       const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
@@ -464,7 +446,7 @@ export default function DemoSol() {
         ],
         solanaProgram.programId
       );
-      console.log('Vault authority PDA:', vaultAuthorityPda.toString());
+      console.log('Vault 权限 PDA:', vaultAuthorityPda.toString());
 
       const unstakeAccounts = {
         projectConfig: projectConfigPubkey,
@@ -476,42 +458,24 @@ export default function DemoSol() {
         tokenProgram: TOKEN_PROGRAM_ID,
       };
 
-      console.log("Unstake accounts:", JSON.stringify(unstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
+      console.log("解质押账户:", JSON.stringify(unstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
 
       // 发送解质押交易
-      console.log('Sending unstake transaction...');
+      console.log('发送解质押交易...');
       const tx = await solanaProgram.methods
         .unstake(new anchor.BN(stakeId))
         .accounts(unstakeAccounts)
         .rpc();
 
-      console.log("✅ 解质押交易已发送! Hash:", tx);
       const contractConfig = getContractConfig((caipNetwork as any).network);
       const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
-      addResult(`🔗 查看解质押交易: ${txLink}`);
+      addResult(`🔗 解质押交易已发送: ${txLink}`);
+      message.success(`解质押成功，请等待交易确认`);
 
       // 等待交易确认并刷新记录
-      const userStakes = await getStakeRecords({
-        stakeId,
-        amount: stakeRecord.amount
-      });
-
-      if (userStakes) {
-        const updatedStake = userStakes.find(stake =>
-          stake.account.stakeId.toNumber() === stakeId
-        );
-
-        if (updatedStake && !updatedStake.account.isStaked) {
-          addResult(`✅ 解质押成功: ${stakeRecord.amount} tokens (Stake ID: ${stakeId})`);
-          message.success(`解质押成功！Stake ID: ${stakeId}`);
-        } else {
-          addResult(`⚠️ 交易可能已成功，但未及时确认`);
-          message.warning('交易已发送，但确认超时。请检查 Solana Explorer 确认状态。');
-        }
-      }
-
+      await getStakeRecords("unstake", stakeId, stakeRecord.amount);
     } catch (error) {
-      console.error('Unstake error:', error);
+      console.error('解质押失败:', error);
       handleContractError(error);
       addResult(`❌ 解质押失败: ${error.message}`);
     } finally {
@@ -550,17 +514,19 @@ export default function DemoSol() {
         return;
       }
 
+      console.log('紧急解质押ID:', stakeId, '数量:', stakeRecord.amount);
+
       // 生成用户代币账户
       const userTokenAccount = getUserTokenAccount(userPublicKey, tokenMintPubkey);
-      console.log('User token account:', userTokenAccount.toString());
+      console.log('用户代币账户:', userTokenAccount.toString());
 
       // 生成质押信息 PDA
       const stakeInfoPda = await getStakeInfoPda(userPublicKey, projectConfigPubkey, stakeId);
-      console.log('Stake info PDA:', stakeInfoPda.toString());
+      console.log('质押信息 PDA:', stakeInfoPda.toString());
 
       // 获取项目配置
       const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
-      console.log('Project config:', projectConfig);
+      console.log('项目配置:', projectConfig);
 
       // 生成 vault authority PDA
       const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
@@ -570,7 +536,7 @@ export default function DemoSol() {
         ],
         solanaProgram.programId
       );
-      console.log('Vault authority PDA:', vaultAuthorityPda.toString());
+      console.log('Vault 权限 PDA:', vaultAuthorityPda.toString());
 
       const emergencyUnstakeAccounts = {
         projectConfig: projectConfigPubkey,
@@ -582,42 +548,24 @@ export default function DemoSol() {
         tokenProgram: TOKEN_PROGRAM_ID,
       };
 
-      console.log("Emergency unstake accounts:", JSON.stringify(emergencyUnstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
+      console.log("紧急解质押账户:", JSON.stringify(emergencyUnstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
 
       // 发送紧急解质押交易
-      console.log('Sending emergency unstake transaction...');
+      console.log('发送紧急解质押交易...');
       const tx = await solanaProgram.methods
         .emergencyUnstake(new anchor.BN(stakeId))
         .accounts(emergencyUnstakeAccounts)
         .rpc();
 
-      console.log("✅ 紧急解质押交易已发送! Hash:", tx);
       const contractConfig = getContractConfig((caipNetwork as any).network);
       const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
-      addResult(`🔗 查看紧急解质押交易: ${txLink}`);
+      addResult(`🔗 紧急解质押交易已发送: ${txLink}`);
+      message.success(`紧急解质押成功，请等待交易确认`);
 
       // 等待交易确认并刷新记录
-      const userStakes = await getStakeRecords({
-        stakeId,
-        amount: stakeRecord.amount
-      });
-
-      if (userStakes) {
-        const updatedStake = userStakes.find(stake =>
-          stake.account.stakeId.toNumber() === stakeId
-        );
-
-        if (updatedStake && !updatedStake.account.isStaked) {
-          addResult(`✅ 紧急解质押成功: ${stakeRecord.amount} tokens (Stake ID: ${stakeId})`);
-          message.success(`紧急解质押成功！Stake ID: ${stakeId}`);
-        } else {
-          addResult(`⚠️ 交易可能已成功，但未及时确认`);
-          message.warning('交易已发送，但确认超时。请检查 Solana Explorer 确认状态。');
-        }
-      }
-
+      await getStakeRecords("emergencyUnstake", stakeId, stakeRecord.amount);
     } catch (error) {
-      console.error('Emergency unstake error:', error);
+      console.error('紧急解质押失败:', error);
       handleContractError(error);
       addResult(`❌ 紧急解质押失败: ${error.message}`);
     } finally {
@@ -684,8 +632,6 @@ export default function DemoSol() {
       ),
     },
   ];
-
-
 
   return (
     <div style={{ padding: '1.2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -795,7 +741,7 @@ export default function DemoSol() {
                           创建新质押 (自动检测 ID)
                         </Button>
                         <Button
-                          onClick={() => getStakeRecords()}
+                          onClick={() => refreshStakeRecords()}
                           loading={loading}
                         >
                           刷新质押记录

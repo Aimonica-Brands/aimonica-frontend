@@ -115,7 +115,7 @@ export default function HeaderComponent() {
         )}
 
         {/* AppKit Connect Button */}
-        <appkit-button size="sm" balance="hide" />
+        <appkit-button balance="hide" />
 
         {/* Wallet initialization component */}
         <WalletComponent />
