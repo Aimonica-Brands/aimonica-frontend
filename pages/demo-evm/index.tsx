@@ -353,7 +353,6 @@ export default function DemoEvm() {
 
   return (
     <div style={{ padding: '1.2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>🧪 AIMonica Demo</h1>
       <p>
         当前连接:{' '}
         <strong>

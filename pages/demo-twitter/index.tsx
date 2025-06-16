@@ -96,7 +96,6 @@ export default function DemoTwitter() {
 
   return (
     <div style={{ padding: '1.2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>🧪 AIMonica Demo</h1>
       <Card title="Twitter 连接">
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           {/* 配置状态检查 */}

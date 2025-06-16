@@ -55,7 +55,7 @@ export default NextAuth({
       return session;
     },
     async redirect({ url, baseUrl }) {
-      const redirectPage = '/demo';
+      const redirectPage = '/';
 
       if (url.startsWith('/')) return `${baseUrl}${url}`;
       else if (new URL(url).origin === baseUrl) return url;
@@ -63,7 +63,7 @@ export default NextAuth({
     }
   },
   pages: {
-    error: '/demo'
+    error: '/'
   },
   secret: process.env.NEXT_PUBLIC_AUTH_SECRET
 });

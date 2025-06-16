@@ -8,14 +8,18 @@ export default function Demo() {
   return (
     <div style={{ padding: '1.2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1>🧪 AIMonica Demo</h1>
-      <Button type="primary" onClick={() => router.push('/demo-twitter')}>
+      <Button onClick={() => router.push('/demo-twitter')}>
         Demo Twitter
       </Button>
-      <Button type="primary" onClick={() => router.push('/demo-evm')}>
+      <br />
+      <br />
+      <Button onClick={() => router.push('/demo-evm')}>
         Demo EVM
       </Button>
-      <Button type="primary" onClick={() => router.push('/demo-sol')}>
-        Demo Solana
+      <br />
+      <br />
+      <Button onClick={() => router.push('/demo-sol')}>
+        Demo Sol
       </Button>
     </div>
   );

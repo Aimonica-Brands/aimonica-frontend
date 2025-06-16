@@ -7,7 +7,7 @@ export const envConfig = {
 
   app: {
     url: process.env.NEXTAUTH_URL,
-    defaultPage: '/demo'
+    defaultPage: '/'
   },
 
   twitter: {
