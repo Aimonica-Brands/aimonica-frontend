@@ -10,7 +10,6 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { SessionProvider } from 'next-auth/react';
-import type { Session } from 'next-auth';
 
 import { wagmiAdapter } from '@/wallet';
 import { WagmiProvider, type Config } from 'wagmi';

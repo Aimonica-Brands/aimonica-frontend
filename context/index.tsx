@@ -22,10 +22,10 @@ interface PageContextType {
   // EVM 合约状态
   provider: any;
   setProvider: (provider: any) => void;
-  USDCContract: any;
-  setUSDCContract: (contract: any) => void;
-  GPDUSDCContract: any;
-  setGPDUSDCContract: (contract: any) => void;
+  evmTokenContract: any;
+  setEvmTokenContract: (contract: any) => void;
+  evmStakingContract: any;
+  setEvmStakingContract: (contract: any) => void;
 
   // Solana 合约状态
   solanaConnection: any;
@@ -56,8 +56,8 @@ export function PageProvider({ children }: PageProviderProps) {
 
   // EVM 状态
   const [provider, setProvider] = useState(null);
-  const [USDCContract, setUSDCContract] = useState(null);
-  const [GPDUSDCContract, setGPDUSDCContract] = useState(null);
+  const [evmTokenContract, setEvmTokenContract] = useState(null);
+  const [evmStakingContract, setEvmStakingContract] = useState(null);
 
   // Solana 状态
   const [solanaConnection, setSolanaConnection] = useState(null);
@@ -79,10 +79,10 @@ export function PageProvider({ children }: PageProviderProps) {
 
     provider,
     setProvider,
-    USDCContract,
-    setUSDCContract,
-    GPDUSDCContract,
-    setGPDUSDCContract,
+    evmTokenContract,
+    setEvmTokenContract,
+    evmStakingContract,
+    setEvmStakingContract,
 
     solanaConnection,
     setSolanaConnection,

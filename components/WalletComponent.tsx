@@ -14,8 +14,8 @@ export const WalletComponent = () => {
 
   const {
     setProvider,
-    setUSDCContract,
-    setGPDUSDCContract,
+    setEvmTokenContract,
+    setEvmStakingContract,
     setSolanaConnection,
     setSolanaProgram,
     setCurrentNetworkType,
@@ -38,44 +38,44 @@ export const WalletComponent = () => {
   }, [isConnected, address, caipNetwork, connection, walletProvider]);
 
   const initializeContracts = async (caipNetwork: any) => {
-    const { chainNamespace, network } = caipNetwork as any;
+    const { chainNamespace, id, name } = caipNetwork as any;
 
-    console.log(`🔗 初始化 ${network} 合约...`);
+    console.log(`🔗 初始化 ${name} 合约...`);
 
     if (chainNamespace === 'eip155') {
       try {
-        const result = await initEVMContracts(network);
-        console.log(`✅ ${network} 合约初始化成功`, result);
+        const result = await initEVMContracts(id);
+        console.log(`✅ ${name} 合约初始化成功`, result);
 
         setProvider(result.provider);
-        setUSDCContract(result.usdcContract);
-        setGPDUSDCContract(result.gpdUsdcContract);
+        setEvmTokenContract(result.evmTokenContract);
+        setEvmStakingContract(result.evmStakingContract);
       } catch (error) {
-        console.error(`❌ ${network} 合约初始化失败`, error);
+        console.error(`❌ ${name} 合约初始化失败`, error);
       }
     } else if (chainNamespace === 'solana') {
       // Solana 网络需要使用 React 钩子
 
       if (connection && walletProvider) {
         try {
-          const result = initSolanaContracts(network, walletProvider);
-          console.log(`✅ ${network} 合约初始化成功`, result);
+          const result = initSolanaContracts(id, walletProvider);
+          console.log(`✅ ${name} 合约初始化成功`, result);
 
           setSolanaConnection(result.solanaConnection);
           setSolanaProgram(result.solanaProgram);
         } catch (error) {
-          console.error(`❌ ${network} 合约初始化失败`, error);
+          console.error(`❌ ${name} 合约初始化失败`, error);
         }
       } else {
-        console.log(`⏳ 等待 ${network} 连接...`);
+        console.log(`⏳ 等待 ${name} 连接...`);
       }
     }
   };
 
   const clearContractStates = () => {
     setProvider(null);
-    setUSDCContract(null);
-    setGPDUSDCContract(null);
+    setEvmTokenContract(null);
+    setEvmStakingContract(null);
     setSolanaConnection(null);
     setSolanaProgram(null);
     setCurrentNetworkType(null);

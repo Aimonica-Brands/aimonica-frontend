@@ -7,11 +7,11 @@ import { message } from 'antd';
 /**
  * 初始化 EVM 合约
  */
-export const initEVMContracts = async (network: string) => {
+export const initEVMContracts = async (id: any) => {
   try {
-    const tokenConfig = getContractConfig(network);
+    const tokenConfig = getContractConfig(id);
     if (!tokenConfig) {
-      throw new Error(`No token configuration found for network ${network}`);
+      throw new Error(`No token configuration found for network ${id}`);
     }
 
     if (!window.ethereum) {
@@ -21,14 +21,14 @@ export const initEVMContracts = async (network: string) => {
     const provider = new ethers.BrowserProvider(window.ethereum as any);
     const signer = await provider.getSigner();
 
-    const usdcContract = new ethers.Contract(tokenConfig.USDC, tokenConfig.USDCABI, signer);
+    const tokenContract = new ethers.Contract(tokenConfig.BKIBSHI, tokenConfig.BKIBSHIABI, signer);
 
-    const gpdUsdcContract = new ethers.Contract(tokenConfig.GPDUSDC, tokenConfig.GPDUSDCABI, signer);
+    const stakingContract = new ethers.Contract(tokenConfig.AimStaking, tokenConfig.AimStakingABI, signer);
 
     return {
       provider,
-      usdcContract,
-      gpdUsdcContract
+      evmTokenContract: tokenContract,
+      evmStakingContract: stakingContract
     };
   } catch (error) {
     console.error('EVM contract initialization error:', error);
@@ -39,11 +39,11 @@ export const initEVMContracts = async (network: string) => {
 /**
  * 初始化 Solana 合约
  */
-export const initSolanaContracts = (network: string, walletProvider: any) => {
+export const initSolanaContracts = (id: any, walletProvider: any) => {
   try {
-    const tokenConfig = getContractConfig(network);
+    const tokenConfig = getContractConfig(id);
     if (!tokenConfig) {
-      throw new Error(`No token configuration found for network ${network}`);
+      throw new Error(`No token configuration found for network ${id}`);
     }
 
     if (!walletProvider) {
