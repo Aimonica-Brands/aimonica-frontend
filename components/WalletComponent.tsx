@@ -1,4 +1,3 @@
-'use client';
 import { useEffect } from 'react';
 import { useAppKitAccount, useAppKitNetwork, useAppKitProvider, useAppKitEvents } from '@reown/appkit/react';
 import { useAppKitConnection } from '@reown/appkit-adapter-solana/react';
@@ -85,13 +84,13 @@ export default function WalletComponent() {
   return <>
     {
       (isConnected && address) ? (
-        <button className='connect-wallet-button' onClick={() => modal.open()}>
-          <img src="/assets/images/wallet.svg" alt="" />
+        <button className='connect-button' onClick={() => modal.open()}>
+          <img src="/assets/images/icon-wallet.svg" alt="" />
           {address.slice(0, 6)}...{address.slice(-4)}
         </button>
       ) : (
-        <button className='connect-wallet-button' onClick={() => modal.open()}>
-          <img src="/assets/images/wallet.svg" alt="" />
+        <button className='connect-button' onClick={() => modal.open()}>
+          <img src="/assets/images/icon-wallet.svg" alt="" />
           Connect Wallet
         </button>
       )

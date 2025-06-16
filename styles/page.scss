@@ -60,7 +60,7 @@ header {
       height: 0.48rem;
       border-radius: 0.12rem;
       background: #ffffff;
-      margin-right: 0.2rem;
+      margin-left: 0.1rem;
       .ant-select-prefix {
         .anticon-search {
           font-size: 0.3rem;
@@ -81,7 +81,7 @@ header {
       font-size: 0.2rem;
       color: #5c7392;
       padding: 0 0.15rem;
-      margin-right: 0.2rem;
+      margin-left: 0.1rem;
       img {
         width: auto;
         height: 65%;
@@ -91,7 +91,7 @@ header {
   }
 }
 
-.connect-wallet-button {
+.connect-button {
   width: fit-content;
   height: 0.48rem;
   border-radius: 0.3rem;
@@ -101,6 +101,7 @@ header {
   font-weight: 400;
   font-size: 0.2rem;
   padding: 0 0.1rem;
+  margin-left: 0.1rem;
   img {
     width: auto;
     height: 0.3rem;
