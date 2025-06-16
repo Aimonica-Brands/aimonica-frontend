@@ -6,6 +6,7 @@ declare module "next-auth" {
     refreshToken?: string
     twitterUsername?: string
     twitterId?: string
+    profile_image_url?: string
   }
 }
 
@@ -15,5 +16,6 @@ declare module "next-auth/jwt" {
     refreshToken?: string
     twitterUsername?: string
     twitterId?: string
+    profile_image_url?: string
   }
 } 

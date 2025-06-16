@@ -6,6 +6,7 @@ export interface TwitterUser {
   id: string;
   accessToken?: string;
   refreshToken?: string;
+  profile_image_url?: string;
 }
 
 // Context 类型定义

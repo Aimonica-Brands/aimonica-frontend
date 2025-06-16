@@ -47,10 +47,13 @@ export default NextAuth({
       return token;
     },
     async session({ session, token }) {
+      console.log('session', session);
+      console.log('token', token);
       session.accessToken = token.accessToken as string;
       session.refreshToken = token.refreshToken as string;
       session.twitterUsername = token.twitterUsername as string;
       session.twitterId = token.twitterId as string;
+      session.profile_image_url = token.profile_image_url as string;
 
       return session;
     },
