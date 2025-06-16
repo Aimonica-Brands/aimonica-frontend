@@ -1,35 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { Button, message, Card, Input, Tabs, Divider, Space } from 'antd';
+import { Button, Card, App, Tabs, Divider, Space, Tag, InputNumber, Table } from 'antd';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
 import { ethers } from 'ethers';
 import { handleContractError } from '@/wallet/contracts';
-import { getCurrentEnv } from '@/pages/api/auth/utils';
 
 export default function DemoEvm() {
+  const { message } = App.useApp();
   const { address, isConnected } = useAppKitAccount();
   const {
     provider,
-    USDCContract,
-    GPDUSDCContract,
+    evmTokenContract,
+    evmStakingContract,
     currentNetworkType,
   } = usePageContext();
 
   const [loading, setLoading] = useState(false);
   const [signMessage, setSignMessage] = useState('Hello from AIMonica DApp!');
-  const [transferAmount, setTransferAmount] = useState('');
-  const [transferTo, setTransferTo] = useState('');
   const [results, setResults] = useState<string[]>([]);
+  const [ETHBalance, setETHBalance] = useState(0);
+  const [tokenBalance, setTokenBalance] = useState(0);
+  // Stake related state
+  const [stakeAmount, setStakeAmount] = useState<number>(10);
+  const [stakeDuration, setStakeDuration] = useState<number>(7);
+  const [stakeRecords, setStakeRecords] = useState([]);
+  const [isApproved, setIsApproved] = useState(false);
 
-  // 环境配置
-  const envConfig = getCurrentEnv();
+  // Project ID for staking
+  // AIM001
+  const PROJECT_ID = "0x41494d3030310000000000000000000000000000000000000000000000000000";
+
+  useEffect(() => {
+    if (provider && evmTokenContract && evmStakingContract) {
+      updateData();
+    }
+  }, [provider, evmTokenContract, evmStakingContract]);
+
+  const updateData = () => {
+    getETHBalance();
+    getTokenBalance();
+    refreshStakeRecords();
+  }
 
   const addResult = (result: string) => {
     setResults((prev) => [`${new Date().toLocaleTimeString()}: ${result}`, ...prev.slice(0, 9)]);
   };
 
-  // 签名消息
-  const handleSignMessage = async () => {
+  // 查询 ETH 余额
+  const getETHBalance = async () => {
     if (!provider || !address) {
       message.error('请先连接 EVM 钱包');
       return;
@@ -37,98 +55,301 @@ export default function DemoEvm() {
 
     setLoading(true);
     try {
-      const signer = await provider.getSigner();
-      const signature = await signer.signMessage(signMessage);
-
-      addResult(`EVM 消息签名成功: ${signature.slice(0, 20)}...`);
-      message.success('消息签名成功');
-      console.log('签名结果:', signature);
+      const balance = await provider.getBalance(address);
+      const ethBalance = Number(ethers.formatEther(balance));
+      setETHBalance(ethBalance);
+      addResult(`ETH 余额: ${ethBalance.toFixed(4)} ETH`);
     } catch (error) {
       handleContractError(error);
-      addResult(`EVM 签名失败: ${error.message}`);
+      addResult(`查询 ETH 余额失败: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // 发送 ETH
-  const handleSendETH = async () => {
-    if (!provider || !address || !transferTo) {
-      message.error('请填写完整信息');
+  // 查询代币余额
+  const getTokenBalance = async () => {
+    if (!evmTokenContract || !address) {
+      message.error('代币合约未初始化');
       return;
     }
 
     setLoading(true);
     try {
-      const signer = await provider.getSigner();
-      const tx = await signer.sendTransaction({
-        to: transferTo,
-        value: ethers.parseEther(transferAmount)
-      });
+      const _balance = await evmTokenContract.balanceOf(address);
+      const balanceInEther = Number(ethers.formatEther(_balance));
+      setTokenBalance(balanceInEther);
+      addResult(`代币余额: ${balanceInEther.toFixed(2)} tokens`);
 
-      addResult(`ETH 转账交易发送: ${tx.hash}`);
-      message.success('交易已发送，等待确认...');
-
-      const receipt = await tx.wait();
-      addResult(`ETH 转账确认: 区块 ${receipt.blockNumber}`);
-      message.success('转账成功');
+      if (balanceInEther > 0) {
+        const stakingContractAddress = await evmStakingContract.getAddress();
+        const allowance = await evmTokenContract.allowance(address, stakingContractAddress);
+        const allowanceInEther = Number(ethers.formatEther(allowance));
+        setIsApproved(allowanceInEther >= balanceInEther);
+      }
     } catch (error) {
       handleContractError(error);
-      addResult(`ETH 转账失败: ${error.message}`);
+      addResult(`查询代币余额失败: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // 查询 USDC 余额
-  const handleCheckUSDCBalance = async () => {
-    if (!USDCContract || !address) {
-      message.error('USDC 合约未初始化');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const balance = await USDCContract.balanceOf(address);
-      const formattedBalance = ethers.formatUnits(balance, 6);
-
-      addResult(`USDC 余额: ${formattedBalance}`);
-      message.success(`USDC 余额: ${formattedBalance}`);
-    } catch (error) {
-      handleContractError(error);
-      addResult(`查询 USDC 余额失败: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 授权 USDC
-  const handleApproveUSDC = async () => {
-    if (!USDCContract || !GPDUSDCContract) {
+  // 授权代币
+  const handleApprove = async () => {
+    if (!evmTokenContract || !evmStakingContract) {
       message.error('合约未初始化');
       return;
     }
 
     setLoading(true);
     try {
-      const tx = await USDCContract.approve(
-        await GPDUSDCContract.getAddress(),
-        ethers.parseUnits('1000', 6) // 授权 1000 USDC
+      const stakingContractAddress = await evmStakingContract.getAddress();
+      const tx = await evmTokenContract.approve(
+        stakingContractAddress,
+        ethers.parseEther('1000000') // 授权 100万代币
       );
 
-      addResult(`USDC 授权交易: ${tx.hash}`);
-      message.success('授权交易已发送...');
+      addResult(`🔗 授权交易已发送: ${tx.hash}`);
+      message.success('授权交易已发送，等待确认...');
 
       await tx.wait();
-      addResult(`USDC 授权成功`);
-      message.success('USDC 授权成功');
+      await getTokenBalance();
+
+      addResult(`✅ 授权成功`);
+      message.success('授权成功');
     } catch (error) {
       handleContractError(error);
-      addResult(`USDC 授权失败: ${error.message}`);
+      addResult(`❌ 授权失败: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
+
+  // 刷新质押记录
+  const refreshStakeRecords = async () => {
+    if (!evmStakingContract || !address) return;
+
+    try {
+      const userStakes = await evmStakingContract.getUserStakes(address);
+      const records = [];
+
+      for (const stakeId of userStakes) {
+        const stake = await evmStakingContract.stakes(stakeId);
+
+        const stakedAt = Number(stake.stakedAt) * 1000;
+        const unlockedAt = Number(stake.unlockedAt) * 1000;
+        const now = new Date().getTime();
+        const canUnstake = now >= unlockedAt;
+
+        // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
+
+        records.push({
+          stakeId: Number(stake.stakeId),
+          amount: Number(ethers.formatEther(stake.amount)),
+          stakedAtStr: new Date(stakedAt).toLocaleString(),
+          duration: Number(stake.duration) / 86400,
+          unlockedAtStr: new Date(unlockedAt).toLocaleString(),
+          canUnstake,
+          status: Number(stake.status),
+        });
+      }
+
+      // 按 stakeId 倒序排列
+      const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
+      setStakeRecords(sortedRecords);
+    } catch (error) {
+      console.error('刷新质押记录失败:', error);
+    }
+  };
+
+  // 质押代币
+  const handleStake = async () => {
+    if (!evmStakingContract || !address) {
+      message.error('请先连接 EVM 钱包');
+      return;
+    }
+
+    if (!stakeAmount || stakeAmount <= 0) {
+      message.error('请输入有效的质押数量');
+      return;
+    }
+
+    if (!tokenBalance) {
+      message.error('余额不足');
+      return;
+    }
+
+    if (loading) {
+      message.warning('操作正在进行中，请勿重复点击');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const amount = ethers.parseEther(stakeAmount.toString());
+      const tx = await evmStakingContract.stake(amount, stakeDuration, PROJECT_ID);
+
+      addResult(`🔗 质押交易已发送: ${tx.hash}`);
+      message.success('质押交易已发送，等待确认...');
+
+      await tx.wait();
+      addResult(`✅ 质押成功`);
+      message.success('质押成功');
+
+      // 刷新质押记录
+      updateData();
+    } catch (error) {
+      handleContractError(error);
+      addResult(`❌ 质押失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  // 解质押
+  const handleUnstake = async (stakeId: number) => {
+    if (!evmStakingContract || !address) {
+      message.error('请先连接 EVM 钱包');
+      return;
+    }
+
+    if (loading) {
+      message.warning('操作正在进行中，请勿重复点击');
+      return;
+    }
+
+    // 获取用户的质押记录
+    const stakeRecord = stakeRecords.find(record => record.stakeId === stakeId);
+    if (!stakeRecord) {
+      message.error('未找到对应的质押记录');
+      return;
+    }
+
+    // 检查是否可以解质押
+    if (!stakeRecord.canUnstake) {
+      message.error('质押期限未到，无法解质押');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const tx = await evmStakingContract.unstake(stakeId);
+
+      addResult(`🔗 解质押交易已发送: ${tx.hash}`);
+      message.success('解质押交易已发送，等待确认...');
+
+      await tx.wait();
+      addResult(`✅ 解质押成功`);
+      message.success('解质押成功');
+
+      // 刷新质押记录
+      updateData();
+    } catch (error) {
+      handleContractError(error);
+      addResult(`❌ 解质押失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 紧急解质押
+  const handleEmergencyUnstake = async (stakeId: number) => {
+    if (!evmStakingContract || !address) {
+      message.error('请先连接 EVM 钱包');
+      return;
+    }
+
+    if (loading) {
+      message.warning('操作正在进行中，请勿重复点击');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const tx = await evmStakingContract.emergencyUnstake(stakeId);
+
+      addResult(`🔗 紧急解质押交易已发送: ${tx.hash}`);
+      message.success('紧急解质押交易已发送，等待确认...');
+
+      await tx.wait();
+      addResult(`✅ 紧急解质押成功`);
+      message.success('紧急解质押成功');
+
+      // 刷新质押记录
+      updateData();
+    } catch (error) {
+      handleContractError(error);
+      addResult(`❌ 紧急解质押失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columns = [
+    {
+      title: '质押ID',
+      dataIndex: 'stakeId',
+      key: 'stakeId',
+    },
+    {
+      title: '数量',
+      dataIndex: 'amount',
+      key: 'amount',
+      render: (amount: number) => `${amount.toFixed(2)} tokens`,
+    },
+    {
+      title: '质押时间',
+      dataIndex: 'stakedAtStr',
+      key: 'stakedAtStr',
+    },
+    {
+      title: '质押期限',
+      dataIndex: 'duration',
+      key: 'duration',
+      render: (duration: number) => `${duration} 天`,
+    },
+    {
+      title: '解锁时间',
+      dataIndex: 'unlockedAtStr',
+      key: 'unlockedAtStr',
+    },
+    {
+      title: '状态',
+      dataIndex: 'statusText',
+      key: 'statusText',
+      render: (_, record) => {
+        if (record.status == 0) return <Tag color="green">Active</Tag>;
+        if (record.status == 1) return <Tag color="blue">Unstaked</Tag>;
+        if (record.status == 2) return <Tag color="red">EmergencyUnstaked</Tag>;
+      },
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleUnstake(record.stakeId)}
+            loading={loading}
+            disabled={!record.canUnstake}
+          >
+            解质押
+          </Button>
+          <Button
+            danger
+            onClick={() => handleEmergencyUnstake(record.stakeId)}
+            loading={loading}
+            disabled={record.status == 2}
+          >
+            紧急解质押
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
   return (
     <div style={{ padding: '1.2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -142,57 +363,113 @@ export default function DemoEvm() {
       </p>
 
       {
-        currentNetworkType === 'eip155' ? (
-          <Card title="EVM 功能示例">
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              {/* 消息签名 */}
-              <div>
-                <h4>📝 消息签名</h4>
-                <Input
-                  placeholder="输入要签名的消息"
-                  value={signMessage}
-                  onChange={(e) => setSignMessage(e.target.value)}
-                />
-                <Button onClick={handleSignMessage} loading={loading}>
-                  签名消息
-                </Button>
-              </div>
-
-              {/* ETH 转账 */}
-              <div>
-                <h4>💸 ETH 转账</h4>
-                <Input placeholder="接收地址" value={transferTo} onChange={(e) => setTransferTo(e.target.value)} />
-                <Input
-                  placeholder="转账金额 (ETH)"
-                  value={transferAmount}
-                  onChange={(e) => setTransferAmount(e.target.value)}
-                />
-                <Button onClick={handleSendETH} loading={loading} type="primary">
-                  发送 ETH
-                </Button>
-              </div>
-
-              {/* USDC 操作 */}
-              <div>
-                <h4>🪙 USDC 操作</h4>
+        currentNetworkType === 'eip155' ? <Card title="EVM 功能示例">
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            {/* 余额显示 */}
+            <div>
+              <h4>💸 余额信息</h4>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <div>
+                  <label>ETH 余额: </label>
+                  <Tag color="blue">{ETHBalance.toFixed(4)} ETH</Tag>
+                </div>
+                <div>
+                  <label>代币余额: </label>
+                  <Tag color="green">{tokenBalance.toFixed(2)} tokens</Tag>
+                </div>
                 <Space>
-                  <Button onClick={handleCheckUSDCBalance} loading={loading}>
-                    查询 USDC 余额
+                  <Button
+                    onClick={getETHBalance}
+                    loading={loading}
+                    type="primary"
+                  >
+                    刷新 ETH 余额
                   </Button>
-                  <Button onClick={handleApproveUSDC} loading={loading}>
-                    授权 USDC
+                  <Button
+                    onClick={getTokenBalance}
+                    loading={loading}
+                    type="primary"
+                  >
+                    刷新代币余额
                   </Button>
                 </Space>
-              </div>
-            </Space>
-          </Card>
-        ) : (
+              </Space>
+            </div>
+
+            {/* 质押功能 */}
+            <div>
+              <h4>💎 质押功能</h4>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <div>
+                  <label>质押数量: </label>
+                  <InputNumber
+                    min={1}
+                    value={stakeAmount}
+                    onChange={(value) => setStakeAmount(value || 0)}
+                    style={{ width: '200px' }}
+                  />
+                </div>
+                <div>
+                  <label>质押期限: </label>
+                  <Space>
+                    <Button
+                      type={stakeDuration === 7 ? 'primary' : 'default'}
+                      onClick={() => setStakeDuration(7)}
+                    >
+                      7天
+                    </Button>
+                    <Button
+                      type={stakeDuration === 14 ? 'primary' : 'default'}
+                      onClick={() => setStakeDuration(14)}
+                    >
+                      14天
+                    </Button>
+                    <Button
+                      type={stakeDuration === 30 ? 'primary' : 'default'}
+                      onClick={() => setStakeDuration(30)}
+                    >
+                      30天
+                    </Button>
+                  </Space>
+                </div>
+                <Space>
+                  {!isApproved ? (
+                    <Button
+                      onClick={handleApprove}
+                      loading={loading}
+                      type="primary"
+                    >
+                      授权代币
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleStake}
+                      loading={loading}
+                      type="primary"
+                    >
+                      质押
+                    </Button>
+                  )}
+                </Space>
+              </Space>
+            </div>
+
+            {/* 质押记录 */}
+            <div>
+              <h4>📋 质押记录</h4>
+              <Table
+                columns={columns}
+                dataSource={stakeRecords}
+                rowKey="stakeId"
+                pagination={false}
+              />
+            </div>
+          </Space>
+        </Card> :
           <Card>
             <p>请切换到 EVM 网络 (Base 或 Base Sepolia) 来测试 EVM 功能</p>
           </Card>
-        )
       }
-
 
       {/* 操作结果显示 */}
       {results.length > 0 && (
