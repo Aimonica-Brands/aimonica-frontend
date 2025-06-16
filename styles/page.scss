@@ -91,6 +91,23 @@ header {
   }
 }
 
+.connect-wallet-button {
+  width: fit-content;
+  height: 0.48rem;
+  border-radius: 0.3rem;
+  background: #50b4ff;
+  color: #fff;
+  font-family: AiDeep;
+  font-weight: 400;
+  font-size: 0.2rem;
+  padding: 0 0.1rem;
+  img {
+    width: auto;
+    height: 0.3rem;
+    margin-right: 0.1rem;
+  }
+}
+
 main {
   width: 100%;
   min-height: calc(100vh - 3rem);

@@ -1,17 +1,17 @@
 'use client';
 import { useEffect } from 'react';
-import { useAppKitAccount, useAppKitNetwork, useAppKitProvider } from '@reown/appkit/react';
+import { useAppKitAccount, useAppKitNetwork, useAppKitProvider, useAppKitEvents } from '@reown/appkit/react';
 import { useAppKitConnection } from '@reown/appkit-adapter-solana/react';
 import type { Provider } from '@reown/appkit-adapter-solana/react';
 import { initEVMContracts, initSolanaContracts } from '@/wallet/contracts';
 import { usePageContext } from '@/context';
+import { modal } from '@/wallet';
 
-export const WalletComponent = () => {
+export default function WalletComponent() {
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork } = useAppKitNetwork();
   const { connection } = useAppKitConnection();
   const { walletProvider } = useAppKitProvider<Provider>('solana');
-
   const {
     setProvider,
     setEvmTokenContract,
@@ -22,8 +22,9 @@ export const WalletComponent = () => {
   } = usePageContext();
 
   useEffect(() => {
-    if (isConnected && address && caipNetwork) {
+    if (isConnected && address && caipNetwork && connection && walletProvider) {
       console.log('🌐 网络连接:', caipNetwork);
+      modal.close();
       // 设置当前网络类型
       setCurrentNetworkType(caipNetwork.chainNamespace);
       // 初始化合约
@@ -81,5 +82,19 @@ export const WalletComponent = () => {
     setCurrentNetworkType(null);
   };
 
-  return null; // 这是一个工具组件，不需要 UI
+  return <>
+    {
+      (isConnected && address) ? (
+        <button className='connect-wallet-button' onClick={() => modal.open()}>
+          <img src="/assets/images/wallet.svg" alt="" />
+          {address.slice(0, 6)}...{address.slice(-4)}
+        </button>
+      ) : (
+        <button className='connect-wallet-button' onClick={() => modal.open()}>
+          <img src="/assets/images/wallet.svg" alt="" />
+          Connect Wallet
+        </button>
+      )
+    }
+  </>;
 };

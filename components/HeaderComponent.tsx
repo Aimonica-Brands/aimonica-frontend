@@ -4,10 +4,11 @@ import { Drawer, Select } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { useAppKitAccount } from '@reown/appkit/react';
 import dynamic from 'next/dynamic';
+import WalletComponent from './WalletComponent';
 
-const WalletComponent = dynamic(() => import('./WalletComponent').then((mod) => mod.WalletComponent), {
-  ssr: false
-});
+// const WalletComponent = dynamic(() => import('./WalletComponent').then((mod) => mod.WalletComponent), {
+//   ssr: false
+// });
 
 export default function HeaderComponent() {
   const router = useRouter();
@@ -113,9 +114,6 @@ export default function HeaderComponent() {
             <img src="/assets/images/img-3.png" alt="" /> 0
           </div>
         )}
-
-        {/* AppKit Connect Button */}
-        <appkit-button balance="hide" />
 
         {/* Wallet initialization component */}
         <WalletComponent />
