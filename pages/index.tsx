@@ -200,8 +200,6 @@ export default function Home() {
   }, []);
 
   const toStake = (record: any) => {
-    console.log(record);
-
     router.push(`/stake/${record.rank}`);
   };
 

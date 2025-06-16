@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, message, Button, Avatar } from 'antd';
+import { Modal, message, Button, Avatar, Card } from 'antd';
 import { usePageContext, TwitterUser } from '@/context';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { getCurrentEnv, } from '@/pages/api/auth/utils';
@@ -15,7 +15,7 @@ export default function TwitterComponent() {
   // 用于跟踪之前的连接状态
   const prevConnectedRef = React.useRef<boolean>(false);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true);
 
   // 环境配置
   const envConfig = getCurrentEnv();
@@ -23,15 +23,8 @@ export default function TwitterComponent() {
   // 同步NextAuth session到context
   useEffect(() => {
     if (status === 'authenticated' && session?.twitterUsername) {
-      console.log('session', session);
-      const newTwitterUser: TwitterUser = {
-        username: session.twitterUsername,
-        id: session.twitterId,
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-        profile_image_url: session.profile_image_url,
-      };
-      setTwitterUser(newTwitterUser);
+      console.log('Twitter', session);
+      setTwitterUser(session as any);
     } else if (status === 'unauthenticated') {
       setTwitterUser(null);
     }
@@ -41,7 +34,7 @@ export default function TwitterComponent() {
   useEffect(() => {
     if (isTwitterConnected && !prevConnectedRef.current && twitterUser) {
       // 刚刚连接成功
-      message.success(`Twitter连接成功！欢迎 @${twitterUser.username}`);
+      message.success(`Twitter连接成功！欢迎 @${twitterUser.twitterUsername}`);
 
       // 清理URL参数
       const url = new URL(window.location.href);
@@ -102,8 +95,8 @@ export default function TwitterComponent() {
     {
       (isTwitterConnected && twitterUser) ? (
         <button className='connect-button' onClick={() => setIsModalOpen(true)}>
-          <img src={twitterUser.profile_image_url} alt="" />
-          {twitterUser.username}
+          <img src={twitterUser.user.image} alt="" />
+          {twitterUser.twitterUsername}
         </button>
       ) : (
         <button className='connect-button' onClick={handleConnectTwitter}>
@@ -114,26 +107,27 @@ export default function TwitterComponent() {
     }
 
     <Modal
+      width={'fit-content'}
       open={isModalOpen}
       onCancel={() => setIsModalOpen(false)}
       footer={null}
     >
-      {
-        twitterUser && (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <Avatar
-              size={64}
-              src={twitterUser.profile_image_url}
-              style={{ marginBottom: '0.2rem' }}
-            />
-            <h3 style={{ marginBottom: '0.2rem' }}>@{twitterUser.username}</h3>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.2rem' }}>
-              <Button type="primary" danger onClick={disconnectTwitter}>退出推特</Button>
-              <Button onClick={() => setIsModalOpen(false)}>取消</Button>
+      {(isTwitterConnected && twitterUser) &&
+        <div className='twitter-modal-box'>
+          <div className='twitter-user-info'>
+            <img src={twitterUser.user.image} alt="" />
+            <div>
+              <div className='text1'>{twitterUser.user.name}</div>
+              <div className='text2'>@{twitterUser.twitterUsername}</div>
             </div>
           </div>
-        )
+          <div className='twitter-modal-box-btn'>
+            <Button onClick={() => setIsModalOpen(false)}>取消</Button>
+            <Button type="primary" onClick={disconnectTwitter}>退出推特</Button>
+          </div>
+        </div>
       }
+
     </Modal>
   </>;
 };

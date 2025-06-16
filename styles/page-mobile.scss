@@ -16,6 +16,13 @@
       }
     }
   }
+  .connect-button {
+    height: 0.4rem;
+    font-size: 0.16rem;
+    img {
+      height: 0.16rem;
+    }
+  }
   main {
     width: 100%;
     min-height: calc(100vh - 2.5rem);
@@ -375,5 +382,9 @@
         right: 0;
       }
     }
+  }
+
+  .twitter-modal-box {
+    width: 60vw;
   }
 }

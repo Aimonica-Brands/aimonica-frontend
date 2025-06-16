@@ -2,11 +2,14 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 
 // Twitter用户信息类型
 export interface TwitterUser {
-  username: string;
+  twitterUsername: string;
   id: string;
   accessToken?: string;
   refreshToken?: string;
-  profile_image_url?: string;
+  user: {
+    image: string;
+    name: string;
+  };
 }
 
 // Context 类型定义

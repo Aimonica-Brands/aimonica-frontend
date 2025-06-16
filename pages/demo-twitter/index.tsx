@@ -20,13 +20,7 @@ export default function DemoTwitter() {
   // 同步NextAuth session到context
   useEffect(() => {
     if (status === 'authenticated' && session?.twitterUsername) {
-      const newTwitterUser: TwitterUser = {
-        username: session.twitterUsername,
-        id: session.twitterId,
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-      };
-      setTwitterUser(newTwitterUser);
+      setTwitterUser(session as any);
     } else if (status === 'unauthenticated') {
       setTwitterUser(null);
     }
@@ -41,7 +35,7 @@ export default function DemoTwitter() {
   useEffect(() => {
     if (isTwitterConnected && !prevConnectedRef.current && twitterUser) {
       // 刚刚连接成功
-      message.success(`Twitter连接成功！欢迎 @${twitterUser.username}`);
+      message.success(`Twitter连接成功！欢迎 @${twitterUser.twitterUsername}`);
 
       // 清理URL参数
       const url = new URL(window.location.href);
@@ -143,7 +137,7 @@ export default function DemoTwitter() {
                   ✅ 已连接到 Twitter
                 </p>
                 <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                  <strong>用户名:</strong> @{twitterUser?.username}
+                  <strong>用户名:</strong> @{twitterUser?.twitterUsername}
                 </p>
                 <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
                   <strong>用户ID:</strong> {twitterUser?.id}
@@ -183,7 +177,7 @@ export default function DemoTwitter() {
               <div style={{ marginTop: '10px' }}>
                 <Button
                   onClick={() => {
-                    const shareText = createShareMessages.connected(twitterUser.username);
+                    const shareText = createShareMessages.connected(twitterUser.twitterUsername);
                     shareOnTwitter(shareText);
                   }}
                   style={{
