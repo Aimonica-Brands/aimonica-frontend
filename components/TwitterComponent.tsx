@@ -127,7 +127,6 @@ export default function TwitterComponent() {
           </div>
         </div>
       }
-
     </Modal>
   </>;
 };

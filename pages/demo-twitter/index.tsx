@@ -136,12 +136,15 @@ export default function DemoTwitter() {
                 <p style={{ margin: 0, color: '#52c41a' }}>
                   ✅ 已连接到 Twitter
                 </p>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                  <strong>用户名:</strong> @{twitterUser?.twitterUsername}
-                </p>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                  <strong>用户ID:</strong> {twitterUser?.id}
-                </p>
+                <div className='twitter-modal-box'>
+                  <div className='twitter-user-info'>
+                    <img src={twitterUser.user.image} alt="" />
+                    <div>
+                      <div className='text1'>{twitterUser.user.name}</div>
+                      <div className='text2'>@{twitterUser.twitterUsername}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div style={{
