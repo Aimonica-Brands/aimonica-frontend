@@ -201,6 +201,7 @@ export default function DemoSol() {
     const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
     if (!userStakes) return null;
 
+    console.log('userStakes', userStakes);
     // Process stake records
     const records: any[] = [];
     for (const stake of userStakes) {
@@ -211,7 +212,12 @@ export default function DemoSol() {
       const now = new Date();
       const canUnstake = now >= endDate;
 
+      const projectConfig = stakeInfo.projectConfig.toBase58();
+      const projectId = stakeInfo.projectId.toNumber();
+
       records.push({
+        projectConfig,
+        projectId,
         stakeId: stakeInfo.stakeId.toNumber(),
         amount,
         duration: stakeInfo.durationDays,
@@ -576,9 +582,15 @@ export default function DemoSol() {
   };
 
   // Table columns for stake records
-  const stakeColumns = [
+  const columns: any[] = [
     {
-      title: 'Stake ID',
+      title: '项目',
+      dataIndex: 'projectConfig',
+      key: 'projectConfig',
+      render: (projectConfig: string) => <Tag color="blue">{projectConfig}</Tag>
+    },
+    {
+      title: '质押ID',
       dataIndex: 'stakeId',
       key: 'stakeId',
       render: (stakeId: number) => <Tag color="blue">#{stakeId}</Tag>
@@ -602,7 +614,7 @@ export default function DemoSol() {
       render: (stakeTimestamp: Date) => stakeTimestamp.toLocaleString()
     },
     {
-      title: '结束时间',
+      title: '解锁时间',
       dataIndex: 'endTimestamp',
       key: 'endTimestamp',
       render: (endTimestamp: Date) => endTimestamp.toLocaleString()
@@ -610,6 +622,7 @@ export default function DemoSol() {
     {
       title: '操作',
       key: 'action',
+      fixed: 'right',
       render: (_, record: any) => (
         <Space>
           <Button
@@ -758,7 +771,8 @@ export default function DemoSol() {
             <div>
               <h4>📋 我的质押记录</h4>
               <Table
-                columns={stakeColumns}
+                scroll={{ x: "max-content" }}
+                columns={columns}
                 dataSource={stakeRecords}
                 rowKey="stakeId"
                 size="small"

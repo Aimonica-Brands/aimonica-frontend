@@ -134,17 +134,18 @@ export default function DemoEvm() {
       const userStakes = await evmStakingContract.getUserStakes(address);
       const records = [];
 
+      console.log('userStakes', userStakes);
       for (const stakeId of userStakes) {
         const stake = await evmStakingContract.stakes(stakeId);
-
+        const projectIdStr = ethers.decodeBytes32String(stake.projectId);
         const stakedAt = Number(stake.stakedAt) * 1000;
         const unlockedAt = Number(stake.unlockedAt) * 1000;
         const now = new Date().getTime();
         const canUnstake = now >= unlockedAt;
 
         // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
-
         records.push({
+          projectId: projectIdStr,
           stakeId: Number(stake.stakeId),
           amount: Number(ethers.formatEther(stake.amount)),
           stakedAtStr: new Date(stakedAt).toLocaleString(),
@@ -287,11 +288,18 @@ export default function DemoEvm() {
     }
   };
 
-  const columns = [
+  const columns: any[] = [
+    {
+      title: '项目',
+      dataIndex: 'projectId',
+      key: 'projectId',
+      render: (projectId: string) => <Tag color="blue">{projectId}</Tag>
+    },
     {
       title: '质押ID',
       dataIndex: 'stakeId',
       key: 'stakeId',
+      render: (stakeId: number) => <Tag color="blue">#{stakeId}</Tag>
     },
     {
       title: '数量',
@@ -299,16 +307,17 @@ export default function DemoEvm() {
       key: 'amount',
       render: (amount: number) => `${amount.toFixed(2)} tokens`,
     },
+
+    {
+      title: '期限',
+      dataIndex: 'duration',
+      key: 'duration',
+      render: (duration: number) => `${duration} 天`,
+    },
     {
       title: '质押时间',
       dataIndex: 'stakedAtStr',
       key: 'stakedAtStr',
-    },
-    {
-      title: '质押期限',
-      dataIndex: 'duration',
-      key: 'duration',
-      render: (duration: number) => `${duration} 天`,
     },
     {
       title: '解锁时间',
@@ -328,6 +337,7 @@ export default function DemoEvm() {
     {
       title: '操作',
       key: 'action',
+      fixed: 'right',
       render: (_, record) => (
         <Space>
           <Button
@@ -454,9 +464,10 @@ export default function DemoEvm() {
             </div>
 
             {/* 质押记录 */}
-            <div>
+            <div style={{ width: '100%' }}>
               <h4>📋 质押记录</h4>
               <Table
+                scroll={{ x: "max-content" }}
                 columns={columns}
                 dataSource={stakeRecords}
                 rowKey="stakeId"
