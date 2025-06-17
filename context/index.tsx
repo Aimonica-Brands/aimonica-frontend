@@ -3,7 +3,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 // Twitter用户信息类型
 export interface TwitterUser {
   twitterUsername: string;
-  id: string;
+  twitterId: string;
   accessToken?: string;
   refreshToken?: string;
   user: {

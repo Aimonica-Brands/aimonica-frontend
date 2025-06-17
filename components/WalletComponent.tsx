@@ -21,56 +21,51 @@ export default function WalletComponent() {
   } = usePageContext();
 
   useEffect(() => {
-    if (isConnected && address && caipNetwork && connection && walletProvider) {
-      console.log('🌐 网络连接:', caipNetwork);
-      modal.close();
-      // 设置当前网络类型
-      setCurrentNetworkType(caipNetwork.chainNamespace);
-      // 初始化合约
-      initializeContracts(caipNetwork);
-    } else {
-      // 用户断开连接，清理状态
-      if (!isConnected) {
-        console.log('👋 用户断开连接, 清理状态...');
-        clearContractStates();
-      }
-    }
-  }, [isConnected, address, caipNetwork, connection, walletProvider]);
+    const initContracts = async () => {
+      if (isConnected && address && caipNetwork) {
+        console.log('🌐 网络连接:', caipNetwork);
+        modal.close();
+        setCurrentNetworkType(caipNetwork.chainNamespace);
 
-  const initializeContracts = async (caipNetwork: any) => {
-    const { chainNamespace, id, name } = caipNetwork as any;
+        // 初始化合约
+        if (caipNetwork.chainNamespace === 'eip155') {
+          try {
+            const result = await initEVMContracts(caipNetwork.id);
+            console.log(`✅ ${caipNetwork.name} 合约初始化成功`, result);
 
-    console.log(`🔗 初始化 ${name} 合约...`);
+            setProvider(result.provider);
+            setEvmTokenContract(result.evmTokenContract);
+            setEvmStakingContract(result.evmStakingContract);
+          } catch (error) {
+            console.error(`❌ ${caipNetwork.name} 合约初始化失败`, error);
+          }
+        }
+        else if (caipNetwork.chainNamespace === 'solana') {
+          if (connection && walletProvider) {
+            try {
+              const result = initSolanaContracts(caipNetwork.id, walletProvider);
+              console.log(`✅ ${caipNetwork.name} 合约初始化成功`, result);
 
-    if (chainNamespace === 'eip155') {
-      try {
-        const result = await initEVMContracts(id);
-        console.log(`✅ ${name} 合约初始化成功`, result);
-
-        setProvider(result.provider);
-        setEvmTokenContract(result.evmTokenContract);
-        setEvmStakingContract(result.evmStakingContract);
-      } catch (error) {
-        console.error(`❌ ${name} 合约初始化失败`, error);
-      }
-    } else if (chainNamespace === 'solana') {
-      // Solana 网络需要使用 React 钩子
-
-      if (connection && walletProvider) {
-        try {
-          const result = initSolanaContracts(id, walletProvider);
-          console.log(`✅ ${name} 合约初始化成功`, result);
-
-          setSolanaConnection(result.solanaConnection);
-          setSolanaProgram(result.solanaProgram);
-        } catch (error) {
-          console.error(`❌ ${name} 合约初始化失败`, error);
+              setSolanaConnection(result.solanaConnection);
+              setSolanaProgram(result.solanaProgram);
+            } catch (error) {
+              console.error(`❌ ${caipNetwork.name} 合约初始化失败`, error);
+            }
+          } else {
+            console.log(`⏳ 等待 ${caipNetwork.name} 连接...`);
+          }
         }
       } else {
-        console.log(`⏳ 等待 ${name} 连接...`);
+        // 用户断开连接，清理状态
+        if (!isConnected) {
+          console.log('👋 用户断开连接, 清理状态...');
+          clearContractStates();
+        }
       }
-    }
-  };
+    };
+
+    initContracts();
+  }, [isConnected, address, caipNetwork, connection, walletProvider]);
 
   const clearContractStates = () => {
     setProvider(null);

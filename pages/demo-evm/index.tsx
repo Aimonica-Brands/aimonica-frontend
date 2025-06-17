@@ -134,7 +134,6 @@ export default function DemoEvm() {
       const userStakes = await evmStakingContract.getUserStakes(address);
       const records = [];
 
-      console.log('userStakes', userStakes);
       for (const stakeId of userStakes) {
         const stake = await evmStakingContract.stakes(stakeId);
         const projectIdStr = ethers.decodeBytes32String(stake.projectId);

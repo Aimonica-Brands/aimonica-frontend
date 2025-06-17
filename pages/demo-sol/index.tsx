@@ -201,7 +201,6 @@ export default function DemoSol() {
     const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
     if (!userStakes) return null;
 
-    console.log('userStakes', userStakes);
     // Process stake records
     const records: any[] = [];
     for (const stake of userStakes) {

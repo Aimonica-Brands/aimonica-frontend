@@ -65,11 +65,6 @@ export const initSolanaContracts = (id: any, walletProvider: any) => {
     };
   } catch (error) {
     console.error('❌ Solana contract initialization error:', error);
-    console.error('错误详情:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
     throw error;
   }
 };
