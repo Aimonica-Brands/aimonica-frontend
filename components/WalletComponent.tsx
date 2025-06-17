@@ -8,7 +8,7 @@ import { modal } from '@/wallet';
 
 export default function WalletComponent() {
   const { address, isConnected } = useAppKitAccount();
-  const { caipNetwork } = useAppKitNetwork();
+  const { caipNetwork, chainId } = useAppKitNetwork();
   const { connection } = useAppKitConnection();
   const { walletProvider } = useAppKitProvider<Provider>('solana');
   const {
@@ -22,7 +22,7 @@ export default function WalletComponent() {
 
   useEffect(() => {
     const initContracts = async () => {
-      if (isConnected && address && caipNetwork) {
+      if (isConnected && address && caipNetwork && chainId) {
         console.log('🌐 网络连接:', caipNetwork);
         modal.close();
         setCurrentNetworkType(caipNetwork.chainNamespace);
@@ -30,7 +30,7 @@ export default function WalletComponent() {
         // 初始化合约
         if (caipNetwork.chainNamespace === 'eip155') {
           try {
-            const result = await initEVMContracts(caipNetwork.id);
+            const result = await initEVMContracts(chainId);
             console.log(`✅ ${caipNetwork.name} 合约初始化成功`, result);
 
             setProvider(result.provider);
@@ -39,11 +39,10 @@ export default function WalletComponent() {
           } catch (error) {
             console.error(`❌ ${caipNetwork.name} 合约初始化失败`, error);
           }
-        }
-        else if (caipNetwork.chainNamespace === 'solana') {
+        } else if (caipNetwork.chainNamespace === 'solana') {
           if (connection && walletProvider) {
             try {
-              const result = initSolanaContracts(caipNetwork.id, walletProvider);
+              const result = initSolanaContracts(chainId, walletProvider);
               console.log(`✅ ${caipNetwork.name} 合约初始化成功`, result);
 
               setSolanaConnection(result.solanaConnection);
@@ -65,7 +64,7 @@ export default function WalletComponent() {
     };
 
     initContracts();
-  }, [isConnected, address, caipNetwork, connection, walletProvider]);
+  }, [isConnected, address, caipNetwork, chainId, connection, walletProvider]);
 
   const clearContractStates = () => {
     setProvider(null);

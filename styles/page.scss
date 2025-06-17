@@ -246,8 +246,8 @@ footer {
   text-align: left;
   position: relative;
   .s-img {
-    width: 0.5rem;
-    height: 0.5rem;
+    width: 0.45rem;
+    height: 0.45rem;
     border-radius: 50%;
     background: #e2edfd;
     display: flex;
@@ -264,7 +264,7 @@ footer {
     }
   }
   .s-text {
-    padding-left: 0.5rem;
+    padding-left: 0.4rem;
   }
 }
 
@@ -344,8 +344,10 @@ footer {
   align-items: center;
   margin: 0.5rem 0;
   button {
-    width: 1.12rem;
+    min-width: 1rem;
+    width: fit-content;
     height: 0.38rem;
+    padding: 0 0.1rem;
     border-radius: 0.12rem;
     background: #ffffff;
     font-family: Poppins;

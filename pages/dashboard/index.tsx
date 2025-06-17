@@ -3,13 +3,18 @@ import { Button, Table, Empty, Spin, App, Popover, Collapse } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
+import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
+import { getContractConfig } from '@/wallet';
+import { modal } from '@/wallet';
 
 export default function Dashboard() {
   const router = useRouter();
+  const { chainId } = useAppKitNetwork();
+  const { isConnected } = useAppKitAccount();
+
   const [assetsLoading, setAssetsLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
-
-  const [tabIndex, setTabIndex] = useState(0);
+  const [networkId, setNetworkId] = useState('');
 
   const align = 'center' as const;
   const assetsColumns: ColumnsType<any> = [
@@ -147,6 +152,29 @@ export default function Dashboard() {
   ];
   const assetsDataSource = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }];
 
+  useEffect(() => {
+    if (isConnected && chainId) {
+      setNetworkId(chainId.toString());
+    } else {
+      setNetworkId('');
+    }
+  }, [isConnected, chainId]);
+
+  const handleTabClick = (network: any) => async () => {
+    // modal.open({ view: "Networks" });
+    console.log('目标网络:', network);
+    if (network) {
+      modal.switchNetwork(network).then(() => {
+        console.log('切换网络成功');
+        setNetworkId(network.id.toString());
+      }).catch((error) => {
+        console.error('切换网络失败:', error);
+      });
+    } else {
+      setNetworkId('');
+    }
+  };
+
   return (
     <div className="dashboard-page">
       <div className="page-box">
@@ -188,15 +216,18 @@ export default function Dashboard() {
           <img src="/assets/images/star.png" alt="" className="star-img" />
         </div>
         <div className="tab-box">
-          <button className={tabIndex === 0 ? 'active' : ''} onClick={() => setTabIndex(0)}>
+          <button className={networkId === '' ? 'active' : ''} onClick={handleTabClick(null)}>
             All Chain
           </button>
-          <button className={tabIndex === 1 ? 'active' : ''} onClick={() => setTabIndex(1)}>
-            Solana
-          </button>
-          <button className={tabIndex === 2 ? 'active' : ''} onClick={() => setTabIndex(2)}>
-            Base
-          </button>
+          {
+            getContractConfig().map((item: any) => {
+              return (
+                <button className={networkId === item.network.id.toString() ? 'active' : ''} onClick={handleTabClick(item.network)}>
+                  {item.network.name}
+                </button>
+              );
+            })
+          }
         </div>
 
         <Table

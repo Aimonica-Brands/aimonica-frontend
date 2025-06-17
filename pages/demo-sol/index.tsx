@@ -13,8 +13,8 @@ import { useAppKitAccount } from '@reown/appkit/react';
 
 export default function DemoSol() {
   const { Option } = Select;
-  const { address, isConnected } = useAppKitAccount();
-  const { caipNetwork } = useAppKitNetwork();
+  const { address } = useAppKitAccount();
+  const { chainId } = useAppKitNetwork();
   const { solanaConnection, solanaProgram, currentNetworkType } = usePageContext();
 
   const [loading, setLoading] = useState(false);
@@ -378,9 +378,10 @@ export default function DemoSol() {
         .accounts(stakeAccounts)
         .rpc();
 
-      const contractConfig = getContractConfig((caipNetwork as any).network);
-      const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
+      const contractConfig = getContractConfig(chainId);
+      const txLink = `${contractConfig.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
       addResult(`🔗 质押交易已发送: ${txLink}`);
+
       message.success(`质押成功，请等待交易确认`);
 
       // Wait for the new stake to be confirmed
@@ -474,8 +475,8 @@ export default function DemoSol() {
         .accounts(unstakeAccounts)
         .rpc();
 
-      const contractConfig = getContractConfig((caipNetwork as any).network);
-      const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
+      const contractConfig = getContractConfig(chainId);
+      const txLink = `${contractConfig.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
       addResult(`🔗 解质押交易已发送: ${txLink}`);
       message.success(`解质押成功，请等待交易确认`);
 
@@ -564,8 +565,8 @@ export default function DemoSol() {
         .accounts(emergencyUnstakeAccounts)
         .rpc();
 
-      const contractConfig = getContractConfig((caipNetwork as any).network);
-      const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
+      const contractConfig = getContractConfig(chainId);
+      const txLink = `${contractConfig.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
       addResult(`🔗 紧急解质押交易已发送: ${txLink}`);
       message.success(`紧急解质押成功，请等待交易确认`);
 

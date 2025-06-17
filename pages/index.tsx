@@ -2,9 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Button, Table, Empty, Spin, App, Popover, Collapse } from 'antd';
 import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
+import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
+import { getContractConfig } from '@/wallet';
+import { modal } from '@/wallet';
 
 export default function Home() {
   const router = useRouter();
+  const { chainId } = useAppKitNetwork();
+  const { isConnected } = useAppKitAccount();
+
   const [projectData, setProjectData] = useState([
     { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
     { rank: 2, avatar: '/assets/images/avatar-2.png', name: 'FAI' },
@@ -14,7 +20,7 @@ export default function Home() {
   const [levelData, setLevelData] = useState([]);
 
   const [loading, setLoading] = useState(false);
-  const [tabIndex, setTabIndex] = useState(0);
+  const [networkId, setNetworkId] = useState('');
   const [tabIndex2, setTabIndex2] = useState(0);
 
   const align = 'center' as const;
@@ -199,6 +205,29 @@ export default function Home() {
     setLevelData([projectData[1], projectData[0], projectData[2]]);
   }, []);
 
+  useEffect(() => {
+    if (isConnected && chainId) {
+      setNetworkId(chainId.toString());
+    } else {
+      setNetworkId('');
+    }
+  }, [isConnected, chainId]);
+
+  const handleTabClick = (network: any) => async () => {
+    // modal.open({ view: "Networks" });
+    console.log('目标网络:', network);
+    if (network) {
+      modal.switchNetwork(network).then(() => {
+        console.log('切换网络成功');
+        setNetworkId(network.id.toString());
+      }).catch((error) => {
+        console.error('切换网络失败:', error);
+      });
+    } else {
+      setNetworkId('');
+    }
+  };
+
   const toStake = (record: any) => {
     router.push(`/stake/${record.rank}`);
   };
@@ -264,15 +293,18 @@ export default function Home() {
 
           <div className="tab-box-box">
             <div className="tab-box">
-              <button className={tabIndex === 0 ? 'active' : ''} onClick={() => setTabIndex(0)}>
+              <button className={networkId === '' ? 'active' : ''} onClick={handleTabClick(null)}>
                 All Chain
               </button>
-              <button className={tabIndex === 1 ? 'active' : ''} onClick={() => setTabIndex(1)}>
-                Solana
-              </button>
-              <button className={tabIndex === 2 ? 'active' : ''} onClick={() => setTabIndex(2)}>
-                Base
-              </button>
+              {
+                getContractConfig().map((item: any) => {
+                  return (
+                    <button className={networkId === item.network.id.toString() ? 'active' : ''} onClick={handleTabClick(item.network)}>
+                      {item.network.name}
+                    </button>
+                  );
+                })
+              }
             </div>
             <div className="tab-box tab-box2">
               <button className={tabIndex2 === 0 ? 'active' : ''} onClick={() => setTabIndex2(0)}>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, App, Tabs, Divider, Space, Tag, InputNumber, Table } from 'antd';
-import { useAppKitAccount } from '@reown/appkit/react';
+import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
 import { ethers } from 'ethers';
 import { handleContractError } from '@/wallet/contracts';
@@ -8,6 +8,7 @@ import { handleContractError } from '@/wallet/contracts';
 export default function DemoEvm() {
   const { message } = App.useApp();
   const { address, isConnected } = useAppKitAccount();
+  const { caipNetwork } = useAppKitNetwork();
   const {
     provider,
     evmTokenContract,
@@ -194,7 +195,9 @@ export default function DemoEvm() {
       message.success('质押交易已发送，等待确认...');
 
       await tx.wait();
-      addResult(`✅ 质押成功`);
+
+      const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+      addResult(`🔗 质押交易已发送: ${txLink}`);
       message.success('质押成功');
 
       // 刷新质押记录
@@ -241,7 +244,9 @@ export default function DemoEvm() {
       message.success('解质押交易已发送，等待确认...');
 
       await tx.wait();
-      addResult(`✅ 解质押成功`);
+      
+      const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+      addResult(`🔗 解质押交易已发送: ${txLink}`);
       message.success('解质押成功');
 
       // 刷新质押记录
@@ -274,7 +279,9 @@ export default function DemoEvm() {
       message.success('紧急解质押交易已发送，等待确认...');
 
       await tx.wait();
-      addResult(`✅ 紧急解质押成功`);
+      
+      const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+      addResult(`🔗 紧急解质押交易已发送: ${txLink}`);
       message.success('紧急解质押成功');
 
       // 刷新质押记录

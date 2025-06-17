@@ -7,11 +7,11 @@ import { message } from 'antd';
 /**
  * 初始化 EVM 合约
  */
-export const initEVMContracts = async (id: any) => {
+export const initEVMContracts = async (chainId: any) => {
   try {
-    const tokenConfig = getContractConfig(id);
+    const tokenConfig = getContractConfig(chainId);
     if (!tokenConfig) {
-      throw new Error(`No token configuration found for network ${id}`);
+      throw new Error(`No token configuration found for network ${chainId}`);
     }
 
     if (!window.ethereum) {
@@ -39,11 +39,11 @@ export const initEVMContracts = async (id: any) => {
 /**
  * 初始化 Solana 合约
  */
-export const initSolanaContracts = (id: any, walletProvider: any) => {
+export const initSolanaContracts = (chainId: any, walletProvider: any) => {
   try {
-    const tokenConfig = getContractConfig(id);
+    const tokenConfig = getContractConfig(chainId);
     if (!tokenConfig) {
-      throw new Error(`No token configuration found for network ${id}`);
+      throw new Error(`No token configuration found for network ${chainId}`);
     }
 
     if (!walletProvider) {

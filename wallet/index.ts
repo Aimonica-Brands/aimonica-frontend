@@ -1,10 +1,9 @@
 import { createAppKit } from '@reown/appkit';
 import { SolanaAdapter } from '@reown/appkit-adapter-solana';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { solana, base, baseSepolia, solanaDevnet } from '@reown/appkit/networks';
+import { base, solana, solanaDevnet } from '@reown/appkit/networks';
 
-export const networks: any =
-  process.env.NEXT_PUBLIC_APP_ENV === 'production' ? [base, solana] : [solana, base, baseSepolia, solanaDevnet];
+export const networks: any = process.env.NEXT_PUBLIC_APP_ENV === 'production' ? [base, solana] : [base, solanaDevnet];
 
 // 0. Get projectId from https://cloud.reown.com
 export const projectId = 'b5863416c73906526923f5c4d6db20c8';
@@ -44,28 +43,32 @@ import BKIBSHIABI from '@/wallet/abi/BKIBSHI.json';
 import AimStakingABI from '@/wallet/abi/AimStaking.json';
 import aim_staking_program from '@/wallet/idl/aim_staking_program.json';
 
-// 合约配置 - 使用 @reown/appkit/networks 的网络名称作为 key
-export const contractConfig = {
-  // base
-  8453: {
-    // AimStaking代理合约 :0x990BA617d7E7Ae3edE6318d9E85F851035B8323C
-    // AimStaking合约：0x94b1A58575E00BC7b504b567e424BEa8f850808C
-    // BKIBSHI:0x3d1c275aa98d45c99258a51be98b08fc8572c074
-    BKIBSHI: '0x3d1C275aa98d45C99258A51be98b08Fc8572c074',
-    AimStaking: '0x990ba617d7e7ae3ede6318d9e85f851035b8323c',
-    BKIBSHIABI,
-    AimStakingABI
-  },
+// 合约配置
+export const getContractConfig = (chainId: any = ''): any => {
+  const isProduction = process.env.NEXT_PUBLIC_APP_ENV === 'production';
 
-  // 'solana-devnet'
-  EtWTRABZaYq6iMfeYKouRu166VU2xqa1: {
-    cluster: 'devnet',
-    programId: '5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD',
-    aim_staking_program
+  const config = isProduction
+    ? []
+    : [
+        {
+          // id: 8453,
+          network: base,
+          BKIBSHI: '0x3d1C275aa98d45C99258A51be98b08Fc8572c074',
+          AimStaking: '0x990ba617d7e7ae3ede6318d9e85f851035b8323c',
+          BKIBSHIABI,
+          AimStakingABI
+        },
+        {
+          // id: 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1',
+          network: solanaDevnet,
+          cluster: 'devnet',
+          programId: '5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD',
+          aim_staking_program
+        }
+      ];
+
+  if (chainId) {
+    return config.find((item) => item.network.id === chainId);
   }
-};
-
-// 工具函数
-export const getContractConfig = (networkName: string) => {
-  return contractConfig[networkName] || null;
+  return config;
 };
