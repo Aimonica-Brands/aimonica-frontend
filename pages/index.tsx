@@ -230,11 +230,9 @@ export default function Home() {
 
       <div className="rolling-box rolling-box-1">
         <div className="rolling-content">
-          <span className="rolling-item">AIMONICA</span>
-          <span className="rolling-item">AIMONICA</span>
-          <span className="rolling-item">AIMONICA</span>
-          <span className="rolling-item">AIMONICA</span>
-          <span className="rolling-item">AIMONICA</span>
+          {Array.from({ length: 10 }).map((_, index) => (
+            <span className="rolling-item" key={index}>AIMONICA</span>
+          ))}
         </div>
       </div>
 
@@ -350,11 +348,9 @@ export default function Home() {
 
           <div className="rolling-box rolling-box-2">
             <div className="rolling-content">
-              <span className="rolling-item">AIMONICA</span>
-              <span className="rolling-item">AIMONICA</span>
-              <span className="rolling-item">AIMONICA</span>
-              <span className="rolling-item">AIMONICA</span>
-              <span className="rolling-item">AIMONICA</span>
+              {Array.from({ length: 10 }).map((_, index) => (
+                <span className="rolling-item" key={index}>AIMONICA</span>
+              ))}
             </div>
           </div>
         </div>

@@ -3,11 +3,9 @@ export default function FooterComponent() {
     <footer>
       <div className="rolling-box">
         <div className="rolling-content">
-          <span className="rolling-item">AIMONICA</span>
-          <span className="rolling-item">AIMONICA</span>
-          <span className="rolling-item">AIMONICA</span>
-          <span className="rolling-item">AIMONICA</span>
-          <span className="rolling-item">AIMONICA</span>
+          {Array.from({ length: 10 }).map((_, index) => (
+            <span className="rolling-item" key={index}>AIMONICA</span>
+          ))}
         </div>
       </div>
       <div className="footer-box">

@@ -218,8 +218,17 @@ footer {
       font-weight: 400;
       font-size: 0.48rem;
       color: #ffffff;
-      margin: 0 0.5rem;
     }
+  }
+}
+
+.rolling-content {
+  white-space: nowrap;
+  .rolling-item {
+    width: 4rem;
+    display: inline-block;
+    text-align: center;
+    animation: loop 8s linear infinite;
   }
 }
 
@@ -1493,5 +1502,14 @@ footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+}
+
+@keyframes loop {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
   }
 }
