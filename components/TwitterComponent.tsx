@@ -95,7 +95,7 @@ export default function TwitterComponent() {
     {
       (isTwitterConnected && twitterUser) ? (
         <button className='connect-button' onClick={() => setIsModalOpen(true)}>
-          <img src={twitterUser.user.image} alt="" />
+          <img src={twitterUser.user.image} alt="" style={{ borderRadius: '50%' }} />
           {twitterUser.twitterUsername}
         </button>
       ) : (
