@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, App, Tag, Space } from 'antd';
+import { Button, Table, App, Tag, Space, Modal } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
@@ -71,6 +71,8 @@ export default function Dashboard() {
   const [totalPoints, setTotalPoints] = useState(0);
   const [totalStaked, setTotalStaked] = useState(0);
   const [totalProject, setTotalProject] = useState(0);
+  const [isUnstakeModalOpen, setIsUnstakeModalOpen] = useState(false);
+  const [isEmergencyUnstakeModalOpen, setIsEmergencyUnstakeModalOpen] = useState(false);
 
   const stakeColumns: any[] = [
     {
@@ -124,18 +126,10 @@ export default function Dashboard() {
       fixed: 'right',
       render: (_, record) => (
         <Space direction="vertical">
-          <Button
-            type="primary"
-            disabled={!record.canUnstake}
-            loading={unstakeLoading}
-            onClick={() => handleUnstake(record)}>
+          <Button type="primary" disabled={!record.canUnstake} onClick={() => openUnstakeModal(record)}>
             Unstake
           </Button>
-          <Button
-            danger
-            disabled={record.status == 2}
-            loading={unstakeLoading}
-            onClick={() => handleEmergencyUnstake(record)}>
+          <Button danger disabled={record.status == 2} onClick={() => openEmergencyUnstakeModal(record)}>
             Emergency Unstake
           </Button>
         </Space>
@@ -145,6 +139,7 @@ export default function Dashboard() {
   const [stakeRecords, setStakeRecords] = useState([]);
   const [unstakeLoading, setUnstakeLoading] = useState(false);
   const [stakeRecordsLoading, setStakeRecordsLoading] = useState(false);
+  const [unstakeRecord, setUnstakeRecord] = useState(null);
 
   useEffect(() => {
     const initData = async () => {
@@ -241,7 +236,7 @@ export default function Dashboard() {
           } else if (stakeType === 'unstake' || stakeType === 'emergencyUnstake') {
             const existingStake = currentRecords.find((stake) => stake.stakeId === stakeId);
             if (!existingStake) {
-              console.log('✅ 解质押记录已确认: 原质押记录已移除');
+              console.log('✅ 新质押记录已确认: 原质押记录已移除');
               setStakeRecords(currentRecords);
               found = true;
               break;
@@ -267,9 +262,13 @@ export default function Dashboard() {
     }
   };
 
-  const handleUnstake = async (record: any) => {
+  const handleUnstake = async () => {
+    if (unstakeLoading || !unstakeRecord) return;
+
+    const record = unstakeRecord;
+    setUnstakeLoading(true);
+
     if (caipNetwork.chainNamespace === 'eip155') {
-      setUnstakeLoading(true);
       evmUtils
         .unstake(evmStakingContract, record, caipNetwork.blockExplorers.default.url)
         .then(() => {
@@ -280,6 +279,7 @@ export default function Dashboard() {
         })
         .finally(() => {
           setUnstakeLoading(false);
+          setIsUnstakeModalOpen(false);
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
@@ -297,12 +297,37 @@ export default function Dashboard() {
         })
         .finally(() => {
           setUnstakeLoading(false);
+          setIsUnstakeModalOpen(false);
         });
     }
   };
 
-  const handleEmergencyUnstake = async (record: any) => {
+  const openUnstakeModal = (record: any) => {
+    setIsUnstakeModalOpen(true);
+    setUnstakeRecord(record);
+  };
+
+  const openEmergencyUnstakeModal = (record: any) => {
+    setIsEmergencyUnstakeModalOpen(true);
+    setUnstakeRecord(record);
+  };
+
+  const closeUnstakeModal = () => {
+    setIsUnstakeModalOpen(false);
+    setUnstakeRecord(null);
+  };
+
+  const closeEmergencyUnstakeModal = () => {
+    setIsEmergencyUnstakeModalOpen(false);
+    setUnstakeRecord(null);
+  };
+
+  const handleEmergencyUnstake = async () => {
+    if (unstakeLoading || !unstakeRecord) return;
+
+    const record = unstakeRecord;
     setUnstakeLoading(true);
+
     if (caipNetwork.chainNamespace === 'eip155') {
       evmUtils
         .emergencyUnstake(evmStakingContract, record, caipNetwork.blockExplorers.default.url)
@@ -314,6 +339,7 @@ export default function Dashboard() {
         })
         .finally(() => {
           setUnstakeLoading(false);
+          setIsEmergencyUnstakeModalOpen(false);
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
@@ -331,6 +357,7 @@ export default function Dashboard() {
         })
         .finally(() => {
           setUnstakeLoading(false);
+          setIsEmergencyUnstakeModalOpen(false);
         });
     }
   };
@@ -435,6 +462,81 @@ export default function Dashboard() {
           loading={historyLoading}
         />
       </div>
+
+      <Modal
+        className="unstake-modal"
+        width={'fit-content'}
+        centered
+        closable={false}
+        footer={null}
+        open={isEmergencyUnstakeModalOpen}>
+        <div className="unstake-modal-box">
+          <img src="/assets/images/img-26.png" alt="" className="img-26" />
+          <div className="title">Emergency Unstake</div>
+          <div className="text">(*Warning: Unstaking in advance will result in a 30% deduction of rewards*)</div>
+          <div className="text2">
+            <div className="text2-1">You can only get</div>
+            <div className="text2-2">
+              <div>
+                {unstakeRecord.amount} Aimonica(≈${unstakeRecord.amount})
+              </div>
+              <div className="s-box">
+                <div className="s-img">
+                  <img src="/assets/images/img-3.png" alt="" />
+                </div>
+                <div className="s-text">{unstakeRecord.amount}</div>
+              </div>
+            </div>
+          </div>
+          <div className="btn-box">
+            <Button className="btn-cancel" onClick={closeEmergencyUnstakeModal}>
+              Cancel
+            </Button>
+            <Button className="btn-confirm" loading={unstakeLoading} onClick={handleEmergencyUnstake}>
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        className="unstake-modal"
+        width={'fit-content'}
+        centered
+        closable={false}
+        footer={null}
+        open={isUnstakeModalOpen}>
+        <div className="unstake-modal-box">
+          <img src="/assets/images/img-26.png" alt="" className="img-26" />
+          <div className="title">Unstake</div>
+          <div className="text-box2">
+            <div>Unstaking Fee</div>
+            <div>5%</div>
+          </div>
+          <div className="text2 text3">
+            <div className="text2-1">You can only get</div>
+            <div className="text2-2">
+              <div>
+                {unstakeRecord.amount} Aimonica(≈${unstakeRecord.amount})
+              </div>
+              <div className="s-box">
+                <div className="s-img">
+                  <img src="/assets/images/img-3.png" alt="" />
+                </div>
+                <div className="s-text">{unstakeRecord.amount}</div>
+              </div>
+            </div>
+          </div>
+          <div className="btn-box">
+            <Button className="btn-cancel" onClick={closeUnstakeModal}>
+              Cancel
+            </Button>
+            <Button className="btn-confirm" loading={unstakeLoading} onClick={handleUnstake}>
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
