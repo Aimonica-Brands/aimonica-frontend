@@ -817,35 +817,24 @@ footer {
         padding: 0.2rem 0.5rem;
 
         .tab-title-box {
-          width: fit-content;
-          border: 1px solid #e2edfd;
-          border-radius: 0.36rem;
+          height: 0.48rem;
           display: flex;
           align-items: center;
-          padding: 0.05rem;
-          margin: 0 auto 0.1rem;
-          button {
-            width: 1.5rem;
-            height: 0.4rem;
-            border-radius: 0.2rem;
-            font-family: Clash Grotesk Medium;
-            font-weight: 500;
-            font-size: 0.16rem;
-            color: #5c7392;
-            &.active {
-              background: #e2edfd;
-              color: #50b4ff;
-            }
-          }
+          justify-content: center;
+          margin-bottom: 0.2rem;
+          font-family: Clash Grotesk Medium;
+          font-weight: 500;
+          font-size: 0.2rem;
+          color: #5c7392;
         }
         .stake-item {
           width: 100%;
-          height: calc(100% - 0.6rem);
+          height: calc(100% - 0.7rem);
           display: flex;
           flex-direction: column;
           justify-content: space-between;
           .margin-bottom {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
           }
           .text2 {
             font-family: Clash Grotesk Medium;
@@ -878,12 +867,16 @@ footer {
                 width: 0.85rem;
                 height: 0.4rem;
                 border-radius: 0.2rem;
-                background: #50b4ff;
                 font-family: Poppins;
                 font-weight: 400;
                 font-size: 0.2rem;
-                color: #ffffff;
+                background: #e2edfd;
+                color: #5c7392;
                 margin-left: 0.1rem;
+                &.active {
+                  background: #50b4ff;
+                  color: #ffffff;
+                }
               }
             }
             .number {
@@ -922,6 +915,7 @@ footer {
             .number-box {
               display: flex;
               flex-direction: column;
+              text-align: right;
               .number {
                 font-family: Poppins;
                 font-weight: 400;
