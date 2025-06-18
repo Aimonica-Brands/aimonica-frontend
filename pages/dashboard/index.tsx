@@ -78,14 +78,12 @@ export default function Dashboard() {
     {
       title: 'Project',
       dataIndex: 'projectName',
-      key: 'projectName',
-      render: (projectName: string) => <Tag color="blue">{projectName}</Tag>
+      key: 'projectName'
     },
     {
       title: 'Stake ID',
       dataIndex: 'stakeId',
-      key: 'stakeId',
-      render: (stakeId: number) => <Tag color="blue">#{stakeId}</Tag>
+      key: 'stakeId'
     },
     {
       title: 'Amount',
@@ -98,7 +96,7 @@ export default function Dashboard() {
       title: 'Duration',
       dataIndex: 'duration',
       key: 'duration',
-      render: (duration: number) => `${duration} 天`
+      render: (duration: number) => `${duration} Day`
     },
     {
       title: 'Staked Time',
@@ -117,7 +115,7 @@ export default function Dashboard() {
       render: (_, record) => {
         if (record.status == 0) return <Tag color="green">Active</Tag>;
         if (record.status == 1) return <Tag color="blue">Unstaked</Tag>;
-        if (record.status == 2) return <Tag color="red">EmergencyUnstaked</Tag>;
+        if (record.status == 2) return <Tag color="red">Emergency</Tag>;
       }
     },
     {
@@ -126,11 +124,14 @@ export default function Dashboard() {
       fixed: 'right',
       render: (_, record) => (
         <Space direction="vertical">
-          <Button type="primary" disabled={!record.canUnstake} onClick={() => openUnstakeModal(record)}>
+          <Button className="unstake-btn" disabled={!record.canUnstake} onClick={() => openUnstakeModal(record)}>
             Unstake
           </Button>
-          <Button danger disabled={record.status == 2} onClick={() => openEmergencyUnstakeModal(record)}>
-            Emergency Unstake
+          <Button
+            className="emergency-btn"
+            disabled={record.status == 2}
+            onClick={() => openEmergencyUnstakeModal(record)}>
+            Emergency
           </Button>
         </Space>
       )
@@ -439,28 +440,31 @@ export default function Dashboard() {
           })}
         </div>
 
-        <Table
-          className="tablebox"
-          scroll={{ x: 'max-content' }}
-          columns={stakeColumns}
-          dataSource={stakeRecords}
-          pagination={false}
-          loading={stakeRecordsLoading}
-          rowKey={(record) => record.stakeId}
-        />
+        <div className="tablebox">
+          <Table
+            scroll={{ x: 'max-content' }}
+            columns={stakeColumns}
+            dataSource={stakeRecords}
+            pagination={false}
+            loading={stakeRecordsLoading}
+            rowKey={(record) => record.stakeId}
+          />
+        </div>
 
         <div className="title-box-2">
           Staking History
           <img src="/assets/images/star.png" alt="" className="star-img" />
         </div>
-        <Table
-          className="tablebox"
-          scroll={{ x: 'max-content' }}
-          columns={historyColumns}
-          dataSource={historyDataSource}
-          pagination={false}
-          loading={historyLoading}
-        />
+
+        <div className="tablebox">
+          <Table
+            scroll={{ x: 'max-content' }}
+            columns={historyColumns}
+            dataSource={historyDataSource}
+            pagination={false}
+            loading={historyLoading}
+          />
+        </div>
       </div>
 
       <Modal

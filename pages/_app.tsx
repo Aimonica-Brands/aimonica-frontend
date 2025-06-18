@@ -30,8 +30,8 @@ const antdTheme = {
   hashed: false,
   components: {
     Table: {
-      headerBg: '#BDE4FF',
-      headerBorderRadius: 18,
+      headerBg: '#A1DBF6',
+      headerBorderRadius: 14,
       headerColor: '#FFFFFF',
       headerSplitColor: 'transparent',
       cellPaddingBlock: 10,

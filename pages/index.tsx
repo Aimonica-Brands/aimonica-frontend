@@ -217,12 +217,15 @@ export default function Home() {
     // modal.open({ view: "Networks" });
     console.log('目标网络:', network);
     if (network) {
-      modal.switchNetwork(network).then(() => {
-        console.log('切换网络成功');
-        setNetworkId(network.id.toString());
-      }).catch((error) => {
-        console.error('切换网络失败:', error);
-      });
+      modal
+        .switchNetwork(network)
+        .then(() => {
+          console.log('切换网络成功');
+          setNetworkId(network.id.toString());
+        })
+        .catch((error) => {
+          console.error('切换网络失败:', error);
+        });
     } else {
       setNetworkId('');
     }
@@ -260,7 +263,9 @@ export default function Home() {
       <div className="rolling-box rolling-box-1">
         <div className="rolling-content">
           {Array.from({ length: 10 }).map((_, index) => (
-            <span className="rolling-item" key={index}>AIMONICA</span>
+            <span className="rolling-item" key={index}>
+              AIMONICA
+            </span>
           ))}
         </div>
       </div>
@@ -296,15 +301,15 @@ export default function Home() {
               <button className={networkId === '' ? 'active' : ''} onClick={handleTabClick(null)}>
                 All Chain
               </button>
-              {
-                getContractConfig().map((item: any) => {
-                  return (
-                    <button className={networkId === item.network.id.toString() ? 'active' : ''} onClick={handleTabClick(item.network)}>
-                      {item.network.name}
-                    </button>
-                  );
-                })
-              }
+              {getContractConfig().map((item: any) => {
+                return (
+                  <button
+                    className={networkId === item.network.id.toString() ? 'active' : ''}
+                    onClick={handleTabClick(item.network)}>
+                    {item.network.name}
+                  </button>
+                );
+              })}
             </div>
             <div className="tab-box tab-box2">
               <button className={tabIndex2 === 0 ? 'active' : ''} onClick={() => setTabIndex2(0)}>
@@ -368,20 +373,23 @@ export default function Home() {
             ))}
           </div>
 
-          <Table
-            className="tablebox"
-            scroll={{ x: 'max-content' }}
-            columns={projectColumns}
-            dataSource={projectData}
-            pagination={false}
-            loading={loading}
-            rowKey={(record) => record.rank}
-          />
+          <div className="tablebox">
+            <Table
+              scroll={{ x: 'max-content' }}
+              columns={projectColumns}
+              dataSource={projectData}
+              pagination={false}
+              loading={loading}
+              rowKey={(record) => record.rank}
+            />
+          </div>
 
           <div className="rolling-box rolling-box-2">
             <div className="rolling-content">
               {Array.from({ length: 10 }).map((_, index) => (
-                <span className="rolling-item" key={index}>AIMONICA</span>
+                <span className="rolling-item" key={index}>
+                  AIMONICA
+                </span>
               ))}
             </div>
           </div>
