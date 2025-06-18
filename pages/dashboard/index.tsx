@@ -1,106 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Empty, Spin, App, Popover, Collapse } from 'antd';
+import { Button, Table, App, Tag, Space } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
 import { modal } from '@/wallet';
+import { evmUtils, solanaUtils } from '@/wallet/utils';
+import { usePageContext } from '@/context';
 
 export default function Dashboard() {
-  const router = useRouter();
-  const { chainId } = useAppKitNetwork();
-  const { isConnected } = useAppKitAccount();
+  const { message } = App.useApp();
+  const { chainId, caipNetwork } = useAppKitNetwork();
+  const { isConnected, address } = useAppKitAccount();
+  const { evmStakingContract, solanaProgram } = usePageContext();
 
-  const [assetsLoading, setAssetsLoading] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(false);
   const [networkId, setNetworkId] = useState('');
 
   const align = 'center' as const;
-  const assetsColumns: ColumnsType<any> = [
-    {
-      title: 'Project',
-      dataIndex: '',
-      align,
-      width: 80,
-      render: (value: any, record: any) => {
-        return <div className="text">Aimonica</div>;
-      }
-    },
-    {
-      title: 'Staked',
-      dataIndex: '',
-      align,
-      width: 80,
-      render: (value: any, record: any) => {
-        return <div className="text">18.3K</div>;
-      }
-    },
-    {
-      title: 'Staking Start Time',
-      dataIndex: '',
-      align,
-      width: 160,
-      render: (value: any, record: any) => {
-        return <div className="text">2025-5-25 17:26:46</div>;
-      }
-    },
-    {
-      title: 'Locking Time',
-      dataIndex: '',
-      align,
-      width: 80,
-      render: (value: any, record: any) => {
-        return <div className="text">14D</div>;
-      }
-    },
-    {
-      title: 'Rewards',
-      dataIndex: '',
-      align,
-      width: 160,
-      render: (value: any, record: any) => {
-        return (
-          <div className="s-box">
-            <div className="s-img">
-              <img src="/assets/images/img-5.png" alt="" />
-            </div>
-            <div className="s-text">Points 7.5x AIM</div>
-          </div>
-        );
-      }
-    },
-    {
-      title: 'Points',
-      dataIndex: '',
-      align,
-      width: 160,
-      render: (value: any, record: any) => {
-        return (
-          <div className="s-box">
-            <div className="s-img">
-              <img src="/assets/images/img-25.png" alt="" />
-            </div>
-            <div className="s-text">6,603</div>
-          </div>
-        );
-      }
-    },
-    {
-      title: '',
-      dataIndex: '',
-      align,
-      fixed: 'right',
-      width: 100,
-      render: (value: any, record: any) => {
-        return (
-          <div className="action">
-            <button className="stake-btn">Unstake</button>
-          </div>
-        );
-      }
-    }
-  ];
+  const [historyLoading, setHistoryLoading] = useState(false);
   const historyDataSource = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }];
   const historyColumns: ColumnsType<any> = [
     {
@@ -150,28 +67,293 @@ export default function Dashboard() {
       }
     }
   ];
-  const assetsDataSource = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }];
+
+  const [totalPoints, setTotalPoints] = useState(0);
+  const [totalStaked, setTotalStaked] = useState(0);
+  const [totalProject, setTotalProject] = useState(0);
+
+  const stakeColumns: any[] = [
+    {
+      title: 'Project',
+      dataIndex: 'projectName',
+      key: 'projectName',
+      render: (projectName: string) => <Tag color="blue">{projectName}</Tag>
+    },
+    {
+      title: 'Stake ID',
+      dataIndex: 'stakeId',
+      key: 'stakeId',
+      render: (stakeId: number) => <Tag color="blue">#{stakeId}</Tag>
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'amount',
+      key: 'amount',
+      render: (amount: number) => `${amount.toFixed(2)} tokens`
+    },
+
+    {
+      title: 'Duration',
+      dataIndex: 'duration',
+      key: 'duration',
+      render: (duration: number) => `${duration} 天`
+    },
+    {
+      title: 'Staked Time',
+      dataIndex: 'stakedAtStr',
+      key: 'stakedAtStr'
+    },
+    {
+      title: 'Unlocked Time',
+      dataIndex: 'unlockedAtStr',
+      key: 'unlockedAtStr'
+    },
+    {
+      title: 'Status',
+      dataIndex: 'statusText',
+      key: 'statusText',
+      render: (_, record) => {
+        if (record.status == 0) return <Tag color="green">Active</Tag>;
+        if (record.status == 1) return <Tag color="blue">Unstaked</Tag>;
+        if (record.status == 2) return <Tag color="red">EmergencyUnstaked</Tag>;
+      }
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      fixed: 'right',
+      render: (_, record) => (
+        <Space direction="vertical">
+          <Button
+            type="primary"
+            disabled={!record.canUnstake}
+            loading={unstakeLoading}
+            onClick={() => handleUnstake(record)}>
+            Unstake
+          </Button>
+          <Button
+            danger
+            disabled={record.status == 2}
+            loading={unstakeLoading}
+            onClick={() => handleEmergencyUnstake(record)}>
+            Emergency Unstake
+          </Button>
+        </Space>
+      )
+    }
+  ];
+  const [stakeRecords, setStakeRecords] = useState([]);
+  const [unstakeLoading, setUnstakeLoading] = useState(false);
+  const [stakeRecordsLoading, setStakeRecordsLoading] = useState(false);
 
   useEffect(() => {
-    if (isConnected && chainId) {
-      setNetworkId(chainId.toString());
+    const initData = async () => {
+      if (isConnected && address && caipNetwork && chainId) {
+        setNetworkId(chainId.toString());
+        getStakeRecords();
+      } else {
+        setNetworkId('');
+        setStakeRecords([]);
+      }
+    };
+
+    initData();
+  }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram]);
+
+  useEffect(() => {
+    if (stakeRecords.length > 0) {
+      setTotalPoints(stakeRecords.reduce((acc, record) => acc + record.amount, 0));
+      setTotalStaked(stakeRecords.reduce((acc, record) => acc + record.amount, 0));
+      setTotalProject(
+        stakeRecords.reduce((acc, record) => {
+          if (acc.includes(record.projectId)) {
+            return acc;
+          }
+          return [...acc, record.projectId];
+        }, []).length
+      );
     } else {
-      setNetworkId('');
+      setTotalPoints(0);
+      setTotalStaked(0);
+      setTotalProject(0);
     }
-  }, [isConnected, chainId]);
+  }, [stakeRecords]);
+
+  const getStakeRecords = () => {
+    if (caipNetwork.chainNamespace === 'eip155') {
+      if (evmStakingContract) {
+        setStakeRecordsLoading(true);
+        evmUtils
+          .getStakeRecords(evmStakingContract, address)
+          .then((records) => {
+            setStakeRecords(records);
+          })
+          .catch((error) => {
+            console.error(error);
+          })
+          .finally(() => {
+            setStakeRecordsLoading(false);
+          });
+      }
+    } else if (caipNetwork.chainNamespace === 'solana') {
+      if (solanaProgram) {
+        getSolanaStakeRecords();
+      }
+    }
+  };
+
+  const getSolanaStakeRecords = async (stakeType: string = '', stakeId: number = null, stakeAmount: number = null) => {
+    setStakeRecordsLoading(true);
+    try {
+      const maxRetries = 10;
+      let retryCount = 0;
+
+      const fetchStakes = async () => {
+        try {
+          console.log(`🔍 查询质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
+          const records = await solanaUtils.getStakeRecords(solanaProgram);
+          return records;
+        } catch (error) {
+          console.error(`❌ 第 ${retryCount + 1} 次查询失败:`, error);
+          return null;
+        }
+      };
+
+      if (stakeId && stakeAmount) {
+        const pollInterval = 5000;
+        let found = false;
+        while (retryCount < maxRetries && !found) {
+          const currentRecords = await fetchStakes();
+          if (!currentRecords) {
+            retryCount++;
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+            continue;
+          }
+
+          if (stakeType === 'stake') {
+            const newStake = currentRecords.find((stake) => stake.stakeId === stakeId);
+            if (newStake) {
+              console.log('✅ 新质押记录已确认:', newStake);
+              setStakeRecords(currentRecords);
+              found = true;
+              break;
+            }
+          } else if (stakeType === 'unstake' || stakeType === 'emergencyUnstake') {
+            const existingStake = currentRecords.find((stake) => stake.stakeId === stakeId);
+            if (!existingStake) {
+              console.log('✅ 解质押记录已确认: 原质押记录已移除');
+              setStakeRecords(currentRecords);
+              found = true;
+              break;
+            }
+          }
+          retryCount++;
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        }
+        if (!found) {
+          console.log('⚠️ 达到最大重试次数，未获取到新数据');
+        }
+      } else {
+        // 没有 stakeId 或 stakeAmount，直接查一次
+        const currentRecords = await fetchStakes();
+        if (currentRecords) {
+          setStakeRecords(currentRecords);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setStakeRecordsLoading(false);
+    }
+  };
+
+  const handleUnstake = async (record: any) => {
+    if (caipNetwork.chainNamespace === 'eip155') {
+      setUnstakeLoading(true);
+      evmUtils
+        .unstake(evmStakingContract, record, caipNetwork.blockExplorers.default.url)
+        .then(() => {
+          getStakeRecords();
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          setUnstakeLoading(false);
+        });
+    } else if (caipNetwork.chainNamespace === 'solana') {
+      solanaUtils
+        .handleUnstake(
+          solanaProgram,
+          record,
+          caipNetwork.blockExplorers.default.url,
+          getContractConfig(chainId).cluster
+        )
+        .then(() => {
+          getSolanaStakeRecords('unstake', record.stakeId, record.amount);
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          setUnstakeLoading(false);
+        });
+    }
+  };
+
+  const handleEmergencyUnstake = async (record: any) => {
+    setUnstakeLoading(true);
+    if (caipNetwork.chainNamespace === 'eip155') {
+      evmUtils
+        .emergencyUnstake(evmStakingContract, record, caipNetwork.blockExplorers.default.url)
+        .then(() => {
+          getStakeRecords();
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          setUnstakeLoading(false);
+        });
+    } else if (caipNetwork.chainNamespace === 'solana') {
+      solanaUtils
+        .emergencyUnstake(
+          solanaProgram,
+          record,
+          caipNetwork.blockExplorers.default.url,
+          getContractConfig(chainId).cluster
+        )
+        .then(() => {
+          getSolanaStakeRecords('emergencyUnstake', record.stakeId, record.amount);
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          setUnstakeLoading(false);
+        });
+    }
+  };
 
   const handleTabClick = (network: any) => async () => {
-    // modal.open({ view: "Networks" });
     console.log('目标网络:', network);
+    if (!isConnected) {
+      modal.open();
+      return;
+    }
     if (network) {
-      modal.switchNetwork(network).then(() => {
-        console.log('切换网络成功');
-        setNetworkId(network.id.toString());
-      }).catch((error) => {
-        console.error('切换网络失败:', error);
-      });
+      modal
+        .switchNetwork(network)
+        .then(() => {
+          console.log('切换网络成功');
+          setNetworkId(network.id.toString());
+        })
+        .catch((error) => {
+          console.error('切换网络失败:', error);
+        });
     } else {
       setNetworkId('');
+      setStakeRecords([]);
     }
   };
 
@@ -197,16 +379,16 @@ export default function Dashboard() {
               <div className="s-img">
                 <img src="/assets/images/img-3.png" alt="" />
               </div>
-              <div className="s-text">1321546521</div>
+              <div className="s-text">{totalPoints}</div>
             </div>
           </div>
           <div className="banner-item">
             <div className="banner-item-title">Total Staked</div>
-            <div className="text">1321546521</div>
+            <div className="text">{totalStaked}</div>
           </div>
           <div className="banner-item">
             <div className="banner-item-title">Total Project</div>
-            <div className="text">1321546521</div>
+            <div className="text">{totalProject}</div>
           </div>
           <img src="/assets/images/img-24.png" alt="" className="img-24" />
         </div>
@@ -216,28 +398,28 @@ export default function Dashboard() {
           <img src="/assets/images/star.png" alt="" className="star-img" />
         </div>
         <div className="tab-box">
-          <button className={networkId === '' ? 'active' : ''} onClick={handleTabClick(null)}>
+          {/* <button className={networkId === '' ? 'active' : ''} onClick={handleTabClick(null)}>
             All Chain
-          </button>
-          {
-            getContractConfig().map((item: any) => {
-              return (
-                <button className={networkId === item.network.id.toString() ? 'active' : ''} onClick={handleTabClick(item.network)}>
-                  {item.network.name}
-                </button>
-              );
-            })
-          }
+          </button> */}
+          {getContractConfig().map((item: any) => {
+            return (
+              <button
+                className={networkId === item.network.id.toString() ? 'active' : ''}
+                onClick={handleTabClick(item.network)}>
+                {item.network.name}
+              </button>
+            );
+          })}
         </div>
 
         <Table
           className="tablebox"
           scroll={{ x: 'max-content' }}
-          columns={assetsColumns}
-          dataSource={assetsDataSource}
+          columns={stakeColumns}
+          dataSource={stakeRecords}
           pagination={false}
-          loading={assetsLoading}
-          rowKey={(record) => record.id}
+          loading={stakeRecordsLoading}
+          rowKey={(record) => record.stakeId}
         />
 
         <div className="title-box-2">
@@ -251,7 +433,6 @@ export default function Dashboard() {
           dataSource={historyDataSource}
           pagination={false}
           loading={historyLoading}
-          rowKey={(record) => record.id}
         />
       </div>
     </div>
