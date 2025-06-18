@@ -470,33 +470,35 @@ export default function Dashboard() {
         closable={false}
         footer={null}
         open={isEmergencyUnstakeModalOpen}>
-        <div className="unstake-modal-box">
-          <img src="/assets/images/img-26.png" alt="" className="img-26" />
-          <div className="title">Emergency Unstake</div>
-          <div className="text">(*Warning: Unstaking in advance will result in a 30% deduction of rewards*)</div>
-          <div className="text2">
-            <div className="text2-1">You can only get</div>
-            <div className="text2-2">
-              <div>
-                {unstakeRecord.amount} Aimonica(≈${unstakeRecord.amount})
-              </div>
-              <div className="s-box">
-                <div className="s-img">
-                  <img src="/assets/images/img-3.png" alt="" />
+        {unstakeRecord && (
+          <div className="unstake-modal-box">
+            <img src="/assets/images/img-26.png" alt="" className="img-26" />
+            <div className="title">Emergency Unstake</div>
+            <div className="text">(*Warning: Unstaking in advance will result in a 30% deduction of rewards*)</div>
+            <div className="text2">
+              <div className="text2-1">You can only get</div>
+              <div className="text2-2">
+                <div>
+                  {unstakeRecord.amount} Aimonica(≈${unstakeRecord.amount})
                 </div>
-                <div className="s-text">{unstakeRecord.amount}</div>
+                <div className="s-box">
+                  <div className="s-img">
+                    <img src="/assets/images/img-3.png" alt="" />
+                  </div>
+                  <div className="s-text">{unstakeRecord.amount}</div>
+                </div>
               </div>
             </div>
+            <div className="btn-box">
+              <Button className="btn-cancel" onClick={closeEmergencyUnstakeModal}>
+                Cancel
+              </Button>
+              <Button className="btn-confirm" loading={unstakeLoading} onClick={handleEmergencyUnstake}>
+                Confirm
+              </Button>
+            </div>
           </div>
-          <div className="btn-box">
-            <Button className="btn-cancel" onClick={closeEmergencyUnstakeModal}>
-              Cancel
-            </Button>
-            <Button className="btn-confirm" loading={unstakeLoading} onClick={handleEmergencyUnstake}>
-              Confirm
-            </Button>
-          </div>
-        </div>
+        )}
       </Modal>
 
       <Modal
@@ -506,36 +508,38 @@ export default function Dashboard() {
         closable={false}
         footer={null}
         open={isUnstakeModalOpen}>
-        <div className="unstake-modal-box">
-          <img src="/assets/images/img-26.png" alt="" className="img-26" />
-          <div className="title">Unstake</div>
-          <div className="text-box2">
-            <div>Unstaking Fee</div>
-            <div>5%</div>
-          </div>
-          <div className="text2 text3">
-            <div className="text2-1">You can only get</div>
-            <div className="text2-2">
-              <div>
-                {unstakeRecord.amount} Aimonica(≈${unstakeRecord.amount})
-              </div>
-              <div className="s-box">
-                <div className="s-img">
-                  <img src="/assets/images/img-3.png" alt="" />
+        {unstakeRecord && (
+          <div className="unstake-modal-box">
+            <img src="/assets/images/img-26.png" alt="" className="img-26" />
+            <div className="title">Unstake</div>
+            <div className="text-box2">
+              <div>Unstaking Fee</div>
+              <div>5%</div>
+            </div>
+            <div className="text2 text3">
+              <div className="text2-1">You can only get</div>
+              <div className="text2-2">
+                <div>
+                  {unstakeRecord.amount} Aimonica(≈${unstakeRecord.amount})
                 </div>
-                <div className="s-text">{unstakeRecord.amount}</div>
+                <div className="s-box">
+                  <div className="s-img">
+                    <img src="/assets/images/img-3.png" alt="" />
+                  </div>
+                  <div className="s-text">{unstakeRecord.amount}</div>
+                </div>
               </div>
             </div>
+            <div className="btn-box">
+              <Button className="btn-cancel" onClick={closeUnstakeModal}>
+                Cancel
+              </Button>
+              <Button className="btn-confirm" loading={unstakeLoading} onClick={handleUnstake}>
+                Confirm
+              </Button>
+            </div>
           </div>
-          <div className="btn-box">
-            <Button className="btn-cancel" onClick={closeUnstakeModal}>
-              Cancel
-            </Button>
-            <Button className="btn-confirm" loading={unstakeLoading} onClick={handleUnstake}>
-              Confirm
-            </Button>
-          </div>
-        </div>
+        )}
       </Modal>
     </div>
   );
