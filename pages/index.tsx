@@ -161,17 +161,17 @@ export default function Home() {
       }
     },
     {
-      title: '',
-      dataIndex: '',
+      title: 'Action',
+      key: 'action',
       align,
       width: 100,
       fixed: 'right',
       render: (value: any, record: any) => {
         return (
           <div className="action">
-            <button className="stake-btn" onClick={() => toStake(record)}>
+            <Button className="stake-btn" onClick={() => toStake(record)}>
               Stake
-            </button>
+            </Button>
           </div>
         );
       }
