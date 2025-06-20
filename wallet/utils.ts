@@ -1,17 +1,20 @@
 import { ethers } from 'ethers';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { message } from 'antd';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import * as anchor from '@coral-xyz/anchor';
 
+// 质押时长
 export const durationDays = [1, 7, 14, 30];
 
+// EVM 项目配置地址
 const EVM_PROJECT_CONFIG = '0x41494d3030310000000000000000000000000000000000000000000000000000';
 
 export const evmUtils = {
+  // 获取质押记录
   getStakeRecords: async (evmStakingContract: any, address: string) => {
     const userStakes = await evmStakingContract.getUserStakes(address);
     console.log('EVM 原始质押记录:', userStakes);
+
     if (!userStakes) return [];
 
     const records = [];
@@ -44,6 +47,7 @@ export const evmUtils = {
 
     const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
     console.log('EVM 质押记录:', sortedRecords);
+
     return sortedRecords;
   },
 
@@ -97,15 +101,15 @@ export const evmUtils = {
   }
 };
 
-// Only keep the project config address as it's needed to fetch the configuration
+// 项目配置地址
 const SOLANA_PROJECT_CONFIG = '25dYEUwQ4EQLkkeS1zSu7r1MR34a5mcBGEyNpuEBJuNf';
 
-// Utility function to generate user token account address
+// 获取用户代币账户地址
 const getUserTokenAccount = (userPublicKey: PublicKey, tokenMint: PublicKey): PublicKey => {
   return getAssociatedTokenAddressSync(tokenMint, userPublicKey);
 };
 
-// Utility function to generate stake info PDA
+// 获取质押信息 PDA
 const getStakeInfoPda = async (
   solanaProgram: any,
   userPublicKey: PublicKey,
@@ -124,6 +128,7 @@ const getStakeInfoPda = async (
   return stakeInfoPda;
 };
 
+// 获取VaultAuthority PDA
 const getVaultAuthorityPda = async (solanaProgram: any, projectId: anchor.BN) => {
   const [vaultAuthorityPda] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from('vault-authority'), projectId.toArrayLike(Buffer, 'le', 8)],
@@ -132,7 +137,7 @@ const getVaultAuthorityPda = async (solanaProgram: any, projectId: anchor.BN) =>
   return vaultAuthorityPda;
 };
 
-// Helper function to get project configuration
+// 获取项目配置
 const getProjectConfig = async (solanaProgram: any) => {
   const projectConfigPubkey = new PublicKey(SOLANA_PROJECT_CONFIG);
   const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
@@ -150,21 +155,21 @@ const getProjectConfig = async (solanaProgram: any) => {
     userTokenAccount
   };
 
-  // console.log(
-  //   'Solana 项目配置:',
-  //   JSON.stringify(config, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-  // );
+  console.log(
+    'Solana 项目配置:',
+    JSON.stringify(config, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+  );
 
   return config;
 };
 
 export const solanaUtils = {
+  // 获取下一个质押ID
   getNextStakeId: async (solanaProgram: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
     const { projectConfigPubkey } = await getProjectConfig(solanaProgram);
 
-    // Use memcmp filters to efficiently query stake records
     const userFilter = {
       memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
     };
@@ -174,7 +179,8 @@ export const solanaUtils = {
     };
 
     const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
-    // console.log('Solana 原始质押记录:', userStakes);
+    console.log('Solana 原始质押记录:', userStakes);
+
     if (!userStakes) return [];
 
     const records = userStakes.map((stake) => {
@@ -183,16 +189,17 @@ export const solanaUtils = {
     });
     const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
     const nextStakeId = sortedRecords[0].stakeId + 1;
-    // console.log('下一个质押ID:', nextStakeId);
+    console.log('下一个质押ID:', nextStakeId);
+
     return nextStakeId;
   },
 
+  // 获取质押记录
   getStakeRecords: async (solanaProgram: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
     const { projectConfigPubkey, projectId, projectName } = await getProjectConfig(solanaProgram);
 
-    // Use memcmp filters to efficiently query stake records
     const userFilter = {
       memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
     };
@@ -202,7 +209,8 @@ export const solanaUtils = {
     };
 
     const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
-    // console.log('Solana 原始质押记录:', userStakes);
+    console.log('Solana 原始质押记录:', userStakes);
+
     if (!userStakes) return [];
 
     const records = [];
@@ -229,7 +237,8 @@ export const solanaUtils = {
     }
 
     const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
-    // console.log('Solana 质押记录:', sortedRecords);
+    console.log('Solana 质押记录:', sortedRecords);
+
     return sortedRecords;
   },
 
@@ -241,7 +250,6 @@ export const solanaUtils = {
 
     console.log('解质押ID:', record.stakeId, '数量:', record.amount);
 
-    // 生成质押信息 PDA
     const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, record.stakeId);
 
     const unstakeAccounts = {
@@ -261,24 +269,17 @@ export const solanaUtils = {
 
     const tx = await solanaProgram.methods.unstake(new anchor.BN(record.stakeId)).accounts(unstakeAccounts).rpc();
 
-    message.success('Successful transaction!');
-
     return tx;
   },
 
   // 紧急解质押
   emergencyUnstake: async (solanaProgram: any, record: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
-    if (!userPublicKey) {
-      message.error('Wallet not connected or unable to get user public key');
-      return;
-    }
 
     const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount } = await getProjectConfig(solanaProgram);
 
     console.log('紧急解质押ID:', record.stakeId, '数量:', record.amount);
 
-    // 生成质押信息 PDA
     const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, record.stakeId);
 
     const emergencyUnstakeAccounts = {
@@ -301,24 +302,17 @@ export const solanaUtils = {
       .accounts(emergencyUnstakeAccounts)
       .rpc();
 
-    message.success('Successful transaction!');
-
     return tx;
   },
 
+  // 质押
   stake: async (solanaProgram: any, stakeId: number, stakeAmount: number, stakeDuration: number) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
-    if (!userPublicKey) {
-      message.error('Wallet not connected or unable to get user public key');
-      return;
-    }
 
     const { projectConfigPubkey, vault, userTokenAccount } = await getProjectConfig(solanaProgram);
 
-    // Use the next stake ID from state
     console.log('质押ID:', stakeId, '数量:', stakeAmount);
 
-    // Generate stake info PDA
     const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, stakeId);
 
     const stakeAmountLamports = new anchor.BN(stakeAmount * Math.pow(10, 9));
@@ -344,19 +338,16 @@ export const solanaUtils = {
       .accounts(stakeAccounts)
       .rpc();
 
-    message.success('Successful transaction!');
-
     return tx;
   },
 
   getTokenBalance: async (solanaProgram: any, solanaConnection: any) => {
-    const userPublicKey = solanaProgram.provider.wallet.publicKey;
-    if (!userPublicKey) return;
-
     const { userTokenAccount } = await getProjectConfig(solanaProgram);
 
     const tokenAccount = await solanaConnection.getTokenAccountBalance(userTokenAccount);
+
     const balance = tokenAccount.value.uiAmount || 0;
+
     return balance;
   }
 };

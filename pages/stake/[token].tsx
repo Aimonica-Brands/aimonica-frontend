@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Empty, Spin, App, Popover, Collapse, Input } from 'antd';
+import { Button, Modal, App, Input } from 'antd';
 import { LeftOutlined, ExportOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { getContractConfig } from '@/wallet';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
 import { durationDays, evmUtils, solanaUtils } from '@/wallet/utils';
-import { ethers } from 'ethers';
 
 export default function Stake() {
   const { message } = App.useApp();
@@ -101,7 +100,7 @@ export default function Stake() {
           evmUtils
             .getAllowance(evmTokenContract, address, stakeAddress)
             .then((allowance) => {
-              console.log('EVM 代币授权:', allowance, balance, allowance >= balance);
+              // console.log('EVM 代币授权:', allowance, balance, allowance >= balance);
               setIsApproved(allowance >= balance);
             })
             .catch((error) => {
@@ -177,7 +176,7 @@ export default function Stake() {
             getContractConfig(chainId).cluster
           }`;
           console.log('🔗质押交易链接:', txLink);
-
+          message.success('Successful transaction!');
           setIsStakeModalOpen(true);
           getSolTokenBalance();
           setAmount('');

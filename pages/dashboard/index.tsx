@@ -294,6 +294,7 @@ export default function Dashboard() {
             getContractConfig(chainId).cluster
           }`;
           console.log('🔗解质押交易链接:', txLink);
+          message.success('Successful transaction!');
           getSolanaStakeRecords('unstake', record.stakeId, record.amount);
         })
         .catch((error) => {
@@ -356,6 +357,7 @@ export default function Dashboard() {
             getContractConfig(chainId).cluster
           }`;
           console.log('🔗紧急解质押交易链接:', txLink);
+          message.success('Successful transaction!');
           getSolanaStakeRecords('emergencyUnstake', record.stakeId, record.amount);
         })
         .catch((error) => {
@@ -369,7 +371,6 @@ export default function Dashboard() {
   };
 
   const handleTabClick = (network: any) => async () => {
-    console.log('目标网络:', network);
     if (!isConnected) {
       modal.open();
       return;
@@ -378,7 +379,7 @@ export default function Dashboard() {
       modal
         .switchNetwork(network)
         .then(() => {
-          console.log('切换网络成功');
+          console.log('切换网络成功', network);
           setNetworkId(network.id.toString());
         })
         .catch((error) => {
