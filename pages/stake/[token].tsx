@@ -6,6 +6,7 @@ import { getContractConfig } from '@/wallet';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
 import { durationDays, evmUtils, solanaUtils } from '@/wallet/utils';
+import { handleContractError } from '@/wallet/contracts';
 
 export default function Stake() {
   const { message } = App.useApp();
@@ -126,7 +127,7 @@ export default function Stake() {
         getEvmTokenBalance();
       })
       .catch((error) => {
-        console.error(error);
+        handleContractError(error);
       })
       .finally(() => {
         setLoading(false);
@@ -161,7 +162,7 @@ export default function Stake() {
           setAmount('');
         })
         .catch((error) => {
-          console.error(error);
+          handleContractError(error);
         })
         .finally(() => {
           setLoading(false);
@@ -182,7 +183,7 @@ export default function Stake() {
           setAmount('');
         })
         .catch((error) => {
-          console.error(error);
+          handleContractError(error);
         })
         .finally(() => {
           setLoading(false);

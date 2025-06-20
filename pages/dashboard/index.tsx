@@ -7,6 +7,7 @@ import { getContractConfig } from '@/wallet';
 import { modal } from '@/wallet';
 import { evmUtils, solanaUtils } from '@/wallet/utils';
 import { usePageContext } from '@/context';
+import { handleContractError } from '@/wallet/contracts';
 
 export default function Dashboard() {
   const { message } = App.useApp();
@@ -280,7 +281,7 @@ export default function Dashboard() {
           getStakeRecords();
         })
         .catch((error) => {
-          console.error(error);
+          handleContractError(error);
         })
         .finally(() => {
           setUnstakeLoading(false);
@@ -288,7 +289,7 @@ export default function Dashboard() {
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
-        .handleUnstake(solanaProgram, record)
+        .unstake(solanaProgram, record)
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
             getContractConfig(chainId).cluster
@@ -298,11 +299,54 @@ export default function Dashboard() {
           getSolanaStakeRecords('unstake', record.stakeId, record.amount);
         })
         .catch((error) => {
-          console.error(error);
+          handleContractError(error);
         })
         .finally(() => {
           setUnstakeLoading(false);
           setIsUnstakeModalOpen(false);
+        });
+    }
+  };
+
+  const handleEmergencyUnstake = async () => {
+    if (unstakeLoading || !unstakeRecord) return;
+
+    const record = unstakeRecord;
+    setUnstakeLoading(true);
+
+    if (caipNetwork.chainNamespace === 'eip155') {
+      evmUtils
+        .emergencyUnstake(evmStakingContract, record)
+        .then((tx) => {
+          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+          console.log('🔗紧急解质押交易链接:', txLink);
+          message.success('Successful transaction!');
+          getStakeRecords();
+        })
+        .catch((error) => {
+          handleContractError(error);
+        })
+        .finally(() => {
+          setUnstakeLoading(false);
+          setIsEmergencyUnstakeModalOpen(false);
+        });
+    } else if (caipNetwork.chainNamespace === 'solana') {
+      solanaUtils
+        .emergencyUnstake(solanaProgram, record)
+        .then((tx) => {
+          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
+            getContractConfig(chainId).cluster
+          }`;
+          console.log('🔗紧急解质押交易链接:', txLink);
+          message.success('Successful transaction!');
+          getSolanaStakeRecords('emergencyUnstake', record.stakeId, record.amount);
+        })
+        .catch((error) => {
+          handleContractError(error);
+        })
+        .finally(() => {
+          setUnstakeLoading(false);
+          setIsEmergencyUnstakeModalOpen(false);
         });
     }
   };
@@ -325,49 +369,6 @@ export default function Dashboard() {
   const closeEmergencyUnstakeModal = () => {
     setIsEmergencyUnstakeModalOpen(false);
     setUnstakeRecord(null);
-  };
-
-  const handleEmergencyUnstake = async () => {
-    if (unstakeLoading || !unstakeRecord) return;
-
-    const record = unstakeRecord;
-    setUnstakeLoading(true);
-
-    if (caipNetwork.chainNamespace === 'eip155') {
-      evmUtils
-        .emergencyUnstake(evmStakingContract, record)
-        .then((tx) => {
-          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
-          console.log('🔗紧急解质押交易链接:', txLink);
-          message.success('Successful transaction!');
-          getStakeRecords();
-        })
-        .catch((error) => {
-          console.error(error);
-        })
-        .finally(() => {
-          setUnstakeLoading(false);
-          setIsEmergencyUnstakeModalOpen(false);
-        });
-    } else if (caipNetwork.chainNamespace === 'solana') {
-      solanaUtils
-        .emergencyUnstake(solanaProgram, record)
-        .then((tx) => {
-          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
-            getContractConfig(chainId).cluster
-          }`;
-          console.log('🔗紧急解质押交易链接:', txLink);
-          message.success('Successful transaction!');
-          getSolanaStakeRecords('emergencyUnstake', record.stakeId, record.amount);
-        })
-        .catch((error) => {
-          console.error(error);
-        })
-        .finally(() => {
-          setUnstakeLoading(false);
-          setIsEmergencyUnstakeModalOpen(false);
-        });
-    }
   };
 
   const handleTabClick = (network: any) => async () => {

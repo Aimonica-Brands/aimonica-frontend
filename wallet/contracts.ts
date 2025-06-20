@@ -65,25 +65,24 @@ export const initSolanaContracts = (chainId: any, walletProvider: any) => {
   }
 };
 
-// 在这里实现一下对合约报错的处理，比如说用户取消授权或取消交易等
+/**处理合约错误*/
 export const handleContractError = (error: any) => {
   console.error('合约错误:', error);
 
-  // Handle user rejection cases
+  // 用户取消了操作
   if (
     error.code === 4001 ||
     error.code === 'ACTION_REJECTED' ||
     error.message?.includes('user rejected') ||
     error === '交易已取消'
   ) {
-    message.info('用户取消了操作');
     return;
   }
 
-  // Handle other common error cases
+  // 处理其他常见错误
   if (error.message) {
-    message.error(`操作失败: ${error.message}`);
+    message.error(`Failed: ${error.message}`);
   } else {
-    message.error('合约操作失败，请稍后重试');
+    message.error('Failed: Please try again later');
   }
 };

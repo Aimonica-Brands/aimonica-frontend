@@ -290,7 +290,7 @@ export const solanaUtils = {
   },
 
   /**解质押 */
-  handleUnstake: async (solanaProgram: any, record: any) => {
+  unstake: async (solanaProgram: any, record: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
     const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount } = await getProjectConfig(solanaProgram);
