@@ -6,6 +6,8 @@ import * as anchor from '@coral-xyz/anchor';
 
 export const durationDays = [1, 7, 14, 30];
 
+const EVM_PROJECT_CONFIG = '0x41494d3030310000000000000000000000000000000000000000000000000000';
+
 export const evmUtils = {
   getStakeRecords: async (evmStakingContract: any, address: string) => {
     const userStakes = await evmStakingContract.getUserStakes(address);
@@ -46,28 +48,57 @@ export const evmUtils = {
   },
 
   // 解质押
-  unstake: async (evmStakingContract: any, record: any, blockExplorer: string) => {
+  unstake: async (evmStakingContract: any, record: any) => {
+    console.log('解质押ID:', record.stakeId, '数量:', record.amount);
+
     const tx = await evmStakingContract.unstake(record.stakeId);
     await tx.wait();
-
-    const txLink = `${blockExplorer}/tx/${tx.hash}`;
-    console.log('🔗解质押交易链接:', txLink);
-    message.success('Successful transaction!');
+    return tx;
   },
 
   // 紧急解质押
-  emergencyUnstake: async (evmStakingContract: any, record: any, blockExplorer: string) => {
+  emergencyUnstake: async (evmStakingContract: any, record: any) => {
+    console.log('紧急解质押ID:', record.stakeId, '数量:', record.amount);
+
     const tx = await evmStakingContract.emergencyUnstake(record.stakeId);
     await tx.wait();
+    return tx;
+  },
 
-    const txLink = `${blockExplorer}/tx/${tx.hash}`;
-    console.log('🔗紧急解质押交易链接:', txLink);
-    message.success('Successful transaction!');
+  // 获取代币余额
+  getTokenBalance: async (evmTokenContract: any, address: string) => {
+    const _balance = await evmTokenContract.balanceOf(address);
+    const balance = Number(ethers.formatEther(_balance));
+    return balance;
+  },
+
+  // 获取代币授权
+  getAllowance: async (evmTokenContract: any, address: string, stakeAddress: string) => {
+    const _allowance = await evmTokenContract.allowance(address, stakeAddress);
+    const allowance = Number(ethers.formatEther(_allowance));
+    return allowance;
+  },
+
+  // 授权
+  approve: async (evmTokenContract: any, stakeAddress: string) => {
+    const tx = await evmTokenContract.approve(stakeAddress, ethers.parseEther('1000000'));
+    await tx.wait();
+    return tx;
+  },
+
+  // 质押
+  stake: async (evmStakingContract: any, stakeAmount: string, stakeDuration: number) => {
+    console.log('质押数量:', stakeAmount, '质押时长:', stakeDuration);
+
+    const amount = ethers.parseEther(stakeAmount);
+    const tx = await evmStakingContract.stake(amount, stakeDuration, EVM_PROJECT_CONFIG);
+    await tx.wait();
+    return tx;
   }
 };
 
 // Only keep the project config address as it's needed to fetch the configuration
-const PROJECT_CONFIG = '25dYEUwQ4EQLkkeS1zSu7r1MR34a5mcBGEyNpuEBJuNf';
+const SOLANA_PROJECT_CONFIG = '25dYEUwQ4EQLkkeS1zSu7r1MR34a5mcBGEyNpuEBJuNf';
 
 // Utility function to generate user token account address
 const getUserTokenAccount = (userPublicKey: PublicKey, tokenMint: PublicKey): PublicKey => {
@@ -103,7 +134,7 @@ const getVaultAuthorityPda = async (solanaProgram: any, projectId: anchor.BN) =>
 
 // Helper function to get project configuration
 const getProjectConfig = async (solanaProgram: any) => {
-  const projectConfigPubkey = new PublicKey(PROJECT_CONFIG);
+  const projectConfigPubkey = new PublicKey(SOLANA_PROJECT_CONFIG);
   const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
   const vaultAuthority = await getVaultAuthorityPda(solanaProgram, projectConfig.projectId);
   const userTokenAccount = getUserTokenAccount(solanaProgram.provider.wallet.publicKey, projectConfig.tokenMint);
@@ -130,10 +161,6 @@ const getProjectConfig = async (solanaProgram: any) => {
 export const solanaUtils = {
   getNextStakeId: async (solanaProgram: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
-    if (!userPublicKey) {
-      message.error('Wallet not connected or unable to get user public key');
-      return;
-    }
 
     const { projectConfigPubkey } = await getProjectConfig(solanaProgram);
 
@@ -162,10 +189,6 @@ export const solanaUtils = {
 
   getStakeRecords: async (solanaProgram: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
-    if (!userPublicKey) {
-      message.error('Wallet not connected or unable to get user public key');
-      return;
-    }
 
     const { projectConfigPubkey, projectId, projectName } = await getProjectConfig(solanaProgram);
 
@@ -179,7 +202,7 @@ export const solanaUtils = {
     };
 
     const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
-    console.log('Solana 原始质押记录:', userStakes);
+    // console.log('Solana 原始质押记录:', userStakes);
     if (!userStakes) return [];
 
     const records = [];
@@ -210,12 +233,9 @@ export const solanaUtils = {
     return sortedRecords;
   },
 
+  // 解质押
   handleUnstake: async (solanaProgram: any, record: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
-    if (!userPublicKey) {
-      message.error('Wallet not connected or unable to get user public key');
-      return;
-    }
 
     const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount } = await getProjectConfig(solanaProgram);
 
@@ -335,12 +355,8 @@ export const solanaUtils = {
 
     const { userTokenAccount } = await getProjectConfig(solanaProgram);
 
-    try {
-      const tokenAccount = await solanaConnection.getTokenAccountBalance(userTokenAccount);
-      const balance = tokenAccount.value.uiAmount || 0;
-      return balance;
-    } catch (error) {
-      return 0;
-    }
+    const tokenAccount = await solanaConnection.getTokenAccountBalance(userTokenAccount);
+    const balance = tokenAccount.value.uiAmount || 0;
+    return balance;
   }
 };

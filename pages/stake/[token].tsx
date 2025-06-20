@@ -6,6 +6,7 @@ import { getContractConfig } from '@/wallet';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
 import { durationDays, evmUtils, solanaUtils } from '@/wallet/utils';
+import { ethers } from 'ethers';
 
 export default function Stake() {
   const { message } = App.useApp();
@@ -14,7 +15,7 @@ export default function Stake() {
 
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
-  const { evmStakingContract, solanaProgram, solanaConnection } = usePageContext();
+  const { evmTokenContract, evmStakingContract, solanaProgram, solanaConnection } = usePageContext();
 
   const [projectData, setProjectData] = useState([
     { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
@@ -26,7 +27,7 @@ export default function Stake() {
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
-  const [days, setDays] = useState(7);
+  const [durationDay, setDurationDay] = useState(7);
   const [expectedPoints, setExpectedPoints] = useState(0);
   const [tokenBalance, setTokenBalance] = useState(0);
   const [tokenPrice, setTokenPrice] = useState(1);
@@ -35,6 +36,7 @@ export default function Stake() {
   const [totalTVL, setTotalTVL] = useState(0);
   const [poolAddress, setPoolAddress] = useState('');
   const [poolLink, setPoolLink] = useState('');
+  const [isApproved, setIsApproved] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -46,10 +48,10 @@ export default function Stake() {
     if (isConnected && address && caipNetwork && chainId) {
       const contractConfig = getContractConfig(chainId);
       if (caipNetwork.chainNamespace === 'eip155') {
-        setPoolAddress(contractConfig.AimStaking);
-        const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
-        setPoolLink(link);
-        if (evmStakingContract) {
+        if (evmStakingContract && evmTokenContract) {
+          setPoolAddress(contractConfig.AimStaking);
+          const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
+          setPoolLink(link);
           getEvmTokenBalance();
         }
       } else if (caipNetwork.chainNamespace === 'solana') {
@@ -60,30 +62,116 @@ export default function Stake() {
           getSolTokenBalance();
         }
       }
+    } else {
+      setIsApproved(false);
+      setTokenBalance(0);
+      setTokenWorth(0);
+      setAmount('');
+      setDurationDay(7);
+      setExpectedPoints(0);
+      setTotalUser(0);
+      setTotalTVL(0);
+      setPoolAddress('');
+      setPoolLink('');
     }
-  }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram, solanaConnection]);
+  }, [
+    isConnected,
+    address,
+    caipNetwork,
+    chainId,
+    evmTokenContract,
+    evmStakingContract,
+    solanaProgram,
+    solanaConnection
+  ]);
 
   useEffect(() => {
     setExpectedPoints(Number(amount));
   }, [amount]);
 
-  const getEvmTokenBalance = async () => {};
+  const getEvmTokenBalance = async () => {
+    evmUtils
+      .getTokenBalance(evmTokenContract, address)
+      .then((balance) => {
+        setTokenBalance(balance);
+        setTokenWorth(balance * tokenPrice);
+
+        if (balance > 0) {
+          const stakeAddress = getContractConfig(chainId).AimStaking;
+          evmUtils
+            .getAllowance(evmTokenContract, address, stakeAddress)
+            .then((allowance) => {
+              console.log('EVM 代币授权:', allowance, balance, allowance >= balance);
+              setIsApproved(allowance >= balance);
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  const handleApprove = async () => {
+    if (loading) return;
+    setLoading(true);
+    const stakeAddress = getContractConfig(chainId).AimStaking;
+    evmUtils
+      .approve(evmTokenContract, stakeAddress)
+      .then((tx) => {
+        const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+        console.log('🔗授权交易链接:', txLink);
+        message.success('Approved!');
+        getEvmTokenBalance();
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   const getSolTokenBalance = async () => {
-    const tokenBalance = await solanaUtils.getTokenBalance(solanaProgram, solanaConnection);
-    setTokenBalance(Math.floor(tokenBalance));
-    setTokenWorth(Math.floor(tokenBalance * tokenPrice));
+    solanaUtils
+      .getTokenBalance(solanaProgram, solanaConnection)
+      .then((balance) => {
+        setTokenBalance(Math.floor(balance));
+        setTokenWorth(Math.floor(balance * tokenPrice));
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   const handleStake = async () => {
     if (loading) return;
     setLoading(true);
+
     if (caipNetwork.chainNamespace === 'eip155') {
+      evmUtils
+        .stake(evmStakingContract, amount.toString(), durationDay)
+        .then((tx) => {
+          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+          console.log('🔗质押交易链接:', txLink);
+          message.success('Successful transaction!');
+          setIsStakeModalOpen(true);
+          getEvmTokenBalance();
+          setAmount('');
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     } else if (caipNetwork.chainNamespace === 'solana') {
       const nextStakeId = await solanaUtils.getNextStakeId(solanaProgram);
 
       solanaUtils
-        .stake(solanaProgram, nextStakeId, Number(amount), days)
+        .stake(solanaProgram, nextStakeId, Number(amount), durationDay)
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
             getContractConfig(chainId).cluster
@@ -202,7 +290,10 @@ export default function Stake() {
                 <span>Locking Time</span>
                 <div className="days">
                   {durationDays.map((day) => (
-                    <button key={day} className={days === day ? 'active' : ''} onClick={() => setDays(day)}>
+                    <button
+                      key={day}
+                      className={durationDay === day ? 'active' : ''}
+                      onClick={() => setDurationDay(day)}>
                       {day}D
                     </button>
                   ))}
@@ -212,15 +303,28 @@ export default function Stake() {
                 <span>Expected Points</span>
                 <div className="number">{expectedPoints}</div>
               </div>
-              <Button
-                type="primary"
-                size="large"
-                className="stake-btn"
-                onClick={handleStake}
-                loading={loading}
-                disabled={!isConnected || !address || !caipNetwork || !chainId || !amount || !tokenBalance}>
-                STAKE
-              </Button>
+
+              {caipNetwork.chainNamespace === 'eip155' && !isApproved && tokenBalance > 0 ? (
+                <Button
+                  type="primary"
+                  size="large"
+                  className="stake-btn"
+                  onClick={handleApprove}
+                  loading={loading}
+                  disabled={!isConnected || !address || !caipNetwork || !chainId}>
+                  Approve
+                </Button>
+              ) : (
+                <Button
+                  type="primary"
+                  size="large"
+                  className="stake-btn"
+                  onClick={handleStake}
+                  loading={loading}
+                  disabled={!isConnected || !address || !caipNetwork || !chainId || !amount || !tokenBalance}>
+                  STAKE
+                </Button>
+              )}
             </div>
           </div>
         </div>

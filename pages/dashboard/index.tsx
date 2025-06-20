@@ -272,8 +272,11 @@ export default function Dashboard() {
 
     if (caipNetwork.chainNamespace === 'eip155') {
       evmUtils
-        .unstake(evmStakingContract, record, caipNetwork.blockExplorers.default.url)
-        .then(() => {
+        .unstake(evmStakingContract, record)
+        .then((tx) => {
+          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+          console.log('🔗解质押交易链接:', txLink);
+          message.success('Successful transaction!');
           getStakeRecords();
         })
         .catch((error) => {
@@ -331,8 +334,11 @@ export default function Dashboard() {
 
     if (caipNetwork.chainNamespace === 'eip155') {
       evmUtils
-        .emergencyUnstake(evmStakingContract, record, caipNetwork.blockExplorers.default.url)
-        .then(() => {
+        .emergencyUnstake(evmStakingContract, record)
+        .then((tx) => {
+          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+          console.log('🔗紧急解质押交易链接:', txLink);
+          message.success('Successful transaction!');
           getStakeRecords();
         })
         .catch((error) => {
