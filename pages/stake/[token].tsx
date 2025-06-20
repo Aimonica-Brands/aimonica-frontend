@@ -37,8 +37,6 @@ export default function Stake() {
   const [poolLink, setPoolLink] = useState('');
 
   useEffect(() => {
-    message.success('Successful transaction!', 0);
-
     if (token) {
       setProjectInfo(projectData.find((item) => item.rank === Number(token)));
     }
@@ -78,7 +76,6 @@ export default function Stake() {
   };
 
   const handleStake = async () => {
-    console.log('handleStake', amount, tokenBalance);
     if (loading) return;
     setLoading(true);
     if (caipNetwork.chainNamespace === 'eip155') {

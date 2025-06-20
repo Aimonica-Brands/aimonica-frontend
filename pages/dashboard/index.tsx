@@ -285,13 +285,12 @@ export default function Dashboard() {
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
-        .handleUnstake(
-          solanaProgram,
-          record,
-          caipNetwork.blockExplorers.default.url,
-          getContractConfig(chainId).cluster
-        )
-        .then(() => {
+        .handleUnstake(solanaProgram, record)
+        .then((tx) => {
+          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
+            getContractConfig(chainId).cluster
+          }`;
+          console.log('🔗解质押交易链接:', txLink);
           getSolanaStakeRecords('unstake', record.stakeId, record.amount);
         })
         .catch((error) => {
@@ -345,13 +344,12 @@ export default function Dashboard() {
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
-        .emergencyUnstake(
-          solanaProgram,
-          record,
-          caipNetwork.blockExplorers.default.url,
-          getContractConfig(chainId).cluster
-        )
-        .then(() => {
+        .emergencyUnstake(solanaProgram, record)
+        .then((tx) => {
+          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
+            getContractConfig(chainId).cluster
+          }`;
+          console.log('🔗紧急解质押交易链接:', txLink);
           getSolanaStakeRecords('emergencyUnstake', record.stakeId, record.amount);
         })
         .catch((error) => {
