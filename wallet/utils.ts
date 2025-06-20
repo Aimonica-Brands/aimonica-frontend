@@ -22,7 +22,7 @@ export const evmUtils = {
     for (const stakeId of userStakes) {
       const stake = await evmStakingContract.stakes(stakeId);
       const status = Number(stake.status);
-      // if (status > 0) continue;
+      if (status > 0) continue;
 
       const projectId = Number(stake.projectId);
       const projectName = ethers.decodeBytes32String(stake.projectId);
