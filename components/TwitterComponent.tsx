@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, message, Button } from 'antd';
-import { usePageContext, TwitterUser } from '@/context';
+import { usePageContext } from '@/context';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { getCurrentEnv } from '@/pages/api/auth/utils';
+import { getCurrentEnv, createShareMessages, shareOnTwitter } from '@/pages/api/auth/utils';
 
 export default function TwitterComponent() {
   const { data: session, status } = useSession();
@@ -29,7 +29,7 @@ export default function TwitterComponent() {
   // 监听Twitter连接状态变化
   useEffect(() => {
     if (isTwitterConnected && !prevConnectedRef.current && twitterUser) {
-      message.success(`Welcome @${twitterUser.twitterUsername}`);
+      message.success(`Welcome @${twitterUser.user.name}`);
 
       const url = new URL(window.location.href);
       if (url.search) {
@@ -84,12 +84,15 @@ export default function TwitterComponent() {
     message.success('Twitter disconnected');
   };
 
+  // const shareText = createShareMessages.connected(twitterUser.twitterUsername);
+  // shareOnTwitter(shareText);
+
   return (
     <>
       {isTwitterConnected && twitterUser ? (
         <button className="connect-button" onClick={() => setIsModalOpen(true)}>
           <img src={twitterUser.user.image} alt="" style={{ borderRadius: '50%' }} />
-          {twitterUser.twitterUsername}
+          {twitterUser.user.name}
         </button>
       ) : (
         <button className="connect-button" onClick={handleConnectTwitter}>

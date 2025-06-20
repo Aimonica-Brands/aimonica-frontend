@@ -45,8 +45,8 @@ export const shareOnTwitter = (text: string, url?: string): void => {
 
 /**创建分享消息 */
 export const createShareMessages = {
-  connected: (username: string) => `刚刚在 @AimonicaBrands 上连接了我的 Twitter 账户 @${username}！🚀 #AIMonica #Web3`,
-  staked: (amount: string, token: string) => `在 @AimonicaBrands 上质押了 ${amount} ${token}！💎 #AIMonica #Staking`,
-  nft: (nftName: string) => `在 @AimonicaBrands 上铸造了 NFT "${nftName}"！🎨 #AIMonica #NFT`,
-  general: () => `正在使用 @AimonicaBrands 探索 Web3！🌟 #AIMonica #Web3`
+  connected: (username: string) => `Just connected my Twitter account @${username} on @AimonicaBrands! 🚀 #AIMonica #Web3`,
+  staked: (amount: string, token: string) => `Staked ${amount} ${token} on @AimonicaBrands! 💎 #AIMonica #Staking`,
+  nft: (nftName: string) => `Minted NFT "${nftName}" on @AimonicaBrands! 🎨 #AIMonica #NFT`,
+  general: () => `Exploring Web3 on @AimonicaBrands! 🌟 #AIMonica #Web3`
 };
