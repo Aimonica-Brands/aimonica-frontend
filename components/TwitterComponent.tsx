@@ -29,7 +29,7 @@ export default function TwitterComponent() {
   // 监听Twitter连接状态变化
   useEffect(() => {
     if (isTwitterConnected && !prevConnectedRef.current && twitterUser) {
-      message.success(`Welcome @${twitterUser.user.name}`);
+      message.success(`Welcome ${twitterUser.user.name}!`);
 
       const url = new URL(window.location.href);
       if (url.search) {
