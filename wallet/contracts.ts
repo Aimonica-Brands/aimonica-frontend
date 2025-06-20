@@ -4,9 +4,7 @@ import { clusterApiUrl, Connection } from '@solana/web3.js';
 import { getContractConfig } from './index';
 import { message } from 'antd';
 
-/**
- * 初始化 EVM 合约
- */
+/**初始化 EVM 合约*/
 export const initEVMContracts = async (chainId: any) => {
   try {
     const tokenConfig = getContractConfig(chainId);
@@ -36,9 +34,7 @@ export const initEVMContracts = async (chainId: any) => {
   }
 };
 
-/**
- * 初始化 Solana 合约
- */
+/**初始化 Solana 合约*/
 export const initSolanaContracts = (chainId: any, walletProvider: any) => {
   try {
     const tokenConfig = getContractConfig(chainId);

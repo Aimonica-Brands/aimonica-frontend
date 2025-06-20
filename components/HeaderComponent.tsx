@@ -1,15 +1,10 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
-import { Drawer, Select } from 'antd';
+import { useState } from 'react';
+import { Select } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { useAppKitAccount } from '@reown/appkit/react';
-import dynamic from 'next/dynamic';
 import WalletComponent from './WalletComponent';
 import TwitterComponent from './TwitterComponent';
-
-// const WalletComponent = dynamic(() => import('./WalletComponent').then((mod) => mod.WalletComponent), {
-//   ssr: false
-// });
 
 export default function HeaderComponent() {
   const router = useRouter();

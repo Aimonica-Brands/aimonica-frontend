@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, message, Button, Avatar, Card } from 'antd';
+import { Modal, message, Button } from 'antd';
 import { usePageContext, TwitterUser } from '@/context';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { getCurrentEnv } from '@/pages/api/auth/utils';

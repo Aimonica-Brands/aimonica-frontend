@@ -5,20 +5,20 @@ import { base, solana, solanaDevnet } from '@reown/appkit/networks';
 
 export const networks: any = process.env.NEXT_PUBLIC_APP_ENV === 'production' ? [base, solana] : [base, solanaDevnet];
 
-// 0. Get projectId from https://cloud.reown.com
+/**0. Get projectId from https://cloud.reown.com */
 export const projectId = 'b5863416c73906526923f5c4d6db20c8';
 
-// 1. Create the Wagmi adapter
+/**1. Create the Wagmi adapter */
 export const wagmiAdapter = new WagmiAdapter({
   ssr: true,
   projectId,
   networks
 });
 
-// 2. Create Solana adapter
+/**2. Create Solana adapter */
 export const solanaWeb3JsAdapter = new SolanaAdapter();
 
-// 3. Set up the metadata - Optional
+/**3. Set up the metadata - Optional */
 const metadata = {
   name: 'AIMonica',
   description: 'AIMonica DApp',
@@ -26,7 +26,7 @@ const metadata = {
   icons: [`/assets/images/logo2.svg`]
 };
 
-// 4. Create the AppKit instance
+/**4. Create the AppKit instance */
 export const modal = createAppKit({
   adapters: [wagmiAdapter, solanaWeb3JsAdapter],
   networks,
@@ -43,7 +43,7 @@ import BKIBSHIABI from '@/wallet/abi/BKIBSHI.json';
 import AimStakingABI from '@/wallet/abi/AimStaking.json';
 import aim_staking_program from '@/wallet/idl/aim_staking_program.json';
 
-// 合约配置
+/**合约配置 */
 export const getContractConfig = (chainId: any = ''): any => {
   const isProduction = process.env.NEXT_PUBLIC_APP_ENV === 'production';
 
@@ -51,7 +51,6 @@ export const getContractConfig = (chainId: any = ''): any => {
     ? []
     : [
         {
-          // id: 8453,
           network: base,
           BKIBSHI: '0x3d1C275aa98d45C99258A51be98b08Fc8572c074',
           AimStaking: '0x990ba617d7e7ae3ede6318d9e85f851035b8323c',
@@ -59,7 +58,6 @@ export const getContractConfig = (chainId: any = ''): any => {
           AimStakingABI
         },
         {
-          // id: 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1',
           network: solanaDevnet,
           cluster: 'devnet',
           programId: '5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD',
