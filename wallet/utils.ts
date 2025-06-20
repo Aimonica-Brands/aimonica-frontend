@@ -1,13 +1,16 @@
 import { ethers } from 'ethers';
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { message } from 'antd';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import * as anchor from '@coral-xyz/anchor';
 
 // Test account data from logs (updated with new addresses)
-const PROJECT_CONFIG = '57cN6zv7kJ8w2y28zk9EHbLpGwpN2TaRLYcQwbUZJjpA';
-const TOKEN_MINT = 'EJmXTvmKixRrLrQURoE66zwoDMc28DaUMbG6i1XXNaDz';
-const VAULT = '6r9FaxNxJzkRtm9cj5ym3nVWu9dL2pNHHBhU99DVZiwA';
+const PROJECT_CONFIG = '25dYEUwQ4EQLkkeS1zSu7r1MR34a5mcBGEyNpuEBJuNf';
+const TOKEN_MINT = '7jAEAyFi3pkc8dxFTMEPv9SP8PAs1aiFfodGQmbH9VoG';
+const VAULT = '5UsEzwS1Aiqrs414bcCaYA6je5jXEjEk7HwYJjyhTMeP';
+const VAULT_AUTHORITY = '3sQYqrrpHf5g7HJJssBiAtZkLg3qB6GmFFi82Wq1KJBH';
+
+export const durationDays = [1, 7, 14, 30];
 
 export const evmUtils = {
   getStakeRecords: async (evmStakingContract: any, address: string) => {
@@ -94,29 +97,81 @@ const getStakeInfoPda = async (
 };
 
 export const solanaUtils = {
+  getNextStakeId: async (solanaProgram: any) => {
+    const userPublicKey = solanaProgram.provider.wallet.publicKey;
+    if (!userPublicKey) return [];
+
+    const projectConfigPubkey = new PublicKey(PROJECT_CONFIG);
+
+    const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
+    console.log('Solana 项目配置:', projectConfig);
+
+    const projectId = projectConfig.projectId.toNumber();
+    const projectName = projectConfig.name;
+    const tokenMint = projectConfig.tokenMint.toBase58();
+    const vault = projectConfig.vault.toBase58();
+    const authority = projectConfig.authority.toBase58();
+
+    console.log('Solana 项目配置:', projectName, projectId);
+    console.log('tokenMint:', tokenMint);
+    console.log('vault:', vault);
+    console.log('authority:', authority);
+
+    // Use memcmp filters to efficiently query stake records
+    const userFilter = {
+      memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
+    };
+
+    const projectFilter = {
+      memcmp: { offset: 8 + 32, bytes: projectConfigPubkey.toBase58() }
+    };
+
+    const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
+    console.log('Solana 原始质押记录:', userStakes);
+    if (!userStakes) return [];
+
+    const records = userStakes.map((stake) => {
+      const stakeId = stake.account.stakeId.toNumber();
+      return { stakeId };
+    });
+    const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
+    console.log('Solana 质押记录:', sortedRecords);
+    const nextStakeId = sortedRecords[0].stakeId + 1;
+    console.log('下一个质押ID:', nextStakeId);
+    return nextStakeId;
+  },
+
   getStakeRecords: async (solanaProgram: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
     if (!userPublicKey) return [];
 
     const projectConfigPubkey = new PublicKey(PROJECT_CONFIG);
 
+    const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
+    console.log('Solana 项目配置:', projectConfig);
+
+    const projectId = projectConfig.projectId.toNumber();
+    const projectName = projectConfig.name;
+    const tokenMint = projectConfig.tokenMint.toBase58();
+    const vault = projectConfig.vault.toBase58();
+    const authority = projectConfig.authority.toBase58();
+
+    console.log('Solana 项目配置:', projectName, projectId);
+    console.log('tokenMint:', tokenMint);
+    console.log('vault:', vault);
+    console.log('authority:', authority);
+
     // Use memcmp filters to efficiently query stake records
     const userFilter = {
-      memcmp: {
-        offset: 8,
-        bytes: userPublicKey.toBase58()
-      }
+      memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
     };
 
     const projectFilter = {
-      memcmp: {
-        offset: 8 + 32,
-        bytes: projectConfigPubkey.toBase58()
-      }
+      memcmp: { offset: 8 + 32, bytes: projectConfigPubkey.toBase58() }
     };
 
     const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
-    // console.log('Solana 原始质押记录:', userStakes);
+    console.log('Solana 原始质押记录:', userStakes);
     if (!userStakes) return [];
 
     const records = [];
@@ -124,8 +179,6 @@ export const solanaUtils = {
     for (const stake of userStakes) {
       const account = stake.account;
 
-      const projectId = account.projectId.toNumber();
-      const projectName = projectId;
       const stakedAt = account.stakeTimestamp.toNumber() * 1000;
       const unlockedAt = stakedAt + account.durationDays * 86400000;
       const now = new Date().getTime();
@@ -168,14 +221,8 @@ export const solanaUtils = {
     // 生成质押信息 PDA
     const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, record.stakeId);
 
-    // 获取项目配置
-    const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
-
     // 生成 vault authority PDA
-    const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
-      [Buffer.from('vault-authority'), projectConfig.projectId.toArrayLike(Buffer, 'le', 8)],
-      solanaProgram.programId
-    );
+    const vaultAuthorityPda = new PublicKey(VAULT_AUTHORITY);
 
     const unstakeAccounts = {
       projectConfig: projectConfigPubkey,
@@ -219,14 +266,8 @@ export const solanaUtils = {
     // 生成质押信息 PDA
     const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, record.stakeId);
 
-    // 获取项目配置
-    const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
-
     // 生成 vault authority PDA
-    const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
-      [Buffer.from('vault-authority'), projectConfig.projectId.toArrayLike(Buffer, 'le', 8)],
-      solanaProgram.programId
-    );
+    const vaultAuthorityPda = new PublicKey(VAULT_AUTHORITY);
 
     const emergencyUnstakeAccounts = {
       projectConfig: projectConfigPubkey,
@@ -251,5 +292,68 @@ export const solanaUtils = {
     const txLink = `${blockExplorer}/tx/${tx}?cluster=${cluster}`;
     console.log('🔗紧急解质押交易链接:', txLink);
     message.success('Successful transaction!');
+  },
+
+  stake: async (solanaProgram: any, stakeId: number, stakeAmount: number, stakeDuration: number) => {
+    const userPublicKey = solanaProgram.provider.wallet.publicKey;
+    if (!userPublicKey) {
+      message.error('Wallet not connected or unable to get user public key');
+      return;
+    }
+
+    const projectConfigPubkey = new PublicKey(PROJECT_CONFIG);
+    const tokenMintPubkey = new PublicKey(TOKEN_MINT);
+    const vault = new PublicKey(VAULT);
+
+    // Use the next stake ID from state
+    console.log('质押ID:', stakeId, '数量:', stakeAmount);
+
+    // Generate user token account
+    const userTokenAccount = getUserTokenAccount(userPublicKey, tokenMintPubkey);
+
+    // Generate stake info PDA
+    const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, stakeId);
+
+    const stakeAmountLamports = new anchor.BN(stakeAmount * Math.pow(10, 9));
+    const stakeIdBN = new anchor.BN(stakeId);
+
+    const stakeAccounts = {
+      projectConfig: projectConfigPubkey,
+      stakeInfo: stakeInfoPda,
+      user: userPublicKey,
+      userTokenAccount: userTokenAccount,
+      vault: vault,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID
+    };
+
+    console.log(
+      '质押账户:',
+      JSON.stringify(stakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+    );
+
+    const tx = await solanaProgram.methods
+      .stake(stakeAmountLamports, stakeDuration, stakeIdBN)
+      .accounts(stakeAccounts)
+      .rpc();
+
+    message.success('Successful transaction!');
+    return tx;
+  },
+
+  getTokenBalance: async (solanaProgram: any, solanaConnection: any) => {
+    const userPublicKey = solanaProgram.provider.wallet.publicKey;
+    if (!userPublicKey) return;
+
+    const tokenMintPubkey = new PublicKey(TOKEN_MINT);
+    const userTokenAccount = getUserTokenAccount(userPublicKey, tokenMintPubkey);
+
+    try {
+      const tokenAccount = await solanaConnection.getTokenAccountBalance(userTokenAccount);
+      const balance = tokenAccount.value.uiAmount || 0;
+      return balance;
+    } catch (error) {
+      return 0;
+    }
   }
 };

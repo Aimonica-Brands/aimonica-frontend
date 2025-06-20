@@ -9,12 +9,7 @@ export default function DemoEvm() {
   const { message } = App.useApp();
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork } = useAppKitNetwork();
-  const {
-    provider,
-    evmTokenContract,
-    evmStakingContract,
-    currentNetworkType,
-  } = usePageContext();
+  const { provider, evmTokenContract, evmStakingContract, currentNetworkType } = usePageContext();
 
   const [loading, setLoading] = useState(false);
   const [signMessage, setSignMessage] = useState('Hello from AIMonica DApp!');
@@ -29,7 +24,7 @@ export default function DemoEvm() {
 
   // Project ID for staking
   // AIM001
-  const PROJECT_ID = "0x41494d3030310000000000000000000000000000000000000000000000000000";
+  const PROJECT_ID = '0x41494d3030310000000000000000000000000000000000000000000000000000';
 
   useEffect(() => {
     if (provider && evmTokenContract && evmStakingContract) {
@@ -41,7 +36,7 @@ export default function DemoEvm() {
     getETHBalance();
     getTokenBalance();
     refreshStakeRecords();
-  }
+  };
 
   const addResult = (result: string) => {
     setResults((prev) => [`${new Date().toLocaleTimeString()}: ${result}`, ...prev.slice(0, 9)]);
@@ -152,7 +147,7 @@ export default function DemoEvm() {
           duration: Number(stake.duration) / 86400,
           unlockedAtStr: new Date(unlockedAt).toLocaleString(),
           canUnstake,
-          status: Number(stake.status),
+          status: Number(stake.status)
         });
       }
 
@@ -210,7 +205,6 @@ export default function DemoEvm() {
     }
   };
 
-
   // 解质押
   const handleUnstake = async (stakeId: number) => {
     if (!evmStakingContract || !address) {
@@ -224,7 +218,7 @@ export default function DemoEvm() {
     }
 
     // 获取用户的质押记录
-    const stakeRecord = stakeRecords.find(record => record.stakeId === stakeId);
+    const stakeRecord = stakeRecords.find((record) => record.stakeId === stakeId);
     if (!stakeRecord) {
       message.error('未找到对应的质押记录');
       return;
@@ -244,7 +238,7 @@ export default function DemoEvm() {
       message.success('解质押交易已发送，等待确认...');
 
       await tx.wait();
-      
+
       const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
       addResult(`🔗 解质押交易已发送: ${txLink}`);
       message.success('解质押成功');
@@ -279,7 +273,7 @@ export default function DemoEvm() {
       message.success('紧急解质押交易已发送，等待确认...');
 
       await tx.wait();
-      
+
       const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
       addResult(`🔗 紧急解质押交易已发送: ${txLink}`);
       message.success('紧急解质押成功');
@@ -311,24 +305,24 @@ export default function DemoEvm() {
       title: '数量',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount: number) => `${amount.toFixed(2)} tokens`,
+      render: (amount: number) => `${amount.toFixed(2)} tokens`
     },
 
     {
       title: '期限',
       dataIndex: 'duration',
       key: 'duration',
-      render: (duration: number) => `${duration} 天`,
+      render: (duration: number) => `${duration} 天`
     },
     {
       title: '质押时间',
       dataIndex: 'stakedAtStr',
-      key: 'stakedAtStr',
+      key: 'stakedAtStr'
     },
     {
       title: '解锁时间',
       dataIndex: 'unlockedAtStr',
-      key: 'unlockedAtStr',
+      key: 'unlockedAtStr'
     },
     {
       title: '状态',
@@ -338,7 +332,7 @@ export default function DemoEvm() {
         if (record.status == 0) return <Tag color="green">Active</Tag>;
         if (record.status == 1) return <Tag color="blue">Unstaked</Tag>;
         if (record.status == 2) return <Tag color="red">EmergencyUnstaked</Tag>;
-      },
+      }
     },
     {
       title: '操作',
@@ -350,21 +344,19 @@ export default function DemoEvm() {
             type="primary"
             onClick={() => handleUnstake(record.stakeId)}
             loading={loading}
-            disabled={!record.canUnstake}
-          >
+            disabled={!record.canUnstake}>
             解质押
           </Button>
           <Button
             danger
             onClick={() => handleEmergencyUnstake(record.stakeId)}
             loading={loading}
-            disabled={record.status == 2}
-          >
+            disabled={record.status == 2}>
             紧急解质押
           </Button>
         </Space>
-      ),
-    },
+      )
+    }
   ];
 
   return (
@@ -377,8 +369,8 @@ export default function DemoEvm() {
         ({currentNetworkType === 'eip155' ? 'EVM' : currentNetworkType === 'solana' ? 'Solana' : '未知网络'})
       </p>
 
-      {
-        currentNetworkType === 'eip155' ? <Card title="EVM 功能示例">
+      {currentNetworkType === 'eip155' ? (
+        <Card title="EVM 功能示例">
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
             {/* 余额显示 */}
             <div>
@@ -393,18 +385,10 @@ export default function DemoEvm() {
                   <Tag color="green">{tokenBalance.toFixed(2)} tokens</Tag>
                 </div>
                 <Space>
-                  <Button
-                    onClick={getETHBalance}
-                    loading={loading}
-                    type="primary"
-                  >
+                  <Button onClick={getETHBalance} loading={loading} type="primary">
                     刷新 ETH 余额
                   </Button>
-                  <Button
-                    onClick={getTokenBalance}
-                    loading={loading}
-                    type="primary"
-                  >
+                  <Button onClick={getTokenBalance} loading={loading} type="primary">
                     刷新代币余额
                   </Button>
                 </Space>
@@ -427,41 +411,27 @@ export default function DemoEvm() {
                 <div>
                   <label>质押期限: </label>
                   <Space>
-                    <Button
-                      type={stakeDuration === 7 ? 'primary' : 'default'}
-                      onClick={() => setStakeDuration(7)}
-                    >
+                    <Button type={stakeDuration === 1 ? 'primary' : 'default'} onClick={() => setStakeDuration(1)}>
+                      1天
+                    </Button>
+                    <Button type={stakeDuration === 7 ? 'primary' : 'default'} onClick={() => setStakeDuration(7)}>
                       7天
                     </Button>
-                    <Button
-                      type={stakeDuration === 14 ? 'primary' : 'default'}
-                      onClick={() => setStakeDuration(14)}
-                    >
+                    <Button type={stakeDuration === 14 ? 'primary' : 'default'} onClick={() => setStakeDuration(14)}>
                       14天
                     </Button>
-                    <Button
-                      type={stakeDuration === 30 ? 'primary' : 'default'}
-                      onClick={() => setStakeDuration(30)}
-                    >
+                    <Button type={stakeDuration === 30 ? 'primary' : 'default'} onClick={() => setStakeDuration(30)}>
                       30天
                     </Button>
                   </Space>
                 </div>
                 <Space>
                   {!isApproved ? (
-                    <Button
-                      onClick={handleApprove}
-                      loading={loading}
-                      type="primary"
-                    >
+                    <Button onClick={handleApprove} loading={loading} type="primary">
                       授权代币
                     </Button>
                   ) : (
-                    <Button
-                      onClick={handleStake}
-                      loading={loading}
-                      type="primary"
-                    >
+                    <Button onClick={handleStake} loading={loading} type="primary">
                       质押
                     </Button>
                   )}
@@ -473,7 +443,7 @@ export default function DemoEvm() {
             <div style={{ width: '100%' }}>
               <h4>📋 质押记录</h4>
               <Table
-                scroll={{ x: "max-content" }}
+                scroll={{ x: 'max-content' }}
                 columns={columns}
                 dataSource={stakeRecords}
                 rowKey="stakeId"
@@ -481,11 +451,12 @@ export default function DemoEvm() {
               />
             </div>
           </Space>
-        </Card> :
-          <Card>
-            <p>请切换到 EVM 网络 (Base 或 Base Sepolia) 来测试 EVM 功能</p>
-          </Card>
-      }
+        </Card>
+      ) : (
+        <Card>
+          <p>请切换到 EVM 网络 (Base 或 Base Sepolia) 来测试 EVM 功能</p>
+        </Card>
+      )}
 
       {/* 操作结果显示 */}
       {results.length > 0 && (
@@ -502,8 +473,8 @@ export default function DemoEvm() {
                     result.includes('失败') || result.includes('❌')
                       ? '#ff4d4f'
                       : result.includes('成功') || result.includes('✅') || result.includes('🎉')
-                        ? '#52c41a'
-                        : '#1890ff'
+                      ? '#52c41a'
+                      : '#1890ff'
                 }}>
                 {result}
               </div>

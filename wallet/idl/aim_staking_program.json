@@ -316,7 +316,12 @@
           "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ]
     },
     {
       "name": "stake",
@@ -616,12 +621,17 @@
     {
       "code": 6000,
       "name": "InvalidDuration",
-      "msg": "Invalid staking duration. Only 7, 14, or 30 days are allowed."
+      "msg": "Invalid staking duration. Only 1, 7, 14, or 30 days are allowed."
     },
     {
       "code": 6001,
       "name": "LockupPeriodNotEnded",
       "msg": "Lockup period has not ended yet."
+    },
+    {
+      "code": 6002,
+      "name": "NameTooLong",
+      "msg": "Project name cannot exceed 32 characters."
     }
   ],
   "types": [
@@ -685,6 +695,10 @@
           {
             "name": "vault",
             "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
           }
         ]
       }

@@ -9,7 +9,7 @@ import * as anchor from '@coral-xyz/anchor';
 import { useAppKitNetwork } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
 import { useAppKitAccount } from '@reown/appkit/react';
-
+import { durationDays ,evmUtils, solanaUtils} from '@/wallet/utils';
 
 export default function DemoSol() {
   const { Option } = Select;
@@ -29,9 +29,10 @@ export default function DemoSol() {
   const [stakeRecords, setStakeRecords] = useState([]);
 
   // Test account data from logs (updated with new addresses)
-  const PROJECT_CONFIG = "57cN6zv7kJ8w2y28zk9EHbLpGwpN2TaRLYcQwbUZJjpA";
-  const TOKEN_MINT = "EJmXTvmKixRrLrQURoE66zwoDMc28DaUMbG6i1XXNaDz";
-  const VAULT = "6r9FaxNxJzkRtm9cj5ym3nVWu9dL2pNHHBhU99DVZiwA";
+  const PROJECT_CONFIG = '25dYEUwQ4EQLkkeS1zSu7r1MR34a5mcBGEyNpuEBJuNf';
+  const TOKEN_MINT = '7jAEAyFi3pkc8dxFTMEPv9SP8PAs1aiFfodGQmbH9VoG';
+  const VAULT = '5UsEzwS1Aiqrs414bcCaYA6je5jXEjEk7HwYJjyhTMeP';
+  const VAULT_AUTHORITY = '3sQYqrrpHf5g7HJJssBiAtZkLg3qB6GmFFi82Wq1KJBH';
 
   useEffect(() => {
     if (solanaProgram && solanaConnection) {
@@ -43,7 +44,7 @@ export default function DemoSol() {
     getSOLBalance();
     getTokenBalance();
     refreshStakeRecords();
-  }
+  };
 
   // 签名消息
   const handleSolanaSignMessage = async () => {
@@ -135,7 +136,11 @@ export default function DemoSol() {
 
   const getPrivateKey = () => {
     // 您的私钥数组
-    const privateKeyArray = new Uint8Array([104, 6, 27, 155, 224, 174, 1, 74, 31, 122, 9, 169, 139, 243, 245, 178, 51, 62, 178, 251, 223, 165, 114, 130, 221, 223, 189, 211, 211, 108, 114, 234, 166, 181, 206, 158, 177, 135, 230, 10, 6, 143, 200, 153, 178, 235, 105, 165, 170, 148, 170, 169, 97, 108, 202, 97, 159, 84, 49, 207, 127, 17, 47, 150]);
+    const privateKeyArray = new Uint8Array([
+      104, 6, 27, 155, 224, 174, 1, 74, 31, 122, 9, 169, 139, 243, 245, 178, 51, 62, 178, 251, 223, 165, 114, 130, 221,
+      223, 189, 211, 211, 108, 114, 234, 166, 181, 206, 158, 177, 135, 230, 10, 6, 143, 200, 153, 178, 235, 105, 165,
+      170, 148, 170, 169, 97, 108, 202, 97, 159, 84, 49, 207, 127, 17, 47, 150
+    ]);
 
     // 方法1: 创建 Keypair 对象
     const keypair = Keypair.fromSecretKey(privateKeyArray);
@@ -145,7 +150,7 @@ export default function DemoSol() {
 
     // 获取公钥地址
     console.log('钱包地址:', keypair.publicKey.toString());
-  }
+  };
 
   // Utility function to generate user token account address
   const getUserTokenAccount = (userPublicKey: PublicKey, tokenMint: PublicKey): PublicKey => {
@@ -160,7 +165,7 @@ export default function DemoSol() {
   ): Promise<PublicKey> => {
     const [stakeInfoPda] = await PublicKey.findProgramAddress(
       [
-        Buffer.from("stake"),
+        Buffer.from('stake'),
         projectConfig.toBuffer(),
         userPublicKey.toBuffer(),
         new anchor.BN(stakeId).toArrayLike(Buffer, 'le', 8)
@@ -174,7 +179,6 @@ export default function DemoSol() {
     setResults((prev) => [`${new Date().toLocaleTimeString()}: ${result}`, ...prev.slice(0, 9)]);
   };
 
-
   const refreshStakeRecords = async () => {
     if (!solanaProgram || !solanaConnection) return null;
 
@@ -187,14 +191,14 @@ export default function DemoSol() {
     const userFilter = {
       memcmp: {
         offset: 8,
-        bytes: userPublicKey.toBase58(),
+        bytes: userPublicKey.toBase58()
       }
     };
 
     const projectFilter = {
       memcmp: {
         offset: 8 + 32,
-        bytes: projectConfigPubkey.toBase58(),
+        bytes: projectConfigPubkey.toBase58()
       }
     };
 
@@ -207,7 +211,7 @@ export default function DemoSol() {
       const stakeInfo = stake.account;
       const amount = stakeInfo.amount.toNumber() / Math.pow(10, 9);
       const stakeDate = new Date(stakeInfo.stakeTimestamp.toNumber() * 1000);
-      const endDate = new Date(stakeDate.getTime() + (stakeInfo.durationDays * 24 * 60 * 60 * 1000));
+      const endDate = new Date(stakeDate.getTime() + stakeInfo.durationDays * 24 * 60 * 60 * 1000);
       const now = new Date();
       const canUnstake = now >= endDate;
 
@@ -236,9 +240,9 @@ export default function DemoSol() {
     setNextStakeId(nextId);
 
     addResult(`📊 查询到 ${sortedRecords.length} 个质押记录，下一个可用 ID: ${nextId}`);
-    console.log(`📊 查询到 ${sortedRecords.length} 个质押记录，下一个可用 ID: ${nextId}`)
+    console.log(`📊 查询到 ${sortedRecords.length} 个质押记录，下一个可用 ID: ${nextId}`);
     return sortedRecords;
-  }
+  };
 
   // Combined function to fetch stake records and get next stake ID
   const getStakeRecords = async (stakeType: string, stakeId: number, stakeAmount: number) => {
@@ -253,7 +257,7 @@ export default function DemoSol() {
       const fetchStakes = async () => {
         try {
           console.log(`🔍 查询质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
-          records = await refreshStakeRecords()
+          records = await refreshStakeRecords();
           return records;
         } catch (error) {
           console.error(`❌ 第 ${retryCount + 1} 次查询失败:`, error);
@@ -262,7 +266,7 @@ export default function DemoSol() {
             return null;
           }
           retryCount++;
-          await new Promise(resolve => setTimeout(resolve, retryCount * 2000));
+          await new Promise((resolve) => setTimeout(resolve, retryCount * 2000));
           return fetchStakes();
         }
       };
@@ -279,23 +283,19 @@ export default function DemoSol() {
           }
 
           console.log(`⏳ 等待交易确认 (${retryCount}/${maxRetries})...`);
-          await new Promise(resolve => setTimeout(resolve, pollInterval));
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
 
           const currentRecords = await fetchStakes();
           if (!currentRecords) return null;
 
-          if (stakeType === "stake") {
-            const newStake = currentRecords.find(stake =>
-              stake.stakeId === stakeId
-            );
+          if (stakeType === 'stake') {
+            const newStake = currentRecords.find((stake) => stake.stakeId === stakeId);
             if (newStake) {
               console.log('✅ 新质押记录已确认:', newStake);
               return currentRecords;
             }
-          } else if (stakeType === "unstake" || stakeType === "emergencyUnstake") {
-            const existingStake = currentRecords.find(stake =>
-              stake.stakeId === stakeId
-            );
+          } else if (stakeType === 'unstake' || stakeType === 'emergencyUnstake') {
+            const existingStake = currentRecords.find((stake) => stake.stakeId === stakeId);
             if (!existingStake) {
               console.log('✅ 解质押记录已确认: 原质押记录已移除');
               return currentRecords;
@@ -366,10 +366,13 @@ export default function DemoSol() {
         userTokenAccount: userTokenAccount,
         vault: vault,
         systemProgram: SystemProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID
       };
 
-      console.log("质押账户:", JSON.stringify(stakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
+      console.log(
+        '质押账户:',
+        JSON.stringify(stakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+      );
 
       // Send stake transaction
       console.log('发送质押交易...');
@@ -379,13 +382,17 @@ export default function DemoSol() {
         .rpc();
 
       const contractConfig = getContractConfig(chainId);
-      const txLink = `${contractConfig.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
-      addResult(`🔗 质押交易已发送: ${txLink}`);
-
-      message.success(`质押成功，请等待交易确认`);
+      if (!contractConfig || !contractConfig.blockExplorers) {
+        addResult(`🔗 质押交易已发送: ${tx}`);
+        message.success(`质押成功，请等待交易确认`);
+      } else {
+        const txLink = `${contractConfig.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
+        addResult(`🔗 质押交易已发送: ${txLink}`);
+        message.success(`质押成功，请等待交易确认`);
+      }
 
       // Wait for the new stake to be confirmed
-      await getStakeRecords("stake", nextStakeId, stakeAmount);
+      await getStakeRecords('stake', nextStakeId, stakeAmount);
     } catch (error) {
       console.error('质押失败:', error);
       handleContractError(error);
@@ -420,7 +427,7 @@ export default function DemoSol() {
       const vault = new PublicKey(VAULT);
 
       // 获取用户的质押记录
-      const stakeRecord = stakeRecords.find(record => record.stakeId === stakeId);
+      const stakeRecord = stakeRecords.find((record) => record.stakeId === stakeId);
       if (!stakeRecord) {
         message.error('未找到对应的质押记录');
         return;
@@ -447,13 +454,7 @@ export default function DemoSol() {
       console.log('项目配置:', projectConfig);
 
       // 生成 vault authority PDA
-      const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
-        [
-          Buffer.from("vault-authority"),
-          projectConfig.projectId.toArrayLike(Buffer, 'le', 8)
-        ],
-        solanaProgram.programId
-      );
+      const vaultAuthorityPda = new PublicKey(VAULT_AUTHORITY);
       console.log('Vault 权限 PDA:', vaultAuthorityPda.toString());
 
       const unstakeAccounts = {
@@ -463,25 +464,30 @@ export default function DemoSol() {
         userTokenAccount: userTokenAccount,
         vault: vault,
         vaultAuthority: vaultAuthorityPda,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID
       };
 
-      console.log("解质押账户:", JSON.stringify(unstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
+      console.log(
+        '解质押账户:',
+        JSON.stringify(unstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+      );
 
       // 发送解质押交易
       console.log('发送解质押交易...');
-      const tx = await solanaProgram.methods
-        .unstake(new anchor.BN(stakeId))
-        .accounts(unstakeAccounts)
-        .rpc();
+      const tx = await solanaProgram.methods.unstake(new anchor.BN(stakeId)).accounts(unstakeAccounts).rpc();
 
       const contractConfig = getContractConfig(chainId);
-      const txLink = `${contractConfig.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
-      addResult(`🔗 解质押交易已发送: ${txLink}`);
-      message.success(`解质押成功，请等待交易确认`);
+      if (!contractConfig || !contractConfig.blockExplorers) {
+        addResult(`🔗 解质押交易已发送: ${tx}`);
+        message.success(`解质押成功，请等待交易确认`);
+      } else {
+        const txLink = `${contractConfig.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
+        addResult(`🔗 解质押交易已发送: ${txLink}`);
+        message.success(`解质押成功，请等待交易确认`);
+      }
 
       // 等待交易确认并刷新记录
-      await getStakeRecords("unstake", stakeId, stakeRecord.amount);
+      await getStakeRecords('unstake', stakeId, stakeRecord.amount);
     } catch (error) {
       console.error('解质押失败:', error);
       handleContractError(error);
@@ -516,7 +522,7 @@ export default function DemoSol() {
       const vault = new PublicKey(VAULT);
 
       // 获取用户的质押记录
-      const stakeRecord = stakeRecords.find(record => record.stakeId === stakeId);
+      const stakeRecord = stakeRecords.find((record) => record.stakeId === stakeId);
       if (!stakeRecord) {
         message.error('未找到对应的质押记录');
         return;
@@ -537,13 +543,7 @@ export default function DemoSol() {
       console.log('项目配置:', projectConfig);
 
       // 生成 vault authority PDA
-      const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
-        [
-          Buffer.from("vault-authority"),
-          projectConfig.projectId.toArrayLike(Buffer, 'le', 8)
-        ],
-        solanaProgram.programId
-      );
+      const vaultAuthorityPda = new PublicKey(VAULT_AUTHORITY);
       console.log('Vault 权限 PDA:', vaultAuthorityPda.toString());
 
       const emergencyUnstakeAccounts = {
@@ -553,10 +553,13 @@ export default function DemoSol() {
         userTokenAccount: userTokenAccount,
         vault: vault,
         vaultAuthority: vaultAuthorityPda,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID
       };
 
-      console.log("紧急解质押账户:", JSON.stringify(emergencyUnstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2));
+      console.log(
+        '紧急解质押账户:',
+        JSON.stringify(emergencyUnstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+      );
 
       // 发送紧急解质押交易
       console.log('发送紧急解质押交易...');
@@ -566,12 +569,17 @@ export default function DemoSol() {
         .rpc();
 
       const contractConfig = getContractConfig(chainId);
-      const txLink = `${contractConfig.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
-      addResult(`🔗 紧急解质押交易已发送: ${txLink}`);
-      message.success(`紧急解质押成功，请等待交易确认`);
+      if (!contractConfig || !contractConfig.blockExplorers) {
+        addResult(`🔗 紧急解质押交易已发送: ${tx}`);
+        message.success(`紧急解质押成功，请等待交易确认`);
+      } else {
+        const txLink = `${contractConfig.blockExplorers.default.url}/tx/${tx}?cluster=${contractConfig.cluster}`;
+        addResult(`🔗 紧急解质押交易已发送: ${txLink}`);
+        message.success(`紧急解质押成功，请等待交易确认`);
+      }
 
       // 等待交易确认并刷新记录
-      await getStakeRecords("emergencyUnstake", stakeId, stakeRecord.amount);
+      await getStakeRecords('emergencyUnstake', stakeId, stakeRecord.amount);
     } catch (error) {
       console.error('紧急解质押失败:', error);
       handleContractError(error);
@@ -630,8 +638,7 @@ export default function DemoSol() {
             size="small"
             onClick={() => handleUnstake(record.stakeId)}
             loading={loading}
-            disabled={!record.canUnstake}
-          >
+            disabled={!record.canUnstake}>
             解质押
           </Button>
           <Button
@@ -639,13 +646,12 @@ export default function DemoSol() {
             danger
             size="small"
             onClick={() => handleEmergencyUnstake(record.stakeId)}
-            loading={loading}
-          >
+            loading={loading}>
             紧急解质押
           </Button>
         </Space>
-      ),
-    },
+      )
+    }
   ];
 
   return (
@@ -658,8 +664,8 @@ export default function DemoSol() {
         ({currentNetworkType === 'eip155' ? 'EVM' : currentNetworkType === 'solana' ? 'Solana' : '未知网络'})
       </p>
 
-      {
-        currentNetworkType === 'solana' ? <Card title="Solana 功能示例">
+      {currentNetworkType === 'solana' ? (
+        <Card title="Solana 功能示例">
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
             <Button onClick={getPrivateKey}>获取私钥</Button>
 
@@ -689,18 +695,10 @@ export default function DemoSol() {
                   <Tag color="green">{tokenBalance.toFixed(2)} tokens</Tag>
                 </div>
                 <Space>
-                  <Button
-                    onClick={getSOLBalance}
-                    loading={loading}
-                    type="primary"
-                  >
+                  <Button onClick={getSOLBalance} loading={loading} type="primary">
                     刷新 SOL 余额
                   </Button>
-                  <Button
-                    onClick={getTokenBalance}
-                    loading={loading}
-                    type="primary"
-                  >
+                  <Button onClick={getTokenBalance} loading={loading} type="primary">
                     刷新代币余额
                   </Button>
                 </Space>
@@ -728,37 +726,29 @@ export default function DemoSol() {
 
                 <div>
                   <label>质押期限: </label>
-                  <Select
-                    value={stakeDuration}
-                    onChange={setStakeDuration}
-                    style={{ width: 120 }}
-                  >
-                    <Option value={7}>7 天</Option>
-                    <Option value={14}>14 天</Option>
-                    <Option value={30}>30 天</Option>
-                  </Select>
+                  <Space>
+                    {durationDays.map((day) => (
+                      <Button
+                        key={day}
+                        type={stakeDuration === day ? 'primary' : 'default'}
+                        onClick={() => setStakeDuration(day)}>
+                        {day}天
+                      </Button>
+                    ))}
+                  </Space>
                 </div>
 
                 <div>
                   <label>下一个 Stake ID: </label>
                   <Tag color="green">#{nextStakeId}</Tag>
-                  <span style={{ marginLeft: 8, fontSize: '12px', color: '#666' }}>
-                    (自动检测可用ID)
-                  </span>
+                  <span style={{ marginLeft: 8, fontSize: '12px', color: '#666' }}>(自动检测可用ID)</span>
                 </div>
 
                 <Space wrap>
-                  <Button
-                    onClick={handleStake}
-                    loading={loading}
-                    type="primary"
-                  >
+                  <Button onClick={handleStake} loading={loading} type="primary">
                     创建新质押 (自动检测 ID)
                   </Button>
-                  <Button
-                    onClick={() => refreshStakeRecords()}
-                    loading={loading}
-                  >
+                  <Button onClick={() => refreshStakeRecords()} loading={loading}>
                     刷新质押记录
                   </Button>
                 </Space>
@@ -771,7 +761,7 @@ export default function DemoSol() {
             <div>
               <h4>📋 我的质押记录</h4>
               <Table
-                scroll={{ x: "max-content" }}
+                scroll={{ x: 'max-content' }}
                 columns={columns}
                 dataSource={stakeRecords}
                 rowKey="stakeId"
@@ -781,12 +771,12 @@ export default function DemoSol() {
               />
             </div>
           </Space>
-        </Card> :
-          <Card>
-            <p>请切换到 Solana 网络 (Solana 或 Solana Sepolia) 来测试 Solana 功能</p>
-          </Card>
-      }
-
+        </Card>
+      ) : (
+        <Card>
+          <p>请切换到 Solana 网络 (Solana 或 Solana Sepolia) 来测试 Solana 功能</p>
+        </Card>
+      )}
 
       {/* 操作结果显示 */}
       {results.length > 0 && (
@@ -803,8 +793,8 @@ export default function DemoSol() {
                     result.includes('失败') || result.includes('❌')
                       ? '#ff4d4f'
                       : result.includes('成功') || result.includes('✅') || result.includes('🎉')
-                        ? '#52c41a'
-                        : '#1890ff'
+                      ? '#52c41a'
+                      : '#1890ff'
                 }}>
                 {result}
               </div>

@@ -208,6 +208,7 @@ export default function Dashboard() {
         try {
           console.log(`🔍 查询质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
           const records = await solanaUtils.getStakeRecords(solanaProgram);
+          console.log('🔍 查询到的质押记录:', records);
           return records;
         } catch (error) {
           console.error(`❌ 第 ${retryCount + 1} 次查询失败:`, error);

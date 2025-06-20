@@ -3,19 +3,18 @@ import { Button, Modal, Empty, Spin, App, Popover, Collapse, Input } from 'antd'
 import { LeftOutlined, ExportOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { getContractConfig } from '@/wallet';
-import { useAppKitAccount, useAppKitProvider, useAppKitNetwork } from '@reown/appkit/react';
-import { useAppKitConnection } from '@reown/appkit-adapter-solana/react';
-import type { Provider } from '@reown/appkit-adapter-solana/react';
+import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
+import { durationDays, evmUtils, solanaUtils } from '@/wallet/utils';
 
 export default function Stake() {
+  const { message } = App.useApp();
   const router = useRouter();
   const { token: token } = router.query;
 
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
-  const { connection } = useAppKitConnection();
-  const { walletProvider } = useAppKitProvider<Provider>('solana');
+  const { evmStakingContract, solanaProgram, solanaConnection } = usePageContext();
 
   const [projectData, setProjectData] = useState([
     { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
@@ -30,7 +29,7 @@ export default function Stake() {
   const [days, setDays] = useState(7);
   const [expectedPoints, setExpectedPoints] = useState(0);
   const [tokenBalance, setTokenBalance] = useState(0);
-  const [tokenPrice, setTokenPrice] = useState(0);
+  const [tokenPrice, setTokenPrice] = useState(1);
   const [tokenWorth, setTokenWorth] = useState(0);
   const [totalUser, setTotalUser] = useState(0);
   const [totalTVL, setTotalTVL] = useState(0);
@@ -38,6 +37,8 @@ export default function Stake() {
   const [poolLink, setPoolLink] = useState('');
 
   useEffect(() => {
+    message.success('Successful transaction!', 0);
+
     if (token) {
       setProjectInfo(projectData.find((item) => item.rank === Number(token)));
     }
@@ -50,22 +51,59 @@ export default function Stake() {
         setPoolAddress(contractConfig.AimStaking);
         const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
         setPoolLink(link);
+        if (evmStakingContract) {
+          getEvmTokenBalance();
+        }
       } else if (caipNetwork.chainNamespace === 'solana') {
-        if (connection && walletProvider) {
+        if (solanaProgram && solanaConnection) {
           setPoolAddress(contractConfig.programId);
           const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
           setPoolLink(link);
+          getSolTokenBalance();
         }
       }
     }
-  }, [isConnected, address, caipNetwork, chainId, connection, walletProvider]);
+  }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram, solanaConnection]);
 
   useEffect(() => {
     setExpectedPoints(Number(amount));
   }, [amount]);
 
-  const handleStake = () => {
-    setIsStakeModalOpen(true);
+  const getEvmTokenBalance = async () => {};
+
+  const getSolTokenBalance = async () => {
+    const tokenBalance = await solanaUtils.getTokenBalance(solanaProgram, solanaConnection);
+    setTokenBalance(Math.floor(tokenBalance));
+    setTokenWorth(Math.floor(tokenBalance * tokenPrice));
+  };
+
+  const handleStake = async () => {
+    console.log('handleStake', amount, tokenBalance);
+    if (loading) return;
+    setLoading(true);
+    if (caipNetwork.chainNamespace === 'eip155') {
+    } else if (caipNetwork.chainNamespace === 'solana') {
+      const nextStakeId = await solanaUtils.getNextStakeId(solanaProgram);
+
+      solanaUtils
+        .stake(solanaProgram, nextStakeId, Number(amount), days)
+        .then((tx) => {
+          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
+            getContractConfig(chainId).cluster
+          }`;
+          console.log('🔗质押交易链接:', txLink);
+
+          setIsStakeModalOpen(true);
+          getSolTokenBalance();
+          setAmount('');
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
   };
 
   return (
@@ -166,22 +204,24 @@ export default function Stake() {
               <div className="text">
                 <span>Locking Time</span>
                 <div className="days">
-                  <button className={days === 7 ? 'active' : ''} onClick={() => setDays(7)}>
-                    7D
-                  </button>
-                  <button className={days === 14 ? 'active' : ''} onClick={() => setDays(14)}>
-                    14D
-                  </button>
-                  <button className={days === 30 ? 'active' : ''} onClick={() => setDays(30)}>
-                    30D
-                  </button>
+                  {durationDays.map((day) => (
+                    <button key={day} className={days === day ? 'active' : ''} onClick={() => setDays(day)}>
+                      {day}D
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="text">
                 <span>Expected Points</span>
                 <div className="number">{expectedPoints}</div>
               </div>
-              <Button type="primary" size="large" className="stake-btn" onClick={handleStake} loading={loading}>
+              <Button
+                type="primary"
+                size="large"
+                className="stake-btn"
+                onClick={handleStake}
+                loading={loading}
+                disabled={!isConnected || !address || !caipNetwork || !chainId || !amount || !tokenBalance}>
                 STAKE
               </Button>
             </div>
