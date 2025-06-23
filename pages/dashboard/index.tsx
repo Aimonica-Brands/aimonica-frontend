@@ -8,6 +8,7 @@ import { modal } from '@/wallet';
 import { evmUtils, solanaUtils } from '@/wallet/utils';
 import { usePageContext } from '@/context';
 import { handleContractError } from '@/wallet/contracts';
+import utils from '@/utils';
 
 export default function Dashboard() {
   const { message } = App.useApp();
@@ -90,9 +91,8 @@ export default function Dashboard() {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount: number) => `${amount.toFixed(2)} tokens`
+      render: (amount: number) => `${utils.formatNumber(amount)} tokens`
     },
-
     {
       title: 'Duration',
       dataIndex: 'duration',
@@ -411,16 +411,16 @@ export default function Dashboard() {
               <div className="s-img">
                 <img src="/assets/images/img-3.png" alt="" />
               </div>
-              <div className="s-text">{totalPoints}</div>
+              <div className="s-text">{utils.formatNumber(totalPoints)}</div>
             </div>
           </div>
           <div className="banner-item">
             <div className="banner-item-title">Total Staked</div>
-            <div className="text">{totalStaked}</div>
+            <div className="text">{utils.formatNumber(totalStaked)}</div>
           </div>
           <div className="banner-item">
             <div className="banner-item-title">Total Project</div>
-            <div className="text">{totalProject}</div>
+            <div className="text">{utils.formatNumber(totalProject)}</div>
           </div>
           <img src="/assets/images/img-24.png" alt="" className="img-24" />
         </div>

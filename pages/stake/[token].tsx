@@ -7,6 +7,7 @@ import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
 import { durationDays, evmUtils, solanaUtils } from '@/wallet/utils';
 import { handleContractError } from '@/wallet/contracts';
+import utils from '@/utils';
 
 export default function Stake() {
   const { message } = App.useApp();
@@ -233,11 +234,11 @@ export default function Stake() {
               <div className="text2">
                 <div>
                   <span>Users</span>
-                  <span>{totalUser}</span>
+                  <span>{utils.formatNumber(totalUser)}</span>
                 </div>
                 <div>
                   <span>TVL</span>
-                  <span>$ {totalTVL}</span>
+                  <span>$ {utils.formatNumber(totalTVL)}</span>
                 </div>
               </div>
               <div className="text3">
@@ -270,8 +271,8 @@ export default function Stake() {
                   <span>Aimonica</span>
                 </div>
                 <div className="number-box">
-                  <div className="number">{tokenBalance}</div>
-                  <div className="number2">$ {tokenWorth}</div>
+                  <div className="number">{utils.formatNumber(tokenBalance)}</div>
+                  <div className="number2">$ {utils.formatNumber(tokenWorth)}</div>
                 </div>
               </div>
               <div className="inputbox">
@@ -301,7 +302,7 @@ export default function Stake() {
               </div>
               <div className="text">
                 <span>Expected Points</span>
-                <div className="number">{expectedPoints}</div>
+                <div className="number">{utils.formatNumber(expectedPoints)}</div>
               </div>
 
               {caipNetwork.chainNamespace === 'eip155' && !isApproved && tokenBalance > 0 ? (
