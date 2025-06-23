@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import * as anchor from '@coral-xyz/anchor';
+import { request, gql } from 'graphql-request';
 
 /**质押时长 */
 export const durationDays = [1, 7, 14, 30];
@@ -11,45 +12,106 @@ const EVM_PROJECT_CONFIG = '0x64656d6f000000000000000000000000000000000000000000
 
 export const evmUtils = {
   /**获取质押记录 */
-  getStakeRecords: async (evmStakingContract: any, address: string) => {
-    const userStakes = await evmStakingContract.getUserStakes(address);
-    console.log('EVM 原始质押记录:', userStakes);
+  getStakeRecords: async (address: string) => {
+    const query = gql`
+      query ($user: Bytes!) {
+        stakes(where: { user: $user }) {
+          id
+          stakeId
+          user {
+            id
+          }
+          project {
+            id
+          }
+          amount
+          stakingToken
+          stakedAt
+          duration
+          unlockedAt
+          status
+          transactionHash
+        }
+      }
+    `;
+    const variables = { user: address.toLowerCase() };
+    const headers = { Authorization: `Bearer 3e2bce3f640324fa2d38b5c73d3984c3` };
+    const endpoint = 'https://gateway.thegraph.com/api/subgraphs/id/2TCfqqmAFv4LpnJRVxjJ192C3sHJoCxu29rPTxgooch7';
+    const data: any = await request(endpoint, query, variables, headers);
+    console.log('EVM 原始质押记录:', data);
 
-    if (!userStakes) return [];
+    if (!data.stakes) return [];
 
     const records = [];
+    for (const stake of data.stakes) {
+      // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
+      // status: "Active"
+      if (stake.status != 'Active') continue;
 
-    for (const stakeId of userStakes) {
-      const stake = await evmStakingContract.stakes(stakeId);
-      const status = Number(stake.status);
-      if (status > 0) continue;
+      const projectId = stake.project.id;
+      const projectName = ethers.decodeBytes32String(stake.project.id);
 
-      const projectId = Number(stake.projectId);
-      const projectName = ethers.decodeBytes32String(stake.projectId);
       const stakedAt = Number(stake.stakedAt) * 1000;
       const unlockedAt = Number(stake.unlockedAt) * 1000;
       const now = new Date().getTime();
       const canUnstake = now >= unlockedAt;
 
-      // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
       records.push({
         projectId,
         projectName,
         stakeId: Number(stake.stakeId),
         amount: Number(ethers.formatEther(stake.amount)),
         duration: Number(stake.duration) / 86400,
-        stakedAtStr: new Date(stakedAt).toLocaleString(),
-        unlockedAtStr: new Date(unlockedAt).toLocaleString(),
-        canUnstake,
-        status: status
+        stakedAt,
+        unlockedAt,
+        canUnstake
       });
     }
-
-    const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
+    const sortedRecords = records.sort((a: any, b: any) => b.stakedAt - a.stakedAt);
     console.log('EVM 质押记录:', sortedRecords);
 
     return sortedRecords;
   },
+
+  // getStakeRecords: async (evmStakingContract: any, address: string) => {
+  //   const userStakes = await evmStakingContract.getUserStakes(address);
+  //   console.log('EVM 原始质押记录:', userStakes);
+
+  //   if (!userStakes) return [];
+
+  //   const records = [];
+
+  //   for (const stakeId of userStakes) {
+  //     const stake = await evmStakingContract.stakes(stakeId);
+  //     const status = Number(stake.status);
+  //     if (status > 0) continue;
+
+  //     const projectId = Number(stake.projectId);
+  //     const projectName = ethers.decodeBytes32String(stake.projectId);
+  //     const stakedAt = Number(stake.stakedAt) * 1000;
+  //     const unlockedAt = Number(stake.unlockedAt) * 1000;
+  //     const now = new Date().getTime();
+  //     const canUnstake = now >= unlockedAt;
+
+  //     // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
+  //     records.push({
+  //       projectId,
+  //       projectName,
+  //       stakeId: Number(stake.stakeId),
+  //       amount: Number(ethers.formatEther(stake.amount)),
+  //       duration: Number(stake.duration) / 86400,
+  //       stakedAtStr: new Date(stakedAt).toLocaleString(),
+  //       unlockedAtStr: new Date(unlockedAt).toLocaleString(),
+  //       canUnstake,
+  //       status: status
+  //     });
+  //   }
+
+  //   const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
+  //   console.log('EVM 质押记录:', sortedRecords);
+
+  //   return sortedRecords;
+  // },
 
   /**获取代币余额 */
   getTokenBalance: async (evmTokenContract: any, address: string) => {
@@ -146,7 +208,7 @@ const getVaultAuthorityPda = async (solanaProgram: any, projectId: anchor.BN) =>
 const getProjectConfig = async (solanaProgram: any) => {
   const projectConfigPubkey = new PublicKey(SOLANA_PROJECT_CONFIG);
   const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
-  console.log('Solana 项目配置:', projectConfig);
+  // console.log('Solana 项目配置:', projectConfig);
 
   const vaultAuthority = await getVaultAuthorityPda(solanaProgram, projectConfig.projectId);
   const userTokenAccount = getUserTokenAccount(solanaProgram.provider.wallet.publicKey, projectConfig.tokenMint);
@@ -164,10 +226,10 @@ const getProjectConfig = async (solanaProgram: any) => {
     feeWalletTokenAccount
   };
 
-  console.log(
-    'Solana 项目配置:',
-    JSON.stringify(config, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-  );
+  // console.log(
+  //   'Solana 项目配置:',
+  //   JSON.stringify(config, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+  // );
 
   return config;
 };
@@ -196,9 +258,12 @@ export const solanaUtils = {
 
     for (const stake of userStakes) {
       const account = stake.account;
+      // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
+      // status: "Active"
+      if (!account.isStaked) continue;
 
       const stakedAt = account.stakeTimestamp.toNumber() * 1000;
-      const unlockedAt = stakedAt + account.durationDays * 86400000;
+      const unlockedAt = stakedAt + account.durationDays * 86400 * 1000;
       const now = new Date().getTime();
       const canUnstake = now >= unlockedAt;
 
@@ -208,14 +273,13 @@ export const solanaUtils = {
         stakeId: account.stakeId.toNumber(),
         amount: account.amount.toNumber() / Math.pow(10, 9),
         duration: account.durationDays,
-        stakedAtStr: new Date(stakedAt).toLocaleString(),
-        unlockedAtStr: new Date(unlockedAt).toLocaleString(),
-        canUnstake,
-        status: account.isStaked ? 0 : 1
+        stakedAt,
+        unlockedAt,
+        canUnstake
       });
     }
 
-    const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
+    const sortedRecords = records.sort((a, b) => b.stakedAt - a.stakedAt);
     console.log('Solana 质押记录:', sortedRecords);
 
     return sortedRecords;

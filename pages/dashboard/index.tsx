@@ -101,22 +101,24 @@ export default function Dashboard() {
     },
     {
       title: 'Staked Time',
-      dataIndex: 'stakedAtStr',
-      key: 'stakedAtStr'
+      dataIndex: 'stakedAt',
+      key: 'stakedAt',
+      render: (stakedAt: number) => new Date(stakedAt).toLocaleString()
     },
     {
       title: 'Unlocked Time',
-      dataIndex: 'unlockedAtStr',
-      key: 'unlockedAtStr'
+      dataIndex: 'unlockedAt',
+      key: 'unlockedAt',
+      render: (unlockedAt: number) => new Date(unlockedAt).toLocaleString()
     },
     {
       title: 'Status',
-      dataIndex: 'statusText',
-      key: 'statusText',
+      key: 'status',
       render: (_, record) => {
-        if (record.status == 0) return <Tag color="green">Active</Tag>;
-        if (record.status == 1) return <Tag color="blue">Unstaked</Tag>;
-        if (record.status == 2) return <Tag color="red">Emergency</Tag>;
+        return <Tag color="green">Active</Tag>;
+        // if (record.status == 0) return <Tag color="green">Active</Tag>;
+        // if (record.status == 1) return <Tag color="blue">Unstaked</Tag>;
+        // if (record.status == 2) return <Tag color="red">Emergency</Tag>;
       }
     },
     {
@@ -128,10 +130,7 @@ export default function Dashboard() {
           <Button className="unstake-btn" disabled={!record.canUnstake} onClick={() => openUnstakeModal(record)}>
             Unstake
           </Button>
-          <Button
-            className="emergency-btn"
-            disabled={record.status == 2}
-            onClick={() => openEmergencyUnstakeModal(record)}>
+          <Button className="emergency-btn" onClick={() => openEmergencyUnstakeModal(record)}>
             Emergency
           </Button>
         </Space>
@@ -178,20 +177,18 @@ export default function Dashboard() {
 
   const getStakeRecords = () => {
     if (caipNetwork.chainNamespace === 'eip155') {
-      if (evmStakingContract) {
-        setStakeRecordsLoading(true);
-        evmUtils
-          .getStakeRecords(evmStakingContract, address)
-          .then((records) => {
-            setStakeRecords(records);
-          })
-          .catch((error) => {
-            console.error(error);
-          })
-          .finally(() => {
-            setStakeRecordsLoading(false);
-          });
-      }
+      setStakeRecordsLoading(true);
+      evmUtils
+        .getStakeRecords(address)
+        .then((records) => {
+          setStakeRecords(records);
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          setStakeRecordsLoading(false);
+        });
     } else if (caipNetwork.chainNamespace === 'solana') {
       if (solanaProgram) {
         getSolanaStakeRecords();

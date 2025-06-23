@@ -1,6 +1,5 @@
 import { message } from 'antd';
 import axios, { AxiosInstance } from 'axios';
-import { request, gql } from 'graphql-request';
 
 // 创建 axios 实例
 const instance: AxiosInstance = axios.create({
