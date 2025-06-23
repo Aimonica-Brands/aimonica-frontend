@@ -156,7 +156,7 @@ export default function Stake() {
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗质押交易链接:', txLink);
-          message.success('Successful transaction!');
+          message.success('Transaction submitted, please wait...');
           setIsStakeModalOpen(true);
           getEvmTokenBalance();
           setAmount('');
@@ -177,7 +177,7 @@ export default function Stake() {
             getContractConfig(chainId).cluster
           }`;
           console.log('🔗质押交易链接:', txLink);
-          message.success('Successful transaction!');
+          message.success('Transaction submitted, please wait...');
           setIsStakeModalOpen(true);
           getSolTokenBalance();
           setAmount('');

@@ -52,8 +52,8 @@ export const getContractConfig = (chainId: any = ''): any => {
     : [
         {
           network: base,
-          BKIBSHI: '0x3d1C275aa98d45C99258A51be98b08Fc8572c074',
-          AimStaking: '0x990ba617d7e7ae3ede6318d9e85f851035b8323c',
+          BKIBSHI: '0x3d1c275aa98d45c99258a51be98b08fc8572c074',
+          AimStaking: '0x29ecDC454121184C5F06E0f067ae11aA2d43184f',
           BKIBSHIABI,
           AimStakingABI
         },

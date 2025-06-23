@@ -7,7 +7,7 @@ import * as anchor from '@coral-xyz/anchor';
 export const durationDays = [1, 7, 14, 30];
 
 /**EVM 项目配置地址 */
-const EVM_PROJECT_CONFIG = '0x41494d3030310000000000000000000000000000000000000000000000000000';
+const EVM_PROJECT_CONFIG = '0x64656d6f00000000000000000000000000000000000000000000000000000000';
 
 export const evmUtils = {
   /**获取质押记录 */
@@ -102,11 +102,16 @@ export const evmUtils = {
 };
 
 /**项目配置地址 */
-const SOLANA_PROJECT_CONFIG = '25dYEUwQ4EQLkkeS1zSu7r1MR34a5mcBGEyNpuEBJuNf';
+const SOLANA_PROJECT_CONFIG = 'J1trx6Q6bwA5jMGn2BXwGCHpuwKdQ9136KuTuZrCh4uM';
 
 /**获取用户代币账户地址 */
 const getUserTokenAccount = (userPublicKey: PublicKey, tokenMint: PublicKey): PublicKey => {
   return getAssociatedTokenAddressSync(tokenMint, userPublicKey);
+};
+
+/**获取费用钱包代币账户地址 */
+const getFeeWalletTokenAccount = (feeWallet: PublicKey, tokenMint: PublicKey): PublicKey => {
+  return getAssociatedTokenAddressSync(tokenMint, feeWallet);
 };
 
 /**获取质押信息 PDA */
@@ -141,8 +146,11 @@ const getVaultAuthorityPda = async (solanaProgram: any, projectId: anchor.BN) =>
 const getProjectConfig = async (solanaProgram: any) => {
   const projectConfigPubkey = new PublicKey(SOLANA_PROJECT_CONFIG);
   const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
+  console.log('Solana 项目配置:', projectConfig);
+
   const vaultAuthority = await getVaultAuthorityPda(solanaProgram, projectConfig.projectId);
   const userTokenAccount = getUserTokenAccount(solanaProgram.provider.wallet.publicKey, projectConfig.tokenMint);
+  const feeWalletTokenAccount = getFeeWalletTokenAccount(projectConfig.feeWallet, projectConfig.tokenMint);
 
   const config = {
     projectConfigPubkey,
@@ -152,7 +160,8 @@ const getProjectConfig = async (solanaProgram: any) => {
     vault: projectConfig.vault,
     projectName: projectConfig.name,
     vaultAuthority,
-    userTokenAccount
+    userTokenAccount,
+    feeWalletTokenAccount
   };
 
   console.log(
@@ -293,7 +302,8 @@ export const solanaUtils = {
   unstake: async (solanaProgram: any, record: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
-    const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount } = await getProjectConfig(solanaProgram);
+    const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount, feeWalletTokenAccount } =
+      await getProjectConfig(solanaProgram);
 
     console.log('解质押ID:', record.stakeId, '数量:', record.amount);
 
@@ -306,6 +316,7 @@ export const solanaUtils = {
       userTokenAccount: userTokenAccount,
       vault: vault,
       vaultAuthority: vaultAuthority,
+      feeWallet: feeWalletTokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID
     };
 
@@ -323,7 +334,8 @@ export const solanaUtils = {
   emergencyUnstake: async (solanaProgram: any, record: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
-    const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount } = await getProjectConfig(solanaProgram);
+    const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount, feeWalletTokenAccount } =
+      await getProjectConfig(solanaProgram);
 
     console.log('紧急解质押ID:', record.stakeId, '数量:', record.amount);
 
@@ -336,6 +348,7 @@ export const solanaUtils = {
       userTokenAccount: userTokenAccount,
       vault: vault,
       vaultAuthority: vaultAuthority,
+      feeWallet: feeWalletTokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID
     };
 

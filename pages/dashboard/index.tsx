@@ -277,7 +277,7 @@ export default function Dashboard() {
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗解质押交易链接:', txLink);
-          message.success('Successful transaction!');
+          message.success('Transaction submitted, please wait...');
           getStakeRecords();
         })
         .catch((error) => {
@@ -295,7 +295,7 @@ export default function Dashboard() {
             getContractConfig(chainId).cluster
           }`;
           console.log('🔗解质押交易链接:', txLink);
-          message.success('Successful transaction!');
+          message.success('Transaction submitted, please wait...');
           getSolanaStakeRecords('unstake', record.stakeId, record.amount);
         })
         .catch((error) => {
@@ -320,7 +320,7 @@ export default function Dashboard() {
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗紧急解质押交易链接:', txLink);
-          message.success('Successful transaction!');
+          message.success('Transaction submitted, please wait...');
           getStakeRecords();
         })
         .catch((error) => {
@@ -338,7 +338,7 @@ export default function Dashboard() {
             getContractConfig(chainId).cluster
           }`;
           console.log('🔗紧急解质押交易链接:', txLink);
-          message.success('Successful transaction!');
+          message.success('Transaction submitted, please wait...');
           getSolanaStakeRecords('emergencyUnstake', record.stakeId, record.amount);
         })
         .catch((error) => {

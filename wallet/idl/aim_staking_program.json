@@ -121,6 +121,10 @@
           }
         },
         {
+          "name": "fee_wallet",
+          "writable": true
+        },
+        {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
@@ -324,6 +328,47 @@
       ]
     },
     {
+      "name": "update_project_config",
+      "discriminator": [
+        123,
+        69,
+        168,
+        195,
+        183,
+        213,
+        199,
+        214
+      ],
+      "accounts": [
+        {
+          "name": "project_config",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "project_config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "fee_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "unstake_fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "emergency_unstake_fee_bps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
       "name": "stake",
       "discriminator": [
         206,
@@ -523,6 +568,10 @@
           }
         },
         {
+          "name": "fee_wallet",
+          "writable": true
+        },
+        {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
@@ -632,6 +681,11 @@
       "code": 6002,
       "name": "NameTooLong",
       "msg": "Project name cannot exceed 32 characters."
+    },
+    {
+      "code": 6003,
+      "name": "InvalidFeeWallet",
+      "msg": "Invalid fee wallet."
     }
   ],
   "types": [
@@ -699,6 +753,18 @@
           {
             "name": "name",
             "type": "string"
+          },
+          {
+            "name": "fee_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "unstake_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "emergency_unstake_fee_bps",
+            "type": "u16"
           }
         ]
       }
