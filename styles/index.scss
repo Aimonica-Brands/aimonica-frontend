@@ -178,6 +178,18 @@ button {
   padding: 0;
 }
 
+.ant-tabs {
+  .ant-tabs-tab {
+    padding: 0.1rem;
+  }
+  .ant-tabs-tab-btn {
+    font-family: AiDeep;
+    font-weight: 400;
+    font-size: 0.16rem !important;
+    color: #5c7392;
+  }
+}
+
 @media screen and (max-width: 750px) {
   html {
     font-size: calc(100vw / 7.5);

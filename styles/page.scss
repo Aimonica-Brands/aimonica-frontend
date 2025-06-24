@@ -647,10 +647,21 @@ footer {
 
 .stake-page {
   width: 100%;
+  position: relative;
+  .img-37 {
+    width: 6rem;
+    height: auto;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 1;
+  }
   .stake-box {
     width: 14rem;
     margin: 0 auto;
-    padding: 1.5rem 0 1rem;
+    padding-top: 1.5rem;
+    position: relative;
+    z-index: 2;
     .back-box {
       width: fit-content;
       position: relative;
@@ -670,11 +681,10 @@ footer {
       }
     }
     .stake-content {
-      width: fit-content;
-      margin: 0.5rem auto;
+      margin-top: 0.5rem;
       display: flex;
       align-items: flex-end;
-      justify-content: space-between;
+      justify-content: flex-end;
       .left-box {
         width: 7.7rem;
         display: flex;
@@ -809,7 +819,7 @@ footer {
         }
       }
       .right-box {
-        width: 6rem;
+        width: 6.2rem;
         height: 5.8rem;
         background: url('/assets/images/img-22.png') no-repeat;
         background-size: 100% 100%;
@@ -1510,5 +1520,119 @@ footer {
   }
   100% {
     transform: translateX(-100%);
+  }
+}
+
+.cookie-box {
+  width: 14rem;
+  margin: 0 auto;
+  padding: 0.5rem 0;
+  position: relative;
+  z-index: 2;
+  .title {
+    font-family: AiDeep;
+    font-weight: 400;
+    font-size: 0.24rem;
+    color: #50b4ff;
+    margin-bottom: 0.2rem;
+  }
+  .des {
+    font-family: Poppins;
+    font-weight: 400;
+    font-size: 0.16rem;
+    color: #5c7392;
+  }
+  .cookie-box1 {
+    width: 100%;
+    background: #fff;
+    border-radius: 1rem 0.3rem 0.3rem 0.3rem;
+    padding: 0.5rem;
+    .textbox {
+      display: flex;
+      .text-item {
+        min-width: 2rem;
+        border: 1px solid #9fd6ff;
+        border-radius: 0.1rem;
+        padding: 0.1rem;
+        margin-right: 0.2rem;
+        .text1 {
+          font-family: Poppins;
+          font-weight: 600;
+          font-size: 0.16rem;
+          color: #5c7392;
+        }
+        .text {
+          font-family: AiDeep;
+          font-weight: 400;
+          font-size: 0.2rem;
+          color: #56b6fe;
+          margin-top: 0.1rem;
+        }
+        .avatar-box {
+          position: relative;
+          img {
+            width: 0.4rem;
+            height: 0.4rem;
+            border-radius: 50%;
+            border: 1px solid #9fd6ff;
+          }
+        }
+      }
+    }
+  }
+  .cookie-box2 {
+    background: #ffffff url('/assets/images/img-34.png') no-repeat right top;
+    background-size: auto 90%;
+    border-radius: 0.3rem;
+    padding: 0.3rem;
+    margin-top: 0.5rem;
+    .textbox {
+      .text-item {
+        width: 2rem;
+        font-family: Poppins;
+        font-weight: 400;
+        font-size: 0.16rem;
+        color: #5c7392;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 0.1rem;
+        div {
+          &:nth-child(2) {
+            color: #50b4ff;
+          }
+        }
+      }
+    }
+  }
+  .cookie-box3 {
+    background: #ffffff url('/assets/images/img-35.png') no-repeat;
+    background-size: 100% auto;
+    border-radius: 0.3rem;
+    padding: 0.3rem;
+    margin-top: 0.5rem;
+    position: relative;
+    .img-36 {
+      width: auto;
+      height: 1.8rem;
+      position: absolute;
+      bottom: 0;
+      right: 0.2rem;
+    }
+  }
+  .cookie-box4 {
+    background: #ffffff;
+    border-radius: 0.3rem;
+    padding: 0.3rem;
+    margin-top: 0.5rem;
+    .s-title {
+      font-family: AiDeep;
+      font-weight: 400;
+      font-size: 0.16rem;
+      color: #50b4ff;
+      margin-bottom: 0.2rem;
+    }
+    .team-details {
+    }
   }
 }

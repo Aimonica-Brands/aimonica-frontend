@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, App, Input } from 'antd';
+import { Button, Modal, App, Input, Tabs } from 'antd';
 import { LeftOutlined, ExportOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { getContractConfig } from '@/wallet';
@@ -24,6 +24,37 @@ export default function Stake() {
     { rank: 3, avatar: '/assets/images/avatar-3.png', name: 'Ai16z' }
   ]);
 
+  const infoItems = [
+    {
+      key: '1',
+      label: 'Team Details',
+      children: (
+        <div className="team-details">
+          <div className="s-title">Our Team</div>
+        </div>
+      )
+    },
+    {
+      key: '2',
+      label: 'Project Details',
+      children: 'Content of Tab Pane 2'
+    },
+    {
+      key: '3',
+      label: 'Trades',
+      children: 'Content of Tab Pane 3'
+    },
+    {
+      key: '4',
+      label: 'Holders',
+      children: 'Content of Tab Pane 4'
+    }
+  ];
+
+  const onChange = (key: string) => {
+    console.log(key);
+  };
+
   const [projectInfo, setProjectInfo] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
@@ -45,46 +76,46 @@ export default function Stake() {
     }
   }, [token]);
 
-  useEffect(() => {
-    if (isConnected && address && caipNetwork && chainId) {
-      const contractConfig = getContractConfig(chainId);
-      if (caipNetwork.chainNamespace === 'eip155') {
-        if (evmStakingContract && evmTokenContract) {
-          setPoolAddress(contractConfig.AimStaking);
-          const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
-          setPoolLink(link);
-          getEvmTokenBalance();
-        }
-      } else if (caipNetwork.chainNamespace === 'solana') {
-        if (solanaProgram && solanaConnection) {
-          setPoolAddress(contractConfig.programId);
-          const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
-          setPoolLink(link);
-          getSolTokenBalance();
-        }
-      }
-    } else {
-      setIsApproved(false);
-      setTokenBalance(0);
-      setTokenWorth(0);
-      setAmount('');
-      setDurationDay(7);
-      setExpectedPoints(0);
-      setTotalUser(0);
-      setTotalTVL(0);
-      setPoolAddress('');
-      setPoolLink('');
-    }
-  }, [
-    isConnected,
-    address,
-    caipNetwork,
-    chainId,
-    evmTokenContract,
-    evmStakingContract,
-    solanaProgram,
-    solanaConnection
-  ]);
+  // useEffect(() => {
+  //   if (isConnected && address && caipNetwork && chainId) {
+  //     const contractConfig = getContractConfig(chainId);
+  //     if (caipNetwork.chainNamespace === 'eip155') {
+  //       if (evmStakingContract && evmTokenContract) {
+  //         setPoolAddress(contractConfig.AimStaking);
+  //         const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
+  //         setPoolLink(link);
+  //         getEvmTokenBalance();
+  //       }
+  //     } else if (caipNetwork.chainNamespace === 'solana') {
+  //       if (solanaProgram && solanaConnection) {
+  //         setPoolAddress(contractConfig.programId);
+  //         const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
+  //         setPoolLink(link);
+  //         getSolTokenBalance();
+  //       }
+  //     }
+  //   } else {
+  //     setIsApproved(false);
+  //     setTokenBalance(0);
+  //     setTokenWorth(0);
+  //     setAmount('');
+  //     setDurationDay(7);
+  //     setExpectedPoints(0);
+  //     setTotalUser(0);
+  //     setTotalTVL(0);
+  //     setPoolAddress('');
+  //     setPoolLink('');
+  //   }
+  // }, [
+  //   isConnected,
+  //   address,
+  //   caipNetwork,
+  //   chainId,
+  //   evmTokenContract,
+  //   evmStakingContract,
+  //   solanaProgram,
+  //   solanaConnection
+  // ]);
 
   useEffect(() => {
     setExpectedPoints(Number(amount));
@@ -194,6 +225,8 @@ export default function Stake() {
 
   return (
     <div className="stake-page">
+      <img src="/assets/images/img-37.png" alt="" className="img-37" />
+
       <div className="stake-box">
         <button className="back-box" onClick={() => router.push('/')}>
           <LeftOutlined />
@@ -328,6 +361,67 @@ export default function Stake() {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="cookie-box">
+        <div className="cookie-box1">
+          <div className="title">Influence Metrics</div>
+          <div className="textbox">
+            <div className="text-item">
+              <div className="text1">Mindshare</div>
+              <div className="text">2.26%</div>
+            </div>
+            <div className="text-item">
+              <div className="text1">Impressions</div>
+              <div className="text">4,020,543</div>
+            </div>
+            <div className="text-item">
+              <div className="text1">Engageme</div>
+              <div className="text">44,806</div>
+            </div>
+            <div className="text-item">
+              <div className="text1">Smart Followers</div>
+              <div className="text">7,289</div>
+            </div>
+            <div className="text-item">
+              <div className="text1">Top Tweets</div>
+              <div className="avatar-box">
+                <img src="/assets/images/avatar-1.png" alt="" />
+                <img src="/assets/images/avatar-2.png" alt="" />
+                <img src="/assets/images/avatar-3.png" alt="" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="cookie-box2">
+          <div className="title">Why This Agent Is Bullish</div>
+          <div className="des">
+            Aimonica is the first Meme focused AI Investor, with the goal of outperforming all Web3 VCs in memes
+            investing Made with vvaifu.fun Create AI Agents with tokens. https://x.com/AimonicaBrands
+          </div>
+          <div className="textbox">
+            <div className="text-item">
+              <div>Links</div>
+              <div>N/A</div>
+            </div>
+            <div className="text-item">
+              <div>Framework</div>
+              <div>N/A</div>
+            </div>
+            <div className="text-item">
+              <div>Capabilities</div>
+              <div>N/A</div>
+            </div>
+          </div>
+        </div>
+        <div className="cookie-box3">
+          <div className="title">Submit your Alpha Thesis</div>
+          <div className="des">Help this agent stand out</div>
+          <img src="/assets/images/img-36.png" alt="" className="img-36" />
+        </div>
+        <div className="cookie-box4">
+          <Tabs defaultActiveKey="1" items={infoItems} onChange={onChange} />
         </div>
       </div>
 
