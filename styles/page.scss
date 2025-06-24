@@ -43,7 +43,7 @@ header {
         font-weight: 400;
         font-size: 0.24rem;
         color: #60bbfd;
-        margin-left: 0.5rem;
+        margin-left: 0.3rem;
         &:hover,
         &.active {
           text-decoration: underline;
@@ -56,11 +56,11 @@ header {
     align-items: center;
     justify-content: space-between;
     .search-input {
-      width: 4rem;
+      width: 3.5rem;
       height: 0.48rem;
       border-radius: 0.12rem;
       background: #ffffff;
-      margin-left: 0.1rem;
+      margin-right: 0.1rem;
       .ant-select-prefix {
         .anticon-search {
           font-size: 0.3rem;
@@ -81,7 +81,7 @@ header {
       font-size: 0.2rem;
       color: #5c7392;
       padding: 0 0.15rem;
-      margin-left: 0.1rem;
+      margin-right: 0.1rem;
       img {
         width: auto;
         height: 65%;
@@ -101,7 +101,7 @@ header {
   font-weight: 400;
   font-size: 0.2rem;
   padding: 0 0.1rem;
-  margin-left: 0.1rem;
+  margin-right: 0.1rem;
   img {
     width: auto;
     height: 0.3rem;

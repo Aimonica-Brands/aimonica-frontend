@@ -77,7 +77,9 @@ export default function WalletComponent() {
 
   return (
     <>
-      {isConnected && address ? (
+      <appkit-button size="sm" />
+
+      {/* {isConnected && address ? (
         <button className="connect-button" onClick={() => modal.open()}>
           <img src="/assets/images/icon-wallet.svg" alt="" />
           {address.slice(0, 6)}...{address.slice(-4)}
@@ -87,7 +89,7 @@ export default function WalletComponent() {
           <img src="/assets/images/icon-wallet.svg" alt="" />
           Connect Wallet
         </button>
-      )}
+      )} */}
     </>
   );
 }
