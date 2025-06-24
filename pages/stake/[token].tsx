@@ -8,21 +8,16 @@ import { usePageContext } from '@/context';
 import { durationDays, evmUtils, solanaUtils } from '@/wallet/utils';
 import { handleContractError } from '@/wallet/contracts';
 import utils from '@/utils';
+import { cookieAPI } from '@/pages/api/cookiefun';
 
 export default function Stake() {
   const { message } = App.useApp();
   const router = useRouter();
-  const { token: token } = router.query;
+  const { token: projectSlug } = router.query as { token: string };
 
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
   const { evmTokenContract, evmStakingContract, solanaProgram, solanaConnection } = usePageContext();
-
-  const [projectData, setProjectData] = useState([
-    { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
-    { rank: 2, avatar: '/assets/images/avatar-2.png', name: 'FAI' },
-    { rank: 3, avatar: '/assets/images/avatar-3.png', name: 'Ai16z' }
-  ]);
 
   const infoItems = [
     {
@@ -71,10 +66,53 @@ export default function Stake() {
   const [isApproved, setIsApproved] = useState(false);
 
   useEffect(() => {
-    if (token) {
-      setProjectInfo(projectData.find((item) => item.rank === Number(token)));
+    console.log('projectSlug', projectSlug);
+    if (projectSlug) {
+      cookieAPI
+        .GetSectors()
+        .then((res) => {
+          if (res.success && res.ok) {
+            console.log('GetSectors', res.ok);
+          }
+        })
+        .catch((error) => {
+          console.log('GetSectors', error);
+        });
+
+      cookieAPI
+        .GetProjectDetails(projectSlug)
+        .then((res) => {
+          if (res.success && res.ok) {
+            console.log('GetProjectDetails', res.ok);
+          }
+        })
+        .catch((error) => {
+          console.log('GetProjectDetails', error);
+        });
+
+      cookieAPI
+        .GetAccountDetails('yangxxx12345')
+        .then((res) => {
+          if (res.success && res.ok) {
+            console.log('GetAccountDetails', res.ok);
+          }
+        })
+        .catch((error) => {
+          console.log('GetAccountDetails', error);
+        });
+
+      cookieAPI
+        .GetMetricsGraph('1', '1', projectSlug)
+        .then((res) => {
+          if (res.success && res.ok) {
+            console.log('GetMetricsGraph', res.ok);
+          }
+        })
+        .catch((error) => {
+          console.log('GetMetricsGraph', error);
+        });
     }
-  }, [token]);
+  }, [projectSlug]);
 
   // useEffect(() => {
   //   if (isConnected && address && caipNetwork && chainId) {

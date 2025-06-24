@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, message, Button } from 'antd';
 import { usePageContext } from '@/context';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { getCurrentEnv, createShareMessages, shareOnTwitter } from '@/pages/api/auth/utils';
+import { getCurrentEnv, createShareMessages, shareOnTwitter } from '@/pages/api/auth';
 
 export default function TwitterComponent() {
   const { data: session, status } = useSession();

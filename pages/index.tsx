@@ -12,9 +12,9 @@ export default function Home() {
   const { isConnected } = useAppKitAccount();
 
   const [projectData, setProjectData] = useState([
-    { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
-    { rank: 2, avatar: '/assets/images/avatar-2.png', name: 'FAI' },
-    { rank: 3, avatar: '/assets/images/avatar-3.png', name: 'Ai16z' }
+    { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica', projectSlug: 'aimonica' },
+    { rank: 2, avatar: '/assets/images/avatar-2.png', name: 'FAI', projectSlug: 'fai' },
+    { rank: 3, avatar: '/assets/images/avatar-3.png', name: 'Ai16z', projectSlug: 'ai16z' }
   ]);
 
   const [levelData, setLevelData] = useState([]);
@@ -27,16 +27,16 @@ export default function Home() {
   const projectColumns: ColumnsType<any> = [
     {
       title: 'Rank',
-      dataIndex: 'rank',
+      key: 'rank',
       align,
       width: 60,
       render: (value: any, record: any) => {
-        return <div className="rank">{value}</div>;
+        return <div className="rank">{record.rank}</div>;
       }
     },
     {
       title: 'Project',
-      dataIndex: '',
+      key: 'project',
       align,
       width: 150,
       render: (value: any, record: any) => {
@@ -96,7 +96,7 @@ export default function Home() {
     },
     {
       title: 'Staked',
-      dataIndex: '',
+      key: 'staked',
       align,
       width: 80,
       render: (value: any, record: any) => {
@@ -105,7 +105,7 @@ export default function Home() {
     },
     {
       title: 'Users',
-      dataIndex: '',
+      key: 'users',
       align,
       width: 80,
       render: (value: any, record: any) => {
@@ -114,7 +114,7 @@ export default function Home() {
     },
     {
       title: 'Total Points',
-      dataIndex: '',
+      key: 'totalPoints',
       align,
       width: 150,
       render: (value: any, record: any) => {
@@ -130,7 +130,7 @@ export default function Home() {
     },
     {
       title: 'TVL($)',
-      dataIndex: '',
+      key: 'tvl',
       align,
       width: 150,
       render: (value: any, record: any) => {
@@ -146,7 +146,7 @@ export default function Home() {
     },
     {
       title: 'Rewards',
-      dataIndex: '',
+      key: 'rewards',
       align,
       width: 160,
       render: (value: any, record: any) => {
@@ -231,8 +231,8 @@ export default function Home() {
     }
   };
 
-  const toStake = (record: any) => {
-    router.push(`/stake/${record.rank}`);
+  const toStake = (project: any) => {
+    router.push(`/stake/${project.projectSlug}`);
   };
 
   return (
@@ -304,6 +304,7 @@ export default function Home() {
               {getContractConfig().map((item: any) => {
                 return (
                   <button
+                    key={item.network.id}
                     className={networkId === item.network.id.toString() ? 'active' : ''}
                     onClick={handleTabClick(item.network)}>
                     {item.network.name}
