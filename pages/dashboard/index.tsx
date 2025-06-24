@@ -185,6 +185,7 @@ export default function Dashboard() {
         })
         .catch((error) => {
           console.error(error);
+          setStakeRecords([]);
         })
         .finally(() => {
           setStakeRecordsLoading(false);
@@ -257,6 +258,7 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error(error);
+      setStakeRecords([]);
     } finally {
       setStakeRecordsLoading(false);
     }

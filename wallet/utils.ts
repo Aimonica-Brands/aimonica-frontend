@@ -57,6 +57,7 @@ export const evmUtils = {
       const canUnstake = now >= unlockedAt;
 
       records.push({
+        user: stake.user.id,
         projectId,
         projectName,
         stakeId: Number(stake.stakeId),
@@ -268,6 +269,7 @@ export const solanaUtils = {
       const canUnstake = now >= unlockedAt;
 
       records.push({
+        user: account.user.toBase58(),
         projectId,
         projectName,
         stakeId: account.stakeId.toNumber(),
