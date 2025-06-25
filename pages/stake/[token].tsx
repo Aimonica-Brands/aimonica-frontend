@@ -70,16 +70,17 @@ export default function Stake() {
   const [impressions, setImpressions] = useState(0);
   const [engagements, setEngagements] = useState(0);
   const [smartFollowers, setSmartFollowers] = useState(0);
-  const [topTweets, setTopTweets] = useState(0);
+  const [topTweets, setTopTweets] = useState([]);
 
   useEffect(() => {
     console.log('projectSlug', projectSlug);
     if (projectSlug) {
       setProjectInfo(projectData.find((item) => item.projectSlug === projectSlug));
 
-      // getProjectDetails();
+      getSearchTweets();
       getProjectMindshareGraph();
       getMetricsGraph();
+      getProjectDetails();
     }
   }, [projectSlug]);
 
@@ -133,9 +134,10 @@ export default function Stake() {
       .GetMetricsGraph('0', '1', projectSlug)
       .then((res) => {
         if (res.success && res.ok) {
-          console.log('Engagements', res.ok);
-          const totalEngagements = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
-          setEngagements(totalEngagements);
+          console.log('GetMetricsGraph Engagements', res.ok);
+          const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
+          console.log('Engagements', total);
+          setEngagements(total);
         }
       })
       .catch((error) => {
@@ -145,9 +147,10 @@ export default function Stake() {
       .GetMetricsGraph('1', '1', projectSlug)
       .then((res) => {
         if (res.success && res.ok) {
-          console.log('Impressions', res.ok);
-          const totalImpressions = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
-          setImpressions(totalImpressions);
+          console.log('GetMetricsGraph Impressions', res.ok);
+          const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
+          console.log('Impressions', total);
+          setImpressions(total);
         }
       })
       .catch((error) => {
@@ -160,9 +163,10 @@ export default function Stake() {
       .GetProjectMindshareGraph(projectSlug)
       .then((res) => {
         if (res.success && res.ok) {
-          console.log('Mindshare', res.ok);
-          const totalMindshare = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
-          setMindshare(totalMindshare);
+          console.log('GetProjectMindshareGraph Mindshare', res.ok);
+          const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
+          console.log('Mindshare', total);
+          setMindshare(total);
         }
       })
       .catch((error) => {
@@ -170,16 +174,39 @@ export default function Stake() {
       });
   };
 
-  const getProjectDetails = () => {
+  const getProjectDetails = async () => {
+    try {
+      const projectDetailsRes = await cookieAPI.GetProjectDetails(projectSlug);
+      if (projectDetailsRes.success && projectDetailsRes.ok) {
+        console.log('GetProjectDetails', projectDetailsRes.ok);
+        const username = projectDetailsRes.ok.twitterUsernames[0];
+        if (username) {
+          const smartFollowersRes = await cookieAPI.GetAccountSmartFollowers(username);
+          if (smartFollowersRes.success && smartFollowersRes.ok) {
+            console.log('GetAccountSmartFollowers', smartFollowersRes.ok);
+            const total = smartFollowersRes.ok.totalCount;
+            console.log('Smart Followers', total);
+            setSmartFollowers(total);
+          }
+        }
+      }
+    } catch (error) {
+      console.log('GetProjectDetails', error);
+    }
+  };
+
+  const getSearchTweets = async () => {
     cookieAPI
-      .GetProjectDetails(projectSlug)
+      .SearchTweets(projectSlug, projectSlug)
       .then((res) => {
         if (res.success && res.ok) {
-          console.log('GetProjectDetails', res.ok);
+          console.log('SearchTweets', res.ok);
+          const tweets = res.ok.entries.slice(0, 5);
+          setTopTweets(tweets);
         }
       })
       .catch((error) => {
-        console.log('GetProjectDetails', error);
+        console.log('SearchTweets', error);
       });
   };
 
@@ -449,9 +476,15 @@ export default function Stake() {
             <div className="text-item">
               <div className="text1">Top Tweets</div>
               <div className="avatar-box">
-                <img src="/assets/images/avatar-1.png" alt="" />
-                <img src="/assets/images/avatar-2.png" alt="" />
-                <img src="/assets/images/avatar-3.png" alt="" />
+                {topTweets.map((tweet: any, index: number) => (
+                  <a
+                    href={`https://x.com/${tweet.author.username}/status/${tweet.tweetId}`}
+                    target="_blank"
+                    key={index}
+                    style={{ left: `-${index * 0.05}rem` }}>
+                    <img src={tweet.author.profileImageUrl} alt="" />
+                  </a>
+                ))}
               </div>
             </div>
           </div>

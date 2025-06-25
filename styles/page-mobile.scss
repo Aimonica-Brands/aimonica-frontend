@@ -398,10 +398,11 @@
     width: 90vw;
     .cookie-box1 {
       .textbox {
-        flex-wrap: wrap;
+        grid-template-columns: repeat(3, 1fr);
         .text-item {
-          min-width: 1.7rem;
-          margin-bottom: 0.2rem;
+          &:nth-child(5) {
+            grid-column: span 2;
+          }
         }
       }
     }

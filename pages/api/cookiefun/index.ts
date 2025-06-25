@@ -35,5 +35,15 @@ export const cookieAPI = {
   GetProjectMindshareGraph: async (projectSlug: string) => {
     const res = await axios.post('/api/cookiefun/project/mindshare-graph', { projectSlug });
     return res.data;
+  },
+
+  GetAccountSmartFollowers: async (username: string) => {
+    const res = await axios.post('/api/cookiefun/account/smart-followers', { username });
+    return res.data;
+  },
+
+  SearchTweets: async (searchQuery: string, projectSlug: string) => {
+    const res = await axios.post('/api/cookiefun/feed/query', { searchQuery, projectSlug });
+    return res.data;
   }
 };
