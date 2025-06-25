@@ -5,6 +5,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import { useAppKitAccount } from '@reown/appkit/react';
 import WalletComponent from './WalletComponent';
 import TwitterComponent from './TwitterComponent';
+import { projectData } from '@/wallet/project';
 
 export default function HeaderComponent() {
   const router = useRouter();
@@ -35,12 +36,6 @@ export default function HeaderComponent() {
       </div>
     );
   };
-
-  const [projectData, setProjectData] = useState([
-    { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica' },
-    { rank: 2, avatar: '/assets/images/avatar-2.png', name: 'FAI' },
-    { rank: 3, avatar: '/assets/images/avatar-3.png', name: 'Ai16z' }
-  ]);
 
   const [searchValue, setSearchValue] = useState(null);
   const [searchOptions, setSearchOptions] = useState(projectData);

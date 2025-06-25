@@ -177,19 +177,9 @@ export default function Dashboard() {
 
   const getStakeRecords = () => {
     if (caipNetwork.chainNamespace === 'eip155') {
-      setStakeRecordsLoading(true);
-      evmUtils
-        .getStakeRecords(address)
-        .then((records) => {
-          setStakeRecords(records);
-        })
-        .catch((error) => {
-          console.error(error);
-          setStakeRecords([]);
-        })
-        .finally(() => {
-          setStakeRecordsLoading(false);
-        });
+      if (evmStakingContract) {
+        getEvmStakeRecords();
+      }
     } else if (caipNetwork.chainNamespace === 'solana') {
       if (solanaProgram) {
         getSolanaStakeRecords();
@@ -197,7 +187,64 @@ export default function Dashboard() {
     }
   };
 
-  const getSolanaStakeRecords = async (stakeType: string = '', stakeId: number = null, stakeAmount: number = null) => {
+  const getEvmStakeRecords = async (stakeId: number = null, stakeAmount: number = null) => {
+    setStakeRecordsLoading(true);
+    try {
+      const maxRetries = 10;
+      let retryCount = 0;
+
+      const fetchStakes = async () => {
+        try {
+          console.log(`🔍 查询EVM质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
+          const records = await evmUtils.getStakeRecords(address);
+          console.log('🔍 查询到的EVM质押记录:', records);
+          return records;
+        } catch (error) {
+          console.error(`❌ 第 ${retryCount + 1} 次查询失败:`, error);
+          return null;
+        }
+      };
+
+      if (stakeId && stakeAmount) {
+        const pollInterval = 5000;
+        let found = false;
+        while (retryCount < maxRetries && !found) {
+          const currentRecords = await fetchStakes();
+          if (!currentRecords) {
+            retryCount++;
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+            continue;
+          }
+
+          const existingStake = currentRecords.find((stake) => stake.stakeId === stakeId);
+          if (!existingStake) {
+            console.log('✅ 新EVM质押记录已确认: 原质押记录已移除');
+            setStakeRecords(currentRecords);
+            found = true;
+            break;
+          }
+          retryCount++;
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        }
+        if (!found) {
+          console.log('⚠️ 达到最大重试次数，未获取到新EVM数据');
+        }
+      } else {
+        // 没有 stakeId 或 stakeAmount，直接查一次
+        const currentRecords = await fetchStakes();
+        if (currentRecords) {
+          setStakeRecords(currentRecords);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      setStakeRecords([]);
+    } finally {
+      setStakeRecordsLoading(false);
+    }
+  };
+
+  const getSolanaStakeRecords = async (stakeId: number = null, stakeAmount: number = null) => {
     setStakeRecordsLoading(true);
     try {
       const maxRetries = 10;
@@ -226,22 +273,12 @@ export default function Dashboard() {
             continue;
           }
 
-          if (stakeType === 'stake') {
-            const newStake = currentRecords.find((stake) => stake.stakeId === stakeId);
-            if (newStake) {
-              console.log('✅ 新质押记录已确认:', newStake);
-              setStakeRecords(currentRecords);
-              found = true;
-              break;
-            }
-          } else if (stakeType === 'unstake' || stakeType === 'emergencyUnstake') {
-            const existingStake = currentRecords.find((stake) => stake.stakeId === stakeId);
-            if (!existingStake) {
-              console.log('✅ 新质押记录已确认: 原质押记录已移除');
-              setStakeRecords(currentRecords);
-              found = true;
-              break;
-            }
+          const existingStake = currentRecords.find((stake) => stake.stakeId === stakeId);
+          if (!existingStake) {
+            console.log('✅ 新质押记录已确认: 原质押记录已移除');
+            setStakeRecords(currentRecords);
+            found = true;
+            break;
           }
           retryCount++;
           await new Promise((resolve) => setTimeout(resolve, pollInterval));
@@ -277,7 +314,7 @@ export default function Dashboard() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗解质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
-          getStakeRecords();
+          getEvmStakeRecords(record.stakeId, record.amount);
         })
         .catch((error) => {
           handleContractError(error);
@@ -295,7 +332,7 @@ export default function Dashboard() {
           }`;
           console.log('🔗解质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
-          getSolanaStakeRecords('unstake', record.stakeId, record.amount);
+          getSolanaStakeRecords(record.stakeId, record.amount);
         })
         .catch((error) => {
           handleContractError(error);
@@ -320,7 +357,7 @@ export default function Dashboard() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗紧急解质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
-          getStakeRecords();
+          getEvmStakeRecords(record.stakeId, record.amount);
         })
         .catch((error) => {
           handleContractError(error);
@@ -338,7 +375,7 @@ export default function Dashboard() {
           }`;
           console.log('🔗紧急解质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
-          getSolanaStakeRecords('emergencyUnstake', record.stakeId, record.amount);
+          getSolanaStakeRecords(record.stakeId, record.amount);
         })
         .catch((error) => {
           handleContractError(error);

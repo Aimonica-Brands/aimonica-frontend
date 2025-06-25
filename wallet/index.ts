@@ -5,7 +5,6 @@ import { base, solana, solanaDevnet } from '@reown/appkit/networks';
 
 export const networks: any = process.env.NEXT_PUBLIC_APP_ENV === 'production' ? [base, solana] : [base, solanaDevnet];
 
-console.log(networks);
 /**0. Get projectId from https://cloud.reown.com */
 export const projectId = 'b5863416c73906526923f5c4d6db20c8';
 

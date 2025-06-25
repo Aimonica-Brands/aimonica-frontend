@@ -5,17 +5,12 @@ import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
 import { modal } from '@/wallet';
+import { projectData } from '@/wallet/project';
 
 export default function Home() {
   const router = useRouter();
   const { chainId } = useAppKitNetwork();
   const { isConnected } = useAppKitAccount();
-
-  const [projectData, setProjectData] = useState([
-    { rank: 1, avatar: '/assets/images/avatar-1.png', name: 'Aimonica', projectSlug: 'aimonica' },
-    { rank: 2, avatar: '/assets/images/avatar-2.png', name: 'FAI', projectSlug: 'fai' },
-    { rank: 3, avatar: '/assets/images/avatar-3.png', name: 'Ai16z', projectSlug: 'ai16z' }
-  ]);
 
   const [levelData, setLevelData] = useState([]);
 

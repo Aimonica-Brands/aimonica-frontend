@@ -9,6 +9,7 @@ import { durationDays, evmUtils, solanaUtils } from '@/wallet/utils';
 import { handleContractError } from '@/wallet/contracts';
 import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
+import { projectData } from '@/wallet/project';
 
 export default function Stake() {
   const { message } = App.useApp();
@@ -68,6 +69,8 @@ export default function Stake() {
   useEffect(() => {
     console.log('projectSlug', projectSlug);
     if (projectSlug) {
+      setProjectInfo(projectData.find((item) => item.projectSlug === projectSlug));
+
       cookieAPI
         .GetSectors()
         .then((res) => {
@@ -114,46 +117,46 @@ export default function Stake() {
     }
   }, [projectSlug]);
 
-  // useEffect(() => {
-  //   if (isConnected && address && caipNetwork && chainId) {
-  //     const contractConfig = getContractConfig(chainId);
-  //     if (caipNetwork.chainNamespace === 'eip155') {
-  //       if (evmStakingContract && evmTokenContract) {
-  //         setPoolAddress(contractConfig.AimStaking);
-  //         const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
-  //         setPoolLink(link);
-  //         getEvmTokenBalance();
-  //       }
-  //     } else if (caipNetwork.chainNamespace === 'solana') {
-  //       if (solanaProgram && solanaConnection) {
-  //         setPoolAddress(contractConfig.programId);
-  //         const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
-  //         setPoolLink(link);
-  //         getSolTokenBalance();
-  //       }
-  //     }
-  //   } else {
-  //     setIsApproved(false);
-  //     setTokenBalance(0);
-  //     setTokenWorth(0);
-  //     setAmount('');
-  //     setDurationDay(7);
-  //     setExpectedPoints(0);
-  //     setTotalUser(0);
-  //     setTotalTVL(0);
-  //     setPoolAddress('');
-  //     setPoolLink('');
-  //   }
-  // }, [
-  //   isConnected,
-  //   address,
-  //   caipNetwork,
-  //   chainId,
-  //   evmTokenContract,
-  //   evmStakingContract,
-  //   solanaProgram,
-  //   solanaConnection
-  // ]);
+  useEffect(() => {
+    if (isConnected && address && caipNetwork && chainId) {
+      const contractConfig = getContractConfig(chainId);
+      if (caipNetwork.chainNamespace === 'eip155') {
+        if (evmStakingContract && evmTokenContract) {
+          setPoolAddress(contractConfig.AimStaking);
+          const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
+          setPoolLink(link);
+          getEvmTokenBalance();
+        }
+      } else if (caipNetwork.chainNamespace === 'solana') {
+        if (solanaProgram && solanaConnection) {
+          setPoolAddress(contractConfig.programId);
+          const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
+          setPoolLink(link);
+          getSolTokenBalance();
+        }
+      }
+    } else {
+      setIsApproved(false);
+      setTokenBalance(0);
+      setTokenWorth(0);
+      setAmount('');
+      setDurationDay(7);
+      setExpectedPoints(0);
+      setTotalUser(0);
+      setTotalTVL(0);
+      setPoolAddress('');
+      setPoolLink('');
+    }
+  }, [
+    isConnected,
+    address,
+    caipNetwork,
+    chainId,
+    evmTokenContract,
+    evmStakingContract,
+    solanaProgram,
+    solanaConnection
+  ]);
 
   useEffect(() => {
     setExpectedPoints(Number(amount));
