@@ -66,54 +66,20 @@ export default function Stake() {
   const [poolLink, setPoolLink] = useState('');
   const [isApproved, setIsApproved] = useState(false);
 
+  const [mindshare, setMindshare] = useState(0);
+  const [impressions, setImpressions] = useState(0);
+  const [engagements, setEngagements] = useState(0);
+  const [smartFollowers, setSmartFollowers] = useState(0);
+  const [topTweets, setTopTweets] = useState(0);
+
   useEffect(() => {
     console.log('projectSlug', projectSlug);
     if (projectSlug) {
       setProjectInfo(projectData.find((item) => item.projectSlug === projectSlug));
 
-      cookieAPI
-        .GetSectors()
-        .then((res) => {
-          if (res.success && res.ok) {
-            console.log('GetSectors', res.ok);
-          }
-        })
-        .catch((error) => {
-          console.log('GetSectors', error);
-        });
-
-      cookieAPI
-        .GetProjectDetails(projectSlug)
-        .then((res) => {
-          if (res.success && res.ok) {
-            console.log('GetProjectDetails', res.ok);
-          }
-        })
-        .catch((error) => {
-          console.log('GetProjectDetails', error);
-        });
-
-      cookieAPI
-        .GetAccountDetails('yangxxx12345')
-        .then((res) => {
-          if (res.success && res.ok) {
-            console.log('GetAccountDetails', res.ok);
-          }
-        })
-        .catch((error) => {
-          console.log('GetAccountDetails', error);
-        });
-
-      cookieAPI
-        .GetMetricsGraph('1', '1', projectSlug)
-        .then((res) => {
-          if (res.success && res.ok) {
-            console.log('GetMetricsGraph', res.ok);
-          }
-        })
-        .catch((error) => {
-          console.log('GetMetricsGraph', error);
-        });
+      // getProjectDetails();
+      getProjectMindshareGraph();
+      getMetricsGraph();
     }
   }, [projectSlug]);
 
@@ -161,6 +127,61 @@ export default function Stake() {
   useEffect(() => {
     setExpectedPoints(Number(amount));
   }, [amount]);
+
+  const getMetricsGraph = () => {
+    cookieAPI
+      .GetMetricsGraph('0', '1', projectSlug)
+      .then((res) => {
+        if (res.success && res.ok) {
+          console.log('Engagements', res.ok);
+          const totalEngagements = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
+          setEngagements(totalEngagements);
+        }
+      })
+      .catch((error) => {
+        console.log('Engagements', error);
+      });
+    cookieAPI
+      .GetMetricsGraph('1', '1', projectSlug)
+      .then((res) => {
+        if (res.success && res.ok) {
+          console.log('Impressions', res.ok);
+          const totalImpressions = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
+          setImpressions(totalImpressions);
+        }
+      })
+      .catch((error) => {
+        console.log('Impressions', error);
+      });
+  };
+
+  const getProjectMindshareGraph = () => {
+    cookieAPI
+      .GetProjectMindshareGraph(projectSlug)
+      .then((res) => {
+        if (res.success && res.ok) {
+          console.log('Mindshare', res.ok);
+          const totalMindshare = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
+          setMindshare(totalMindshare);
+        }
+      })
+      .catch((error) => {
+        console.log('GetProjectMindshareGraph', error);
+      });
+  };
+
+  const getProjectDetails = () => {
+    cookieAPI
+      .GetProjectDetails(projectSlug)
+      .then((res) => {
+        if (res.success && res.ok) {
+          console.log('GetProjectDetails', res.ok);
+        }
+      })
+      .catch((error) => {
+        console.log('GetProjectDetails', error);
+      });
+  };
 
   const getEvmTokenBalance = async () => {
     evmUtils
@@ -411,19 +432,19 @@ export default function Stake() {
           <div className="textbox">
             <div className="text-item">
               <div className="text1">Mindshare</div>
-              <div className="text">2.26%</div>
+              <div className="text">{utils.formatNumber(mindshare)}%</div>
             </div>
             <div className="text-item">
               <div className="text1">Impressions</div>
-              <div className="text">4,020,543</div>
+              <div className="text">{utils.formatNumber(impressions)}</div>
             </div>
             <div className="text-item">
               <div className="text1">Engageme</div>
-              <div className="text">44,806</div>
+              <div className="text">{utils.formatNumber(engagements)}</div>
             </div>
             <div className="text-item">
               <div className="text1">Smart Followers</div>
-              <div className="text">7,289</div>
+              <div className="text">{utils.formatNumber(smartFollowers)}</div>
             </div>
             <div className="text-item">
               <div className="text1">Top Tweets</div>

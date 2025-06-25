@@ -2,10 +2,10 @@ import axios from 'axios';
 
 // Cookie.fun API 统一管理
 export const cookieAPI = {
-  GetSectors: async () => {
-    const res = await axios.get('/api/cookiefun/sectors');
-    return res.data;
-  },
+  // GetSectors: async () => {
+  //   const res = await axios.get('/api/cookiefun/sectors');
+  //   return res.data;
+  // },
 
   GetProjectDetails: async (slug: string) => {
     const res = await axios.post('/api/cookiefun/project', { slug });
@@ -29,6 +29,11 @@ export const cookieAPI = {
     // _24Hours (1)
 
     const res = await axios.post('/api/cookiefun/metrics', { metricType, granulation, projectSlug });
+    return res.data;
+  },
+
+  GetProjectMindshareGraph: async (projectSlug: string) => {
+    const res = await axios.post('/api/cookiefun/project/mindshare-graph', { projectSlug });
     return res.data;
   }
 };
