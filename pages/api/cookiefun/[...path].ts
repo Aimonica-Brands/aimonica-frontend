@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const externalUrl = `https://api.staging.cookie.fun/v3/${apiPath}`;
     const headers = {
       'Content-Type': 'application/json',
-      'x-api-key': '836596cc-8c94-4d10-bbfb-4234be5068e2'
+      'x-api-key': process.env.NEXT_PUBLIC_COOKIEFUN_APIKEY
     };
     const timeout = 5000;
     // 根据请求方法转发请求
