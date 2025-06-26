@@ -134,7 +134,7 @@ export default function Stake() {
       .GetMetricsGraph('0', '1', projectSlug)
       .then((res) => {
         if (res.success && res.ok) {
-          console.log('GetMetricsGraph Engagements', res.ok);
+          // console.log('GetMetricsGraph Engagements', res.ok);
           const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
           console.log('Engagements', total);
           setEngagements(total);
@@ -147,7 +147,7 @@ export default function Stake() {
       .GetMetricsGraph('1', '1', projectSlug)
       .then((res) => {
         if (res.success && res.ok) {
-          console.log('GetMetricsGraph Impressions', res.ok);
+          // console.log('GetMetricsGraph Impressions', res.ok);
           const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
           console.log('Impressions', total);
           setImpressions(total);
@@ -163,7 +163,7 @@ export default function Stake() {
       .GetProjectMindshareGraph(projectSlug)
       .then((res) => {
         if (res.success && res.ok) {
-          console.log('GetProjectMindshareGraph Mindshare', res.ok);
+          // console.log('GetProjectMindshareGraph Mindshare', res.ok);
           const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
           console.log('Mindshare', total);
           setMindshare(total);
@@ -178,12 +178,12 @@ export default function Stake() {
     try {
       const projectDetailsRes = await cookieAPI.GetProjectDetails(projectSlug);
       if (projectDetailsRes.success && projectDetailsRes.ok) {
-        console.log('GetProjectDetails', projectDetailsRes.ok);
+        // console.log('GetProjectDetails', projectDetailsRes.ok);
         const username = projectDetailsRes.ok.twitterUsernames[0];
         if (username) {
           const smartFollowersRes = await cookieAPI.GetAccountSmartFollowers(username);
           if (smartFollowersRes.success && smartFollowersRes.ok) {
-            console.log('GetAccountSmartFollowers', smartFollowersRes.ok);
+            // console.log('GetAccountSmartFollowers', smartFollowersRes.ok);
             const total = smartFollowersRes.ok.totalCount;
             console.log('Smart Followers', total);
             setSmartFollowers(total);
@@ -200,7 +200,7 @@ export default function Stake() {
       .SearchTweets(projectSlug, projectSlug)
       .then((res) => {
         if (res.success && res.ok) {
-          console.log('SearchTweets', res.ok);
+          // console.log('SearchTweets', res.ok);
           const tweets = res.ok.entries.slice(0, 5);
           setTopTweets(tweets);
         }
