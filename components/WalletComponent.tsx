@@ -6,7 +6,7 @@ import { initEVMContracts, initSolanaContracts } from '@/wallet/contracts';
 import { usePageContext } from '@/context';
 import { modal } from '@/wallet';
 
-export default function WalletComponent() {
+export const WalletComponent = () => {
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
   const { connection } = useAppKitConnection();
@@ -75,21 +75,5 @@ export default function WalletComponent() {
     setCurrentNetworkType(null);
   };
 
-  return (
-    <>
-      <appkit-button size="sm" />
-
-      {/* {isConnected && address ? (
-        <button className="connect-button" onClick={() => modal.open()}>
-          <img src="/assets/images/icon-wallet.svg" alt="" />
-          {address.slice(0, 6)}...{address.slice(-4)}
-        </button>
-      ) : (
-        <button className="connect-button" onClick={() => modal.open()}>
-          <img src="/assets/images/icon-wallet.svg" alt="" />
-          Connect Wallet
-        </button>
-      )} */}
-    </>
-  );
+  return null;
 }

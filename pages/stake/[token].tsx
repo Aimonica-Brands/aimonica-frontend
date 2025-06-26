@@ -390,7 +390,7 @@ export default function Stake() {
               <div className="avatar-box-box">
                 <div className="avatar-box">
                   <img src="/assets/images/avatar.png" alt="" />
-                  <span>Aimonica</span>
+                  <span>{getContractConfig(chainId)?.stakeTokenName || ''}</span>
                 </div>
                 <div className="number-box">
                   <div className="number">{utils.formatNumber(tokenBalance)}</div>

@@ -19,7 +19,7 @@ export const initEVMContracts = async (chainId: any) => {
     const provider = new ethers.BrowserProvider(window.ethereum as any);
     const signer = await provider.getSigner();
 
-    const tokenContract = new ethers.Contract(tokenConfig.BKIBSHI, tokenConfig.BKIBSHIABI, signer);
+    const tokenContract = new ethers.Contract(tokenConfig.StakeToken, tokenConfig.StakeTokenABI, signer);
 
     const stakingContract = new ethers.Contract(tokenConfig.AimStaking, tokenConfig.AimStakingABI, signer);
 

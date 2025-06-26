@@ -3,9 +3,13 @@ import { useState } from 'react';
 import { Select } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { useAppKitAccount } from '@reown/appkit/react';
-import WalletComponent from './WalletComponent';
-import TwitterComponent from './TwitterComponent';
 import { projectData } from '@/wallet/project';
+import TwitterComponent from './TwitterComponent';
+import dynamic from 'next/dynamic';
+
+const WalletComponent = dynamic(() => import('./WalletComponent').then((mod) => mod.WalletComponent), {
+  ssr: false
+});
 
 export default function HeaderComponent() {
   const router = useRouter();
@@ -108,6 +112,8 @@ export default function HeaderComponent() {
 
         <TwitterComponent />
 
+        {/* AppKit Connect Button */}
+        <appkit-button />
         {/* Wallet initialization component */}
         <WalletComponent />
       </div>

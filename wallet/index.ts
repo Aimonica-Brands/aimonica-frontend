@@ -43,7 +43,7 @@ export const modal = createAppKit({
   }
 });
 
-import BKIBSHIABI from '@/wallet/abi/BKIBSHI.json';
+import StakeTokenABI from '@/wallet/abi/BKIBSHI.json';
 import AimStakingABI from '@/wallet/abi/AimStaking.json';
 import aim_staking_program from '@/wallet/idl/aim_staking_program.json';
 
@@ -56,14 +56,16 @@ export const getContractConfig = (chainId: any = ''): any => {
     : [
         {
           network: base,
-          BKIBSHI: '0x3d1c275aa98d45c99258a51be98b08fc8572c074',
+          stakeTokenName: 'BKIBSHI',
+          StakeToken: '0x3d1c275aa98d45c99258a51be98b08fc8572c074',
           AimStaking: '0x29ecDC454121184C5F06E0f067ae11aA2d43184f',
-          BKIBSHIABI,
+          StakeTokenABI,
           AimStakingABI
         },
         {
           network: solanaDevnet,
           cluster: 'devnet',
+          stakeTokenName: 'BKIBSHI',
           programId: '5BH7DL2muAL9w3LYcZWcB1U8JA1dc7KFaCfTpKJ5RjmD',
           aim_staking_program
         }
