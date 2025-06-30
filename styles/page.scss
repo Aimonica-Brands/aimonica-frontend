@@ -1359,6 +1359,38 @@ footer {
   }
 }
 
+.tweet-popover {
+  width: 4.8rem;
+  padding: 0.2rem;
+  .title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.1rem;
+    img {
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 50%;
+      margin-right: 0.1rem;
+    }
+    span {
+      font-family: Poppins;
+      font-weight: 600;
+      font-size: 0.2rem;
+      color: #56b6fe;
+    }
+  }
+  .content {
+    width: 100%;
+    min-height: 1rem;
+    max-height: 3rem;
+    overflow: auto;
+    font-family: Poppins;
+    font-weight: 400;
+    font-size: 0.16rem;
+    color: #5c7392;
+  }
+}
+
 .project-popover {
   width: 4.8rem;
   background: url('/assets/images/img-17.png') no-repeat;
@@ -1570,7 +1602,8 @@ footer {
         }
         .avatar-box {
           display: flex;
-          a {
+          a,
+          div {
             width: 0.4rem;
             height: 0.4rem;
             border-radius: 50%;

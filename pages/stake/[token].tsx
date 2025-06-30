@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, App, Input, Tabs } from 'antd';
-import { LeftOutlined, ExportOutlined } from '@ant-design/icons';
+import { Button, Modal, App, Input, Tabs, Tooltip, Popover } from 'antd';
+import { LeftOutlined, ExportOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { getContractConfig } from '@/wallet';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
@@ -458,7 +458,12 @@ export default function Stake() {
           <div className="title">Influence Metrics</div>
           <div className="textbox">
             <div className="text-item">
-              <div className="text1">Mindshare</div>
+              <div className="text1">
+                Mindshare{' '}
+                <Tooltip title="The percentage of the total conversation about the token on Twitter.">
+                  <QuestionCircleOutlined style={{ fontSize: 16 }} />
+                </Tooltip>
+              </div>
               <div className="text">{utils.formatNumber(mindshare)}%</div>
             </div>
             <div className="text-item">
@@ -466,7 +471,7 @@ export default function Stake() {
               <div className="text">{utils.formatNumber(impressions)}</div>
             </div>
             <div className="text-item">
-              <div className="text1">Engageme</div>
+              <div className="text1">Engagement</div>
               <div className="text">{utils.formatNumber(engagements)}</div>
             </div>
             <div className="text-item">
@@ -477,13 +482,30 @@ export default function Stake() {
               <div className="text1">Top Tweets</div>
               <div className="avatar-box">
                 {topTweets.map((tweet: any, index: number) => (
-                  <a
-                    href={`https://x.com/${tweet.author.username}/status/${tweet.tweetId}`}
-                    target="_blank"
+                  <Popover
                     key={index}
-                    style={{ left: `-${index * 0.05}rem` }}>
-                    <img src={tweet.author.profileImageUrl} alt="" />
-                  </a>
+                    content={() => {
+                      return (
+                        <div className="tweet-popover">
+                          <div className="title">
+                            <img src={tweet.author.profileImageUrl} alt="" />
+                            <span>{tweet.author.username}</span>
+                          </div>
+                          <div className="content">{tweet.text}</div>
+                        </div>
+                      );
+                    }}
+                    arrow={false}>
+                    {/* <a
+                      href={`https://x.com/${tweet.author.username}/status/${tweet.tweetId}`}
+                      target="_blank"
+                      style={{ left: `-${index * 0.05}rem` }}>
+                      <img src={tweet.author.profileImageUrl} alt="" />
+                    </a> */}
+                    <div style={{ left: `-${index * 0.05}rem` }}>
+                      <img src={tweet.author.profileImageUrl} alt="" />
+                    </div>
+                  </Popover>
                 ))}
               </div>
             </div>

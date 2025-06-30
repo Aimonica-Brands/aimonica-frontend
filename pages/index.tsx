@@ -6,12 +6,12 @@ import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
 import { modal } from '@/wallet';
 import { projectData } from '@/wallet/project';
+import { evmAPI } from '@/pages/api/aim';
 
 export default function Home() {
   const router = useRouter();
-  const { chainId } = useAppKitNetwork();
-  const { isConnected } = useAppKitAccount();
-
+  const { isConnected, address } = useAppKitAccount();
+  const { caipNetwork, chainId } = useAppKitNetwork();
   const [levelData, setLevelData] = useState([]);
 
   const [loading, setLoading] = useState(false);
@@ -33,10 +33,11 @@ export default function Home() {
       title: 'Project',
       key: 'project',
       align,
-      width: 150,
+      width: 130,
       render: (value: any, record: any) => {
         return (
           <Popover
+            color="transparent"
             content={() => {
               return (
                 <div className="project-popover">
@@ -111,7 +112,7 @@ export default function Home() {
       title: 'Total Points',
       key: 'totalPoints',
       align,
-      width: 150,
+      width: 160,
       render: (value: any, record: any) => {
         return (
           <div className="s-box">
@@ -127,7 +128,7 @@ export default function Home() {
       title: 'TVL($)',
       key: 'tvl',
       align,
-      width: 150,
+      width: 160,
       render: (value: any, record: any) => {
         return (
           <div className="s-box">
@@ -201,12 +202,28 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (isConnected && chainId) {
+    if (isConnected && address && caipNetwork && chainId) {
       setNetworkId(chainId.toString());
+
+      getProjectData();
     } else {
       setNetworkId('');
     }
-  }, [isConnected, chainId]);
+  }, [isConnected, address, caipNetwork, chainId]);
+
+  const getProjectData = async () => {
+    if (caipNetwork.chainNamespace === 'eip155') {
+      evmAPI
+        .GetProjects()
+        .then((res) => {
+          console.log('全部项目', res);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    } else if (caipNetwork.chainNamespace === 'solana') {
+    }
+  };
 
   const handleTabClick = (network: any) => async () => {
     // modal.open({ view: "Networks" });
