@@ -2,7 +2,6 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { Select } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { useAppKitAccount } from '@reown/appkit/react';
 import { projectData } from '@/wallet/project';
 import TwitterComponent from './TwitterComponent';
 import dynamic from 'next/dynamic';
@@ -13,7 +12,6 @@ const WalletComponent = dynamic(() => import('./WalletComponent').then((mod) => 
 
 export default function HeaderComponent() {
   const router = useRouter();
-  const { address, isConnected } = useAppKitAccount();
 
   const menuList = [
     { label: 'Explore', path: '/' },
@@ -103,12 +101,6 @@ export default function HeaderComponent() {
             )
           }))}
         />
-
-        {isConnected && address && (
-          <div className="number-box">
-            <img src="/assets/images/img-3.png" alt="" /> 0
-          </div>
-        )}
 
         <TwitterComponent />
 

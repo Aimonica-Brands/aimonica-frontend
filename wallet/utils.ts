@@ -7,6 +7,19 @@ import { request, gql } from 'graphql-request';
 /**质押时长 */
 export const durationDays = [1, 7, 14, 30];
 
+export const getRewardPoints = (duration: number) => {
+  switch (duration) {
+    case 1:
+      return 1;
+    case 7:
+      return 1;
+    case 14:
+      return 3;
+    case 30:
+      return 8;
+  }
+};
+
 /**EVM 项目配置地址 */
 const EVM_PROJECT_CONFIG = '0x64656d6f00000000000000000000000000000000000000000000000000000000';
 

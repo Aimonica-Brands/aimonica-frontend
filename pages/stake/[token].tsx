@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { getContractConfig } from '@/wallet';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
-import { durationDays, evmUtils, solanaUtils } from '@/wallet/utils';
+import { durationDays, evmUtils, solanaUtils, getRewardPoints } from '@/wallet/utils';
 import { handleContractError } from '@/wallet/contracts';
 import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
@@ -19,6 +19,27 @@ export default function Stake() {
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
   const { evmTokenContract, evmStakingContract, solanaProgram, solanaConnection } = usePageContext();
+
+  const [projectInfo, setProjectInfo] = useState<any>({});
+  const [loading, setLoading] = useState(false);
+  const [amount, setAmount] = useState('');
+  const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
+  const [durationDay, setDurationDay] = useState(7);
+  const [expectedPoints, setExpectedPoints] = useState(0);
+  const [tokenBalance, setTokenBalance] = useState(0);
+  const [tokenPrice, setTokenPrice] = useState(1);
+  const [tokenWorth, setTokenWorth] = useState(0);
+  const [totalUser, setTotalUser] = useState(0);
+  const [totalTVL, setTotalTVL] = useState(0);
+  const [poolAddress, setPoolAddress] = useState('');
+  const [poolLink, setPoolLink] = useState('');
+  const [isApproved, setIsApproved] = useState(false);
+
+  const [mindshare, setMindshare] = useState(0);
+  const [impressions, setImpressions] = useState(0);
+  const [engagements, setEngagements] = useState(0);
+  const [smartFollowers, setSmartFollowers] = useState(0);
+  const [topTweets, setTopTweets] = useState([]);
 
   const infoItems = [
     {
@@ -51,29 +72,7 @@ export default function Stake() {
     console.log(key);
   };
 
-  const [projectInfo, setProjectInfo] = useState<any>({});
-  const [loading, setLoading] = useState(false);
-  const [amount, setAmount] = useState('');
-  const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
-  const [durationDay, setDurationDay] = useState(7);
-  const [expectedPoints, setExpectedPoints] = useState(0);
-  const [tokenBalance, setTokenBalance] = useState(0);
-  const [tokenPrice, setTokenPrice] = useState(1);
-  const [tokenWorth, setTokenWorth] = useState(0);
-  const [totalUser, setTotalUser] = useState(0);
-  const [totalTVL, setTotalTVL] = useState(0);
-  const [poolAddress, setPoolAddress] = useState('');
-  const [poolLink, setPoolLink] = useState('');
-  const [isApproved, setIsApproved] = useState(false);
-
-  const [mindshare, setMindshare] = useState(0);
-  const [impressions, setImpressions] = useState(0);
-  const [engagements, setEngagements] = useState(0);
-  const [smartFollowers, setSmartFollowers] = useState(0);
-  const [topTweets, setTopTweets] = useState([]);
-
   useEffect(() => {
-    console.log('projectSlug', projectSlug);
     if (projectSlug) {
       setProjectInfo(projectData.find((item) => item.projectSlug === projectSlug));
 
@@ -381,7 +380,7 @@ export default function Stake() {
                   <div className="s-img">
                     <img src="/assets/images/img-5.png" alt="" />
                   </div>
-                  <div className="s-text">Points 7.5x AIM</div>
+                  <div className="s-text">Points {getRewardPoints(durationDay)}x AIM</div>
                 </div>
               </div>
               <div className="text margin-bottom">
@@ -461,7 +460,7 @@ export default function Stake() {
               <div className="text1">
                 Mindshare{' '}
                 <Tooltip title="The percentage of the total conversation about the token on Twitter.">
-                  <QuestionCircleOutlined style={{ fontSize: 16 }} />
+                  <QuestionCircleOutlined style={{ fontSize: '0.18rem' }} />
                 </Tooltip>
               </div>
               <div className="text">{utils.formatNumber(mindshare)}%</div>

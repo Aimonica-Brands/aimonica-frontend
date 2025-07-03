@@ -109,8 +109,8 @@ export default function Home() {
       }
     },
     {
-      title: 'Total Points',
-      key: 'totalPoints',
+      title: 'Points',
+      key: 'points',
       align,
       width: 160,
       render: (value: any, record: any) => {
@@ -310,9 +310,9 @@ export default function Home() {
 
           <div className="tab-box-box">
             <div className="tab-box">
-              <button className={networkId === '' ? 'active' : ''} onClick={handleTabClick(null)}>
+              {/* <button className={networkId === '' ? 'active' : ''} onClick={handleTabClick(null)}>
                 All Chain
-              </button>
+              </button> */}
               {getContractConfig().map((item: any) => {
                 return (
                   <button

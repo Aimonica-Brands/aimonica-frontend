@@ -5,7 +5,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
 import { modal } from '@/wallet';
-import { evmUtils, solanaUtils } from '@/wallet/utils';
+import { evmUtils, solanaUtils, getRewardPoints } from '@/wallet/utils';
 import { usePageContext } from '@/context';
 import { handleContractError } from '@/wallet/contracts';
 import utils from '@/utils';
@@ -79,42 +79,36 @@ export default function Dashboard() {
   const stakeColumns: any[] = [
     {
       title: 'Project',
-      dataIndex: 'projectName',
-      key: 'projectName'
+      dataIndex: 'projectName'
     },
     {
       title: 'Stake ID',
-      dataIndex: 'stakeId',
-      key: 'stakeId'
+      dataIndex: 'stakeId'
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
-      key: 'amount',
-      render: (amount: number) => `${utils.formatNumber(amount)} tokens`
+      render: (value: number) => `${utils.formatNumber(value)} tokens`
     },
     {
       title: 'Duration',
       dataIndex: 'duration',
-      key: 'duration',
-      render: (duration: number) => `${duration} Day`
+      render: (value: number) => `${value} Day`
     },
     {
       title: 'Staked Time',
       dataIndex: 'stakedAt',
-      key: 'stakedAt',
-      render: (stakedAt: number) => new Date(stakedAt).toLocaleString()
+      render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Unlocked Time',
       dataIndex: 'unlockedAt',
-      key: 'unlockedAt',
-      render: (unlockedAt: number) => new Date(unlockedAt).toLocaleString()
+      render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Status',
-      key: 'status',
-      render: (_, record) => {
+      dataIndex: 'status',
+      render: (value: any, record: any) => {
         return <Tag color="green">Active</Tag>;
         // if (record.status == 0) return <Tag color="green">Active</Tag>;
         // if (record.status == 1) return <Tag color="blue">Unstaked</Tag>;
@@ -122,10 +116,55 @@ export default function Dashboard() {
       }
     },
     {
+      title: 'Points',
+      dataIndex: 'points',
+      align,
+      render: (value: any, record: any) => {
+        return (
+          <div className="s-box">
+            <div className="s-img">
+              <img src="/assets/images/img-3.png" alt="" />
+            </div>
+            <div className="s-text">{utils.formatNumber(value)}</div>
+          </div>
+        );
+      }
+    },
+    // {
+    //   title: 'TVL($)',
+    //   dataIndex: 'tvl',
+    //   align,
+    //   render: (value: any, record: any) => {
+    //     return (
+    //       <div className="s-box">
+    //         <div className="s-img">
+    //           <img src="/assets/images/img-4.png" alt="" />
+    //         </div>
+    //         <div className="s-text">$ {utils.formatNumber(value)}</div>
+    //       </div>
+    //     );
+    //   }
+    // },
+    {
+      title: 'Rewards',
+      dataIndex: 'rewards',
+      align,
+      render: (value: any, record: any) => {
+        return (
+          <div className="s-box">
+            <div className="s-img">
+              <img src="/assets/images/img-5.png" alt="" />
+            </div>
+            <div className="s-text">Points {getRewardPoints(record.duration)}x AIM</div>
+          </div>
+        );
+      }
+    },
+    {
       title: 'Action',
-      key: 'action',
+      dataIndex: 'action',
       fixed: 'right',
-      render: (_, record) => (
+      render: (value: any, record: any) => (
         <Space direction="vertical">
           <Button className="unstake-btn" disabled={!record.canUnstake} onClick={() => openUnstakeModal(record)}>
             Unstake
@@ -158,7 +197,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (stakeRecords.length > 0) {
-      setTotalPoints(stakeRecords.reduce((acc, record) => acc + record.amount, 0));
+      setTotalPoints(stakeRecords.reduce((acc, record) => acc + record.points, 0));
       setTotalStaked(stakeRecords.reduce((acc, record) => acc + record.amount, 0));
       setTotalProject(
         stakeRecords.reduce((acc, record) => {
@@ -198,7 +237,12 @@ export default function Dashboard() {
           console.log(`🔍 查询EVM质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
           const records = await evmUtils.getStakeRecords(address);
           console.log('🔍 查询到的EVM质押记录:', records);
-          return records;
+          const newRecords = records.map((record) => {
+            record.points = record.amount * getRewardPoints(record.duration);
+            // record.tvl = record.amount * 0.0015;
+            return record;
+          });
+          return newRecords;
         } catch (error) {
           console.error(`❌ 第 ${retryCount + 1} 次查询失败:`, error);
           return null;
@@ -255,7 +299,12 @@ export default function Dashboard() {
           console.log(`🔍 查询质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
           const records = await solanaUtils.getStakeRecords(solanaProgram);
           console.log('🔍 查询到的质押记录:', records);
-          return records;
+          const newRecords = records.map((record) => {
+            record.points = record.amount * getRewardPoints(record.duration);
+            // record.tvl = record.amount * 0.0015;
+            return record;
+          });
+          return newRecords;
         } catch (error) {
           console.error(`❌ 第 ${retryCount + 1} 次查询失败:`, error);
           return null;
@@ -472,9 +521,10 @@ export default function Dashboard() {
           {/* <button className={networkId === '' ? 'active' : ''} onClick={handleTabClick(null)}>
             All Chain
           </button> */}
-          {getContractConfig().map((item: any) => {
+          {getContractConfig().map((item: any, index: number) => {
             return (
               <button
+                key={index}
                 className={networkId === item.network.id.toString() ? 'active' : ''}
                 onClick={handleTabClick(item.network)}>
                 {item.network.name}
@@ -490,11 +540,11 @@ export default function Dashboard() {
             dataSource={stakeRecords}
             pagination={false}
             loading={stakeRecordsLoading}
-            rowKey={(record) => record.stakeId}
+            rowKey={(record) => `${record.projectId}-${record.stakeId}`}
           />
         </div>
 
-        <div className="title-box-2">
+        {/* <div className="title-box-2">
           Staking History
           <img src="/assets/images/star.png" alt="" className="star-img" />
         </div>
@@ -507,7 +557,7 @@ export default function Dashboard() {
             pagination={false}
             loading={historyLoading}
           />
-        </div>
+        </div> */}
       </div>
 
       <Modal
