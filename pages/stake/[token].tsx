@@ -9,12 +9,13 @@ import { durationDays, evmUtils, solanaUtils, getRewardPoints } from '@/wallet/u
 import { handleContractError } from '@/wallet/contracts';
 import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
-import { projectData } from '@/wallet/project';
+import { aimAPI } from '@/pages/api/aim';
+import { ethers } from 'ethers';
 
 export default function Stake() {
   const { message } = App.useApp();
   const router = useRouter();
-  const { token: projectSlug } = router.query as { token: string };
+  const { token: projectId } = router.query as { token: string };
 
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
@@ -40,6 +41,7 @@ export default function Stake() {
   const [engagements, setEngagements] = useState(0);
   const [smartFollowers, setSmartFollowers] = useState(0);
   const [topTweets, setTopTweets] = useState([]);
+  const [project, setProject] = useState<any>({});
 
   const infoItems = [
     {
@@ -73,15 +75,13 @@ export default function Stake() {
   };
 
   useEffect(() => {
-    if (projectSlug) {
-      setProjectInfo(projectData.find((item) => item.projectSlug === projectSlug));
-
+    if (project && project.name) {
       getSearchTweets();
       getProjectMindshareGraph();
       getMetricsGraph();
       getProjectDetails();
     }
-  }, [projectSlug]);
+  }, [project]);
 
   useEffect(() => {
     if (isConnected && address && caipNetwork && chainId) {
@@ -101,6 +101,7 @@ export default function Stake() {
           getSolTokenBalance();
         }
       }
+      getProjectData();
     } else {
       setIsApproved(false);
       setTokenBalance(0);
@@ -128,9 +129,35 @@ export default function Stake() {
     setExpectedPoints(Number(amount));
   }, [amount]);
 
+  const getProjectData = async () => {
+    aimAPI
+      .GetProjects()
+      .then(async (res) => {
+        console.log('全部项目', res);
+        const evmProjects = res.filter((item: any) => item.chain == 'Base');
+        const solanaProjects = res.filter((item: any) => item.chain == 'Solana');
+
+        if (caipNetwork.chainNamespace === 'eip155') {
+          console.log('evmProjects------------', evmProjects);
+          for (const item of evmProjects) {
+            const projectName = ethers.decodeBytes32String(item.id);
+            console.log('projectName------------', projectName);
+          }
+        } else if (caipNetwork.chainNamespace === 'solana') {
+          console.log('solanaProjects------------', solanaProjects);
+          const project = solanaProjects.find((item: any) => item.id == projectId);
+          console.log('project------------', project);
+          setProject(project);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
   const getMetricsGraph = () => {
     cookieAPI
-      .GetMetricsGraph('0', '1', projectSlug)
+      .GetMetricsGraph('0', '1', project.name)
       .then((res) => {
         if (res.success && res.ok) {
           // console.log('GetMetricsGraph Engagements', res.ok);
@@ -143,7 +170,7 @@ export default function Stake() {
         console.log('Engagements', error);
       });
     cookieAPI
-      .GetMetricsGraph('1', '1', projectSlug)
+      .GetMetricsGraph('1', '1', project.name)
       .then((res) => {
         if (res.success && res.ok) {
           // console.log('GetMetricsGraph Impressions', res.ok);
@@ -159,7 +186,7 @@ export default function Stake() {
 
   const getProjectMindshareGraph = () => {
     cookieAPI
-      .GetProjectMindshareGraph(projectSlug)
+      .GetProjectMindshareGraph(project.name)
       .then((res) => {
         if (res.success && res.ok) {
           // console.log('GetProjectMindshareGraph Mindshare', res.ok);
@@ -175,7 +202,7 @@ export default function Stake() {
 
   const getProjectDetails = async () => {
     try {
-      const projectDetailsRes = await cookieAPI.GetProjectDetails(projectSlug);
+      const projectDetailsRes = await cookieAPI.GetProjectDetails(project.name);
       if (projectDetailsRes.success && projectDetailsRes.ok) {
         // console.log('GetProjectDetails', projectDetailsRes.ok);
         const username = projectDetailsRes.ok.twitterUsernames[0];
@@ -196,7 +223,7 @@ export default function Stake() {
 
   const getSearchTweets = async () => {
     cookieAPI
-      .SearchTweets(projectSlug, projectSlug)
+      .SearchTweets(project.name, project.name)
       .then((res) => {
         if (res.success && res.ok) {
           // console.log('SearchTweets', res.ok);
@@ -256,7 +283,7 @@ export default function Stake() {
 
   const getSolTokenBalance = async () => {
     solanaUtils
-      .getTokenBalance(solanaProgram, solanaConnection)
+      .getTokenBalance(solanaProgram, solanaConnection, Number(projectId))
       .then((balance) => {
         setTokenBalance(Math.floor(balance));
         setTokenWorth(Math.floor(balance * tokenPrice));
@@ -288,10 +315,10 @@ export default function Stake() {
           setLoading(false);
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
-      const nextStakeId = await solanaUtils.getNextStakeId(solanaProgram);
+      const nextStakeId = await solanaUtils.getNextStakeId(solanaProgram, Number(projectId));
 
       solanaUtils
-        .stake(solanaProgram, nextStakeId, Number(amount), durationDay)
+        .stake(solanaProgram, nextStakeId, Number(amount), durationDay, Number(projectId))
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
             getContractConfig(chainId).cluster

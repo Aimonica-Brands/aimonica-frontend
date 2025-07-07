@@ -61,71 +61,31 @@ export const evmUtils = {
       // status: "Active"
       if (stake.status != 'Active') continue;
 
-      const projectId = stake.project.id;
-      const projectName = ethers.decodeBytes32String(stake.project.id);
+      const project_id = stake.project.id;
+      const projectName = ethers.decodeBytes32String(project_id);
 
-      const stakedAt = Number(stake.stakedAt) * 1000;
-      const unlockedAt = Number(stake.unlockedAt) * 1000;
+      const staked_at = Number(stake.stakedAt) * 1000;
+      const unlocked_at = Number(stake.unlockedAt) * 1000;
       const now = new Date().getTime();
-      const canUnstake = now >= unlockedAt;
+      const canUnstake = now >= unlocked_at;
 
       records.push({
-        user: stake.user.id,
-        projectId,
+        id: Number(stake.stakeId),
+        user_id: stake.user.id,
+        project_id,
         projectName,
-        stakeId: Number(stake.stakeId),
         amount: Number(ethers.formatEther(stake.amount)),
         duration: Number(stake.duration) / 86400,
-        stakedAt,
-        unlockedAt,
+        staked_at,
+        unlocked_at,
         canUnstake
       });
     }
-    const sortedRecords = records.sort((a: any, b: any) => b.stakedAt - a.stakedAt);
+    const sortedRecords = records.sort((a: any, b: any) => b.staked_at - a.staked_at);
     console.log('EVM 质押记录:', sortedRecords);
 
     return sortedRecords;
   },
-
-  // getStakeRecords: async (evmStakingContract: any, address: string) => {
-  //   const userStakes = await evmStakingContract.getUserStakes(address);
-  //   console.log('EVM 原始质押记录:', userStakes);
-
-  //   if (!userStakes) return [];
-
-  //   const records = [];
-
-  //   for (const stakeId of userStakes) {
-  //     const stake = await evmStakingContract.stakes(stakeId);
-  //     const status = Number(stake.status);
-  //     if (status > 0) continue;
-
-  //     const projectId = Number(stake.projectId);
-  //     const projectName = ethers.decodeBytes32String(stake.projectId);
-  //     const stakedAt = Number(stake.stakedAt) * 1000;
-  //     const unlockedAt = Number(stake.unlockedAt) * 1000;
-  //     const now = new Date().getTime();
-  //     const canUnstake = now >= unlockedAt;
-
-  //     // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
-  //     records.push({
-  //       projectId,
-  //       projectName,
-  //       stakeId: Number(stake.stakeId),
-  //       amount: Number(ethers.formatEther(stake.amount)),
-  //       duration: Number(stake.duration) / 86400,
-  //       stakedAtStr: new Date(stakedAt).toLocaleString(),
-  //       unlockedAtStr: new Date(unlockedAt).toLocaleString(),
-  //       canUnstake,
-  //       status: status
-  //     });
-  //   }
-
-  //   const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
-  //   console.log('EVM 质押记录:', sortedRecords);
-
-  //   return sortedRecords;
-  // },
 
   /**获取代币余额 */
   getTokenBalance: async (evmTokenContract: any, address: string) => {
@@ -160,25 +120,22 @@ export const evmUtils = {
 
   /**解质押 */
   unstake: async (evmStakingContract: any, record: any) => {
-    console.log('解质押ID:', record.stakeId, '数量:', record.amount);
+    console.log('解质押ID:', record.id, '数量:', record.amount);
 
-    const tx = await evmStakingContract.unstake(record.stakeId);
+    const tx = await evmStakingContract.unstake(record.id);
     await tx.wait();
     return tx;
   },
 
   /**紧急解质押 */
   emergencyUnstake: async (evmStakingContract: any, record: any) => {
-    console.log('紧急解质押ID:', record.stakeId, '数量:', record.amount);
+    console.log('紧急解质押ID:', record.id, '数量:', record.amount);
 
-    const tx = await evmStakingContract.emergencyUnstake(record.stakeId);
+    const tx = await evmStakingContract.emergencyUnstake(record.id);
     await tx.wait();
     return tx;
   }
 };
-
-/**项目配置地址 */
-const SOLANA_PROJECT_CONFIG = 'J1trx6Q6bwA5jMGn2BXwGCHpuwKdQ9136KuTuZrCh4uM';
 
 /**获取用户代币账户地址 */
 const getUserTokenAccount = (userPublicKey: PublicKey, tokenMint: PublicKey): PublicKey => {
@@ -218,10 +175,26 @@ const getVaultAuthorityPda = async (solanaProgram: any, projectId: anchor.BN) =>
   return vaultAuthorityPda;
 };
 
+/**项目地址 */
+// const SOLANA_PROJECT_CONFIG = 'J1trx6Q6bwA5jMGn2BXwGCHpuwKdQ9136KuTuZrCh4uM';
+
+/**根据项目ID获取项目地址 */
+const getProjectAddressById = async (solanaProgram: any, projectId: number): Promise<PublicKey> => {
+  const [projectConfigPda] = await PublicKey.findProgramAddress(
+    [Buffer.from('project'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
+    solanaProgram.programId
+  );
+  return projectConfigPda;
+};
+
 /**获取项目配置 */
-const getProjectConfig = async (solanaProgram: any) => {
-  const projectConfigPubkey = new PublicKey(SOLANA_PROJECT_CONFIG);
-  const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPubkey);
+const getProjectConfig = async (solanaProgram: any, projectId: number) => {
+  const projectAddress = await getProjectAddressById(solanaProgram, projectId);
+
+  const projectConfig = await solanaProgram.account.projectConfig.fetch(projectAddress);
+
+  const projectConfigPubkey = new PublicKey(projectAddress);
+
   // console.log('Solana 项目配置:', projectConfig);
 
   const vaultAuthority = await getVaultAuthorityPda(solanaProgram, projectConfig.projectId);
@@ -249,21 +222,15 @@ const getProjectConfig = async (solanaProgram: any) => {
 };
 
 export const solanaUtils = {
-  /**获取质押记录 */
+  /**获取用户所有质押记录 */
   getStakeRecords: async (solanaProgram: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
-
-    const { projectConfigPubkey, projectId, projectName } = await getProjectConfig(solanaProgram);
 
     const userFilter = {
       memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
     };
 
-    const projectFilter = {
-      memcmp: { offset: 8 + 32, bytes: projectConfigPubkey.toBase58() }
-    };
-
-    const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
+    const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
     console.log('Solana 原始质押记录:', userStakes);
 
     if (!userStakes) return [];
@@ -276,35 +243,99 @@ export const solanaUtils = {
       // status: "Active"
       if (!account.isStaked) continue;
 
-      const stakedAt = account.stakeTimestamp.toNumber() * 1000;
-      const unlockedAt = stakedAt + account.durationDays * 86400 * 1000;
+      const projectId = account.projectId.toNumber();
+
+      // 获取项目配置信息
+      let projectName = ''; // 默认名称
+      try {
+        const projectConfig = await solanaProgram.account.projectConfig.fetch(account.projectConfig);
+        projectName = projectConfig.name;
+        // console.log(`项目 ${projectId} 配置:`, projectConfig);
+      } catch (error) {
+        // console.warn(`无法获取项目 ${projectId} 的配置信息`);
+        continue;
+      }
+
+      const staked_at = account.stakeTimestamp.toNumber() * 1000;
+      const unlocked_at = staked_at + account.durationDays * 86400 * 1000;
       const now = new Date().getTime();
-      const canUnstake = now >= unlockedAt;
+      const canUnstake = now >= unlocked_at;
 
       records.push({
-        user: account.user.toBase58(),
-        projectId,
+        id: account.stakeId.toNumber(),
+        user_id: account.user.toBase58(),
+        project_id: projectId,
         projectName,
-        stakeId: account.stakeId.toNumber(),
         amount: account.amount.toNumber() / Math.pow(10, 9),
         duration: account.durationDays,
-        stakedAt,
-        unlockedAt,
+        staked_at,
+        unlocked_at,
         canUnstake
       });
     }
 
-    const sortedRecords = records.sort((a, b) => b.stakedAt - a.stakedAt);
+    const sortedRecords = records.sort((a, b) => b.staked_at - a.staked_at);
     console.log('Solana 质押记录:', sortedRecords);
 
     return sortedRecords;
   },
 
+  /**获取所有项目信息 */
+  // getAllProjects: async (solanaProgram: any) => {
+  //   try {
+  //     // 获取所有项目配置
+  //     const allProjectConfigs = await solanaProgram.account.projectConfig.all();
+  //     console.log('Solana 所有项目配置:', allProjectConfigs);
+
+  //     const projects = [];
+
+  //     for (const project of allProjectConfigs) {
+  //       const projectConfig = project.account;
+  //       const projectId = projectConfig.projectId.toNumber();
+
+  //       // 获取该项目的所有质押记录
+  //       const projectFilter = {
+  //         memcmp: { offset: 8 + 32, bytes: project.publicKey.toBase58() }
+  //       };
+
+  //       const projectStakes = await solanaProgram.account.userStakeInfo.all([projectFilter]);
+  //       const activeStakes = projectStakes.filter((stake) => stake.account.isStaked);
+
+  //       // 计算总质押量
+  //       const totalStaked = activeStakes.reduce((sum, stake) => {
+  //         return sum + stake.account.amount.toNumber();
+  //       }, 0);
+
+  //       projects.push({
+  //         id: projectId,
+  //         name: projectConfig.name,
+  //         tokenMint: projectConfig.tokenMint.toBase58(),
+  //         vault: projectConfig.vault.toBase58(),
+  //         authority: projectConfig.authority.toBase58(),
+  //         feeWallet: projectConfig.feeWallet.toBase58(),
+  //         unstakeFeeBps: projectConfig.unstakeFeeBps,
+  //         emergencyUnstakeFeeBps: projectConfig.emergencyUnstakeFeeBps,
+  //         totalStaked: totalStaked / Math.pow(10, 9), // 转换为可读格式
+  //         stakeCount: activeStakes.length,
+  //         projectConfigAddress: project.publicKey.toBase58()
+  //       });
+  //     }
+
+  //     const sortedProjects = projects.sort((a, b) => a.id - b.id);
+  //     console.log('Solana 所有项目:', sortedProjects);
+
+  //     return sortedProjects;
+  //   } catch (error) {
+  //     console.error('获取所有项目信息失败:', error);
+  //     return [];
+  //   }
+  // },
+
   /**获取下一个质押ID */
-  getNextStakeId: async (solanaProgram: any) => {
+  getNextStakeId: async (solanaProgram: any, projectId: number) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
-    const { projectConfigPubkey } = await getProjectConfig(solanaProgram);
+    const { projectConfigPubkey } = await getProjectConfig(solanaProgram, projectId);
 
     const userFilter = {
       memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
@@ -331,8 +362,8 @@ export const solanaUtils = {
   },
 
   /**获取代币余额 */
-  getTokenBalance: async (solanaProgram: any, solanaConnection: any) => {
-    const { userTokenAccount } = await getProjectConfig(solanaProgram);
+  getTokenBalance: async (solanaProgram: any, solanaConnection: any, projectId: number) => {
+    const { userTokenAccount } = await getProjectConfig(solanaProgram, projectId);
 
     const tokenAccount = await solanaConnection.getTokenAccountBalance(userTokenAccount);
 
@@ -342,12 +373,12 @@ export const solanaUtils = {
   },
 
   /**质押 */
-  stake: async (solanaProgram: any, stakeId: number, stakeAmount: number, stakeDuration: number) => {
+  stake: async (solanaProgram: any, stakeId: number, stakeAmount: number, stakeDuration: number, projectId: number) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
-    const { projectConfigPubkey, vault, userTokenAccount } = await getProjectConfig(solanaProgram);
+    const { projectConfigPubkey, vault, userTokenAccount } = await getProjectConfig(solanaProgram, projectId);
 
-    console.log('质押ID:', stakeId, '数量:', stakeAmount);
+    console.log('项目ID:', projectId, '质押ID:', stakeId, '数量:', stakeAmount);
 
     const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, stakeId);
 
@@ -378,15 +409,15 @@ export const solanaUtils = {
   },
 
   /**解质押 */
-  unstake: async (solanaProgram: any, record: any) => {
+  unstake: async (solanaProgram: any, record: any, projectId: number) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
     const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount, feeWalletTokenAccount } =
-      await getProjectConfig(solanaProgram);
+      await getProjectConfig(solanaProgram, projectId);
 
-    console.log('解质押ID:', record.stakeId, '数量:', record.amount);
+    console.log('项目ID:', projectId, '解质押ID:', record.id, '数量:', record.amount);
 
-    const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, record.stakeId);
+    const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, record.id);
 
     const unstakeAccounts = {
       projectConfig: projectConfigPubkey,
@@ -404,21 +435,21 @@ export const solanaUtils = {
       JSON.stringify(unstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
     );
 
-    const tx = await solanaProgram.methods.unstake(new anchor.BN(record.stakeId)).accounts(unstakeAccounts).rpc();
+    const tx = await solanaProgram.methods.unstake(new anchor.BN(record.id)).accounts(unstakeAccounts).rpc();
 
     return tx;
   },
 
   /**紧急解质押 */
-  emergencyUnstake: async (solanaProgram: any, record: any) => {
+  emergencyUnstake: async (solanaProgram: any, record: any, projectId: number) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
     const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount, feeWalletTokenAccount } =
-      await getProjectConfig(solanaProgram);
+      await getProjectConfig(solanaProgram, projectId);
 
-    console.log('紧急解质押ID:', record.stakeId, '数量:', record.amount);
+    console.log('项目ID:', projectId, '紧急解质押ID:', record.id, '数量:', record.amount);
 
-    const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, record.stakeId);
+    const stakeInfoPda = await getStakeInfoPda(solanaProgram, userPublicKey, projectConfigPubkey, record.id);
 
     const emergencyUnstakeAccounts = {
       projectConfig: projectConfigPubkey,
@@ -437,7 +468,7 @@ export const solanaUtils = {
     );
 
     const tx = await solanaProgram.methods
-      .emergencyUnstake(new anchor.BN(record.stakeId))
+      .emergencyUnstake(new anchor.BN(record.id))
       .accounts(emergencyUnstakeAccounts)
       .rpc();
 

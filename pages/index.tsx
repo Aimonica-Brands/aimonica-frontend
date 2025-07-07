@@ -5,8 +5,8 @@ import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
 import { modal } from '@/wallet';
-import { projectData } from '@/wallet/project';
-import { evmAPI } from '@/pages/api/aim';
+import { aimAPI } from '@/pages/api/aim';
+import { ethers } from 'ethers';
 
 export default function Home() {
   const router = useRouter();
@@ -17,6 +17,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [networkId, setNetworkId] = useState('');
   const [tabIndex2, setTabIndex2] = useState(0);
+  const [projectData, setProjectData] = useState([]);
 
   const align = 'center' as const;
   const projectColumns: ColumnsType<any> = [
@@ -198,8 +199,10 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    setLevelData([projectData[1], projectData[0], projectData[2]]);
-  }, []);
+    if (projectData.length > 0) {
+      setLevelData([projectData[1], projectData[0], projectData[2]]);
+    }
+  }, [projectData]);
 
   useEffect(() => {
     if (isConnected && address && caipNetwork && chainId) {
@@ -212,17 +215,30 @@ export default function Home() {
   }, [isConnected, address, caipNetwork, chainId]);
 
   const getProjectData = async () => {
-    if (caipNetwork.chainNamespace === 'eip155') {
-      evmAPI
-        .GetProjects()
-        .then((res) => {
-          console.log('全部项目', res);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    } else if (caipNetwork.chainNamespace === 'solana') {
-    }
+    aimAPI
+      .GetProjects()
+      .then(async (res) => {
+        console.log('全部项目', res);
+
+        if (caipNetwork.chainNamespace === 'eip155') {
+          const projects = res.filter((item: any) => item.chain == 'Base');
+          const projects2 = projects.map((item: any, index: number) => {
+            return { ...item, rank: index + 1 };
+          });
+          console.log('evmProjects------------', projects2);
+          setProjectData(projects2);
+        } else if (caipNetwork.chainNamespace === 'solana') {
+          const projects = res.filter((item: any) => item.chain == 'Solana');
+          const projects2 = projects.map((item: any, index: number) => {
+            return { ...item, rank: index + 1 };
+          });
+          console.log('solanaProjects------------', projects2);
+          setProjectData(projects2);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   const handleTabClick = (network: any) => async () => {
@@ -244,7 +260,7 @@ export default function Home() {
   };
 
   const toStake = (project: any) => {
-    router.push(`/stake/${project.projectSlug}`);
+    router.push(`/stake/${project.id}`);
   };
 
   return (
@@ -336,7 +352,7 @@ export default function Home() {
 
           <div className="level-box">
             {levelData.map((item) => (
-              <div className="level-item" key={item.rank}>
+              <div className="level-item" key={item.id}>
                 <img src={`/assets/images/level-bg-${item.rank}.png`} className="bg" />
                 <img src={`/assets/images/level-${item.rank}.png`} className="level" />
                 <div className="avatar-box">
@@ -393,7 +409,7 @@ export default function Home() {
               dataSource={projectData}
               pagination={false}
               loading={loading}
-              rowKey={(record) => record.rank}
+              rowKey={(record) => record.id}
             />
           </div>
 

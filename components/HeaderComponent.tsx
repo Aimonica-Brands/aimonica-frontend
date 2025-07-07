@@ -2,7 +2,6 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { Select } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { projectData } from '@/wallet/project';
 import TwitterComponent from './TwitterComponent';
 import dynamic from 'next/dynamic';
 
@@ -39,16 +38,16 @@ export default function HeaderComponent() {
     );
   };
 
-  const [searchValue, setSearchValue] = useState(null);
-  const [searchOptions, setSearchOptions] = useState(projectData);
+  // const [searchValue, setSearchValue] = useState(null);
+  // const [searchOptions, setSearchOptions] = useState(projectData);
 
-  const handleSearch = (input: string) => {
-    if (!input) {
-      setSearchOptions(projectData);
-    } else {
-      setSearchOptions(projectData.filter((item) => item.name.toLowerCase().includes(input.toLowerCase())));
-    }
-  };
+  // const handleSearch = (input: string) => {
+  //   if (!input) {
+  //     setSearchOptions(projectData);
+  //   } else {
+  //     setSearchOptions(projectData.filter((item) => item.name.toLowerCase().includes(input.toLowerCase())));
+  //   }
+  // };
 
   const toPage = (path: string) => {
     router.push(path).then(() => {
@@ -70,7 +69,7 @@ export default function HeaderComponent() {
         {getMenu()}
       </div>
       <div className="header-right">
-        <Select
+        {/* <Select
           className="search-input"
           placeholder="Search For Tokens/Projects"
           showSearch
@@ -100,7 +99,7 @@ export default function HeaderComponent() {
               </div>
             )
           }))}
-        />
+        /> */}
 
         <TwitterComponent />
 

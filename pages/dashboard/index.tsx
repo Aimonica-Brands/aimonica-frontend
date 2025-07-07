@@ -9,6 +9,8 @@ import { evmUtils, solanaUtils, getRewardPoints } from '@/wallet/utils';
 import { usePageContext } from '@/context';
 import { handleContractError } from '@/wallet/contracts';
 import utils from '@/utils';
+import { aimAPI } from '@/pages/api/aim';
+import { ethers } from 'ethers';
 
 export default function Dashboard() {
   const { message } = App.useApp();
@@ -75,6 +77,10 @@ export default function Dashboard() {
   const [totalProject, setTotalProject] = useState(0);
   const [isUnstakeModalOpen, setIsUnstakeModalOpen] = useState(false);
   const [isEmergencyUnstakeModalOpen, setIsEmergencyUnstakeModalOpen] = useState(false);
+  const [stakeRecords, setStakeRecords] = useState([]);
+  const [unstakeLoading, setUnstakeLoading] = useState(false);
+  const [stakeRecordsLoading, setStakeRecordsLoading] = useState(false);
+  const [unstakeRecord, setUnstakeRecord] = useState(null);
 
   const stakeColumns: any[] = [
     {
@@ -83,7 +89,7 @@ export default function Dashboard() {
     },
     {
       title: 'Stake ID',
-      dataIndex: 'stakeId'
+      dataIndex: 'id'
     },
     {
       title: 'Amount',
@@ -97,12 +103,12 @@ export default function Dashboard() {
     },
     {
       title: 'Staked Time',
-      dataIndex: 'stakedAt',
+      dataIndex: 'staked_at',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Unlocked Time',
-      dataIndex: 'unlockedAt',
+      dataIndex: 'unlocked_at',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
@@ -110,9 +116,6 @@ export default function Dashboard() {
       dataIndex: 'status',
       render: (value: any, record: any) => {
         return <Tag color="green">Active</Tag>;
-        // if (record.status == 0) return <Tag color="green">Active</Tag>;
-        // if (record.status == 1) return <Tag color="blue">Unstaked</Tag>;
-        // if (record.status == 2) return <Tag color="red">Emergency</Tag>;
       }
     },
     {
@@ -176,10 +179,6 @@ export default function Dashboard() {
       )
     }
   ];
-  const [stakeRecords, setStakeRecords] = useState([]);
-  const [unstakeLoading, setUnstakeLoading] = useState(false);
-  const [stakeRecordsLoading, setStakeRecordsLoading] = useState(false);
-  const [unstakeRecord, setUnstakeRecord] = useState(null);
 
   useEffect(() => {
     const initData = async () => {
@@ -214,7 +213,73 @@ export default function Dashboard() {
     }
   }, [stakeRecords]);
 
-  const getStakeRecords = () => {
+  const getStakeRecords = async () => {
+    // 获取所有项目信息
+    // const allProjects = await solanaUtils.getAllProjects(solanaProgram);
+    // console.log('所有项目:', allProjects);
+    // if (stakeRecordsLoading) return;
+    // setStakeRecordsLoading(true);
+    // setStakeRecords([]);
+
+    // evmAPI
+    //   .GetPointsDashboard(address)
+    //   .then((res) => {
+    //     console.log('GetPointsDashboard------------', res);
+    //     setTotalPoints(Number(res.totalScore));
+
+    //     const records = res.stakes.map((stake) => {
+    //       // if (stake.status != 'Active') return;
+
+    //       const projectName = stake.chain == 'Solana' ? stake.project_id : ethers.decodeBytes32String(stake.project_id);
+    //       const duration = stake.chain == 'Solana' ? Number(stake.duration) : Number(stake.duration) / 86400;
+
+    //       const amount = Number(ethers.formatEther(stake.amount));
+    //       const points = amount * getRewardPoints(duration);
+
+    //       return {
+    //         ...stake,
+    //         // id: '9',
+    //         // user_id: '0x6716eec26c82a8a025cef05d301e0af8cb8da33d',
+    //         // project_id: '0x64656d6f00000000000000000000000000000000000000000000000000000000',
+    //         projectName,
+    //         // chain: 'Base',
+    //         // amount: '150000000000000000000',
+    //         amount,
+    //         // staked_at: '2025-07-03T09:17:21.000Z',
+    //         // duration: 86400,
+    //         duration,
+    //         // unlocked_at: '2025-07-04T09:17:21.000Z',
+    //         // status: 'Active',
+    //         // transaction_hash: '0x0c81651036bd1675d37b3c83cebf664321f04ed668a00721848f3936d03eee3f',
+    //         // processed: true,
+    //         // created_at: '2025-07-05T16:45:00.028Z',
+    //         points
+    //       };
+    //     });
+
+    //     setStakeRecords(records);
+    //   })
+    //   .catch((error) => {
+    //     console.error(error);
+    //     setStakeRecords([]);
+    //   })
+    //   .finally(() => {
+    //     setStakeRecordsLoading(false);
+    //   });
+
+    // evmAPI.GetPointsLeaderboard().then((res) => {
+    //   const { projects, users } = res;
+    //   console.log('projects------------', projects);
+    //   console.log('users------------', users);
+    //   const evmTotalScore = projects.filter((item: any) => item.chain == 'Base');
+    //   const solanaTotalScore = projects.filter((item: any) => item.chain == 'Solana');
+    //   const userTotalScore = users.find((item: any) => item.user_id.toLowerCase() == address.toLowerCase());
+
+    //   console.log('evmTotalScore------------', evmTotalScore);
+    //   console.log('solanaTotalScore------------', solanaTotalScore);
+    //   console.log('userTotalScore------------', userTotalScore);
+    // });
+
     if (caipNetwork.chainNamespace === 'eip155') {
       if (evmStakingContract) {
         getEvmStakeRecords();
@@ -226,7 +291,7 @@ export default function Dashboard() {
     }
   };
 
-  const getEvmStakeRecords = async (stakeId: number = null, stakeAmount: number = null) => {
+  const getEvmStakeRecords = async (id: number = null, stakeAmount: number = null) => {
     setStakeRecordsLoading(true);
     try {
       const maxRetries = 10;
@@ -249,7 +314,7 @@ export default function Dashboard() {
         }
       };
 
-      if (stakeId && stakeAmount) {
+      if (id && stakeAmount) {
         const pollInterval = 5000;
         let found = false;
         while (retryCount < maxRetries && !found) {
@@ -260,7 +325,7 @@ export default function Dashboard() {
             continue;
           }
 
-          const existingStake = currentRecords.find((stake) => stake.stakeId === stakeId);
+          const existingStake = currentRecords.find((stake) => stake.id === id);
           if (!existingStake) {
             console.log('✅ 新EVM质押记录已确认: 原质押记录已移除');
             setStakeRecords(currentRecords);
@@ -274,7 +339,7 @@ export default function Dashboard() {
           console.log('⚠️ 达到最大重试次数，未获取到新EVM数据');
         }
       } else {
-        // 没有 stakeId 或 stakeAmount，直接查一次
+        // 没有 id 或 stakeAmount，直接查一次
         const currentRecords = await fetchStakes();
         if (currentRecords) {
           setStakeRecords(currentRecords);
@@ -288,7 +353,7 @@ export default function Dashboard() {
     }
   };
 
-  const getSolanaStakeRecords = async (stakeId: number = null, stakeAmount: number = null) => {
+  const getSolanaStakeRecords = async (id: number = null, stakeAmount: number = null) => {
     setStakeRecordsLoading(true);
     try {
       const maxRetries = 10;
@@ -311,7 +376,7 @@ export default function Dashboard() {
         }
       };
 
-      if (stakeId && stakeAmount) {
+      if (id && stakeAmount) {
         const pollInterval = 5000;
         let found = false;
         while (retryCount < maxRetries && !found) {
@@ -322,7 +387,7 @@ export default function Dashboard() {
             continue;
           }
 
-          const existingStake = currentRecords.find((stake) => stake.stakeId === stakeId);
+          const existingStake = currentRecords.find((stake) => stake.id === id);
           if (!existingStake) {
             console.log('✅ 新质押记录已确认: 原质押记录已移除');
             setStakeRecords(currentRecords);
@@ -336,7 +401,7 @@ export default function Dashboard() {
           console.log('⚠️ 达到最大重试次数，未获取到新数据');
         }
       } else {
-        // 没有 stakeId 或 stakeAmount，直接查一次
+        // 没有 id 或 stakeAmount，直接查一次
         const currentRecords = await fetchStakes();
         if (currentRecords) {
           setStakeRecords(currentRecords);
@@ -363,7 +428,7 @@ export default function Dashboard() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗解质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
-          getEvmStakeRecords(record.stakeId, record.amount);
+          getEvmStakeRecords(record.id, record.amount);
         })
         .catch((error) => {
           handleContractError(error);
@@ -374,14 +439,14 @@ export default function Dashboard() {
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
-        .unstake(solanaProgram, record)
+        .unstake(solanaProgram, record, Number(record.project_id))
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
             getContractConfig(chainId).cluster
           }`;
           console.log('🔗解质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
-          getSolanaStakeRecords(record.stakeId, record.amount);
+          getSolanaStakeRecords(record.id, record.amount);
         })
         .catch((error) => {
           handleContractError(error);
@@ -406,7 +471,7 @@ export default function Dashboard() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗紧急解质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
-          getEvmStakeRecords(record.stakeId, record.amount);
+          getEvmStakeRecords(record.id, record.amount);
         })
         .catch((error) => {
           handleContractError(error);
@@ -417,14 +482,14 @@ export default function Dashboard() {
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
-        .emergencyUnstake(solanaProgram, record)
+        .emergencyUnstake(solanaProgram, record, Number(record.project_id))
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
             getContractConfig(chainId).cluster
           }`;
           console.log('🔗紧急解质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
-          getSolanaStakeRecords(record.stakeId, record.amount);
+          getSolanaStakeRecords(record.id, record.amount);
         })
         .catch((error) => {
           handleContractError(error);
@@ -540,7 +605,7 @@ export default function Dashboard() {
             dataSource={stakeRecords}
             pagination={false}
             loading={stakeRecordsLoading}
-            rowKey={(record) => `${record.projectId}-${record.stakeId}`}
+            rowKey={(record) => `${record.project_id}-${record.id}`}
           />
         </div>
 

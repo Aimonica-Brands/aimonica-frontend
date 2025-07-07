@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // AIM API 统一管理
-export const evmAPI = {
+export const aimAPI = {
   GetPointsLeaderboard: async () => {
     const res = await axios.get('/api/aim/points/leaderboard');
     return res.data;
