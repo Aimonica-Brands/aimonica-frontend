@@ -6,11 +6,12 @@ import { getContractConfig } from '@/wallet';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
 import { durationDays, evmUtils, solanaUtils, getRewardPoints } from '@/wallet/utils';
-import { handleContractError } from '@/wallet/contracts';
+import { handleContractError, initEVMTokenContract, initEVMStakingContract } from '@/wallet/contracts';
 import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
 import { aimAPI } from '@/pages/api/aim';
 import { ethers } from 'ethers';
+import StakeTokenABI from '@/wallet/abi/BKIBSHI.json';
 
 export default function Stake() {
   const { message } = App.useApp();
@@ -19,7 +20,8 @@ export default function Stake() {
 
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
-  const { evmTokenContract, evmStakingContract, solanaProgram, solanaConnection } = usePageContext();
+  const { evmTokenContract, evmStakingContract, solanaProgram, solanaConnection, projectsData, setEvmTokenContract } =
+    usePageContext();
 
   const [projectInfo, setProjectInfo] = useState<any>({});
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,6 @@ export default function Stake() {
   const [engagements, setEngagements] = useState(0);
   const [smartFollowers, setSmartFollowers] = useState(0);
   const [topTweets, setTopTweets] = useState([]);
-  const [project, setProject] = useState<any>({});
 
   const infoItems = [
     {
@@ -75,44 +76,40 @@ export default function Stake() {
   };
 
   useEffect(() => {
-    if (project && project.name) {
+    if (projectInfo && projectInfo.name) {
       getSearchTweets();
       getProjectMindshareGraph();
       getMetricsGraph();
       getProjectDetails();
     }
-  }, [project]);
+  }, [projectInfo]);
+
+  useEffect(() => {
+    if (!projectId || !projectsData) {
+      return;
+    }
+    getProjectData();
+  }, [projectId, projectsData]);
 
   useEffect(() => {
     if (isConnected && address && caipNetwork && chainId) {
       const contractConfig = getContractConfig(chainId);
+
       if (caipNetwork.chainNamespace === 'eip155') {
+        setPoolAddress(contractConfig.AimStaking);
+        const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
+        setPoolLink(link);
         if (evmStakingContract && evmTokenContract) {
-          setPoolAddress(contractConfig.AimStaking);
-          const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
-          setPoolLink(link);
           getEvmTokenBalance();
         }
       } else if (caipNetwork.chainNamespace === 'solana') {
+        setPoolAddress(contractConfig.programId);
+        const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
+        setPoolLink(link);
         if (solanaProgram && solanaConnection) {
-          setPoolAddress(contractConfig.programId);
-          const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
-          setPoolLink(link);
           getSolTokenBalance();
         }
       }
-      getProjectData();
-    } else {
-      setIsApproved(false);
-      setTokenBalance(0);
-      setTokenWorth(0);
-      setAmount('');
-      setDurationDay(7);
-      setExpectedPoints(0);
-      setTotalUser(0);
-      setTotalTVL(0);
-      setPoolAddress('');
-      setPoolLink('');
     }
   }, [
     isConnected,
@@ -134,105 +131,20 @@ export default function Stake() {
       .GetProjects()
       .then(async (res) => {
         console.log('全部项目', res);
-        const evmProjects = res.filter((item: any) => item.chain == 'Base');
-        const solanaProjects = res.filter((item: any) => item.chain == 'Solana');
+
+        const project = projectsData.find((item: any) => item.id == projectId);
+        console.log('project------------', project);
+        setProjectInfo(project);
 
         if (caipNetwork.chainNamespace === 'eip155') {
-          console.log('evmProjects------------', evmProjects);
-          for (const item of evmProjects) {
-            const projectName = ethers.decodeBytes32String(item.id);
-            console.log('projectName------------', projectName);
-          }
+          const contract = await initEVMTokenContract(chainId, project.stakingToken, StakeTokenABI);
+          console.log(`✅ 质押代币合约初始化成功`, contract);
+          setEvmTokenContract(contract);
         } else if (caipNetwork.chainNamespace === 'solana') {
-          console.log('solanaProjects------------', solanaProjects);
-          const project = solanaProjects.find((item: any) => item.id == projectId);
-          console.log('project------------', project);
-          setProject(project);
         }
       })
       .catch((error) => {
         console.error(error);
-      });
-  };
-
-  const getMetricsGraph = () => {
-    cookieAPI
-      .GetMetricsGraph('0', '1', project.name)
-      .then((res) => {
-        if (res.success && res.ok) {
-          // console.log('GetMetricsGraph Engagements', res.ok);
-          const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
-          console.log('Engagements', total);
-          setEngagements(total);
-        }
-      })
-      .catch((error) => {
-        console.log('Engagements', error);
-      });
-    cookieAPI
-      .GetMetricsGraph('1', '1', project.name)
-      .then((res) => {
-        if (res.success && res.ok) {
-          // console.log('GetMetricsGraph Impressions', res.ok);
-          const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
-          console.log('Impressions', total);
-          setImpressions(total);
-        }
-      })
-      .catch((error) => {
-        console.log('Impressions', error);
-      });
-  };
-
-  const getProjectMindshareGraph = () => {
-    cookieAPI
-      .GetProjectMindshareGraph(project.name)
-      .then((res) => {
-        if (res.success && res.ok) {
-          // console.log('GetProjectMindshareGraph Mindshare', res.ok);
-          const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
-          console.log('Mindshare', total);
-          setMindshare(total);
-        }
-      })
-      .catch((error) => {
-        console.log('GetProjectMindshareGraph', error);
-      });
-  };
-
-  const getProjectDetails = async () => {
-    try {
-      const projectDetailsRes = await cookieAPI.GetProjectDetails(project.name);
-      if (projectDetailsRes.success && projectDetailsRes.ok) {
-        // console.log('GetProjectDetails', projectDetailsRes.ok);
-        const username = projectDetailsRes.ok.twitterUsernames[0];
-        if (username) {
-          const smartFollowersRes = await cookieAPI.GetAccountSmartFollowers(username);
-          if (smartFollowersRes.success && smartFollowersRes.ok) {
-            // console.log('GetAccountSmartFollowers', smartFollowersRes.ok);
-            const total = smartFollowersRes.ok.totalCount;
-            console.log('Smart Followers', total);
-            setSmartFollowers(total);
-          }
-        }
-      }
-    } catch (error) {
-      console.log('GetProjectDetails', error);
-    }
-  };
-
-  const getSearchTweets = async () => {
-    cookieAPI
-      .SearchTweets(project.name, project.name)
-      .then((res) => {
-        if (res.success && res.ok) {
-          // console.log('SearchTweets', res.ok);
-          const tweets = res.ok.entries.slice(0, 5);
-          setTopTweets(tweets);
-        }
-      })
-      .catch((error) => {
-        console.log('SearchTweets', error);
       });
   };
 
@@ -338,6 +250,86 @@ export default function Stake() {
     }
   };
 
+  const getMetricsGraph = () => {
+    cookieAPI
+      .GetMetricsGraph('0', '1', projectInfo.name)
+      .then((res) => {
+        if (res.success && res.ok) {
+          // console.log('GetMetricsGraph Engagements', res.ok);
+          const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
+          console.log('Engagements', total);
+          setEngagements(total);
+        }
+      })
+      .catch((error) => {
+        console.log('Engagements', error);
+      });
+    cookieAPI
+      .GetMetricsGraph('1', '1', projectInfo.name)
+      .then((res) => {
+        if (res.success && res.ok) {
+          // console.log('GetMetricsGraph Impressions', res.ok);
+          const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
+          console.log('Impressions', total);
+          setImpressions(total);
+        }
+      })
+      .catch((error) => {
+        console.log('Impressions', error);
+      });
+  };
+
+  const getProjectMindshareGraph = () => {
+    cookieAPI
+      .GetProjectMindshareGraph(projectInfo.name)
+      .then((res) => {
+        if (res.success && res.ok) {
+          // console.log('GetProjectMindshareGraph Mindshare', res.ok);
+          const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
+          console.log('Mindshare', total);
+          setMindshare(total);
+        }
+      })
+      .catch((error) => {
+        console.log('GetProjectMindshareGraph', error);
+      });
+  };
+
+  const getProjectDetails = async () => {
+    try {
+      const projectDetailsRes = await cookieAPI.GetProjectDetails(projectInfo.name);
+      if (projectDetailsRes.success && projectDetailsRes.ok) {
+        // console.log('GetProjectDetails', projectDetailsRes.ok);
+        const username = projectDetailsRes.ok.twitterUsernames[0];
+        if (username) {
+          const smartFollowersRes = await cookieAPI.GetAccountSmartFollowers(username);
+          if (smartFollowersRes.success && smartFollowersRes.ok) {
+            // console.log('GetAccountSmartFollowers', smartFollowersRes.ok);
+            const total = smartFollowersRes.ok.totalCount;
+            console.log('Smart Followers', total);
+            setSmartFollowers(total);
+          }
+        }
+      }
+    } catch (error) {
+      console.log('GetProjectDetails', error);
+    }
+  };
+
+  const getSearchTweets = async () => {
+    cookieAPI
+      .SearchTweets(projectInfo.name, projectInfo.name)
+      .then((res) => {
+        if (res.success && res.ok) {
+          // console.log('SearchTweets', res.ok);
+          const tweets = res.ok.entries.slice(0, 5);
+          setTopTweets(tweets);
+        }
+      })
+      .catch((error) => {
+        console.log('SearchTweets', error);
+      });
+  };
   return (
     <div className="stake-page">
       <img src="/assets/images/img-37.png" alt="" className="img-37" />
@@ -360,25 +352,27 @@ export default function Stake() {
             <div className="box2">
               <div className="avatar-box">
                 <div className="avatar">
-                  <img src={projectInfo?.avatar} alt="" />
-                  <span>{projectInfo?.name}</span>
+                  <img src={projectInfo?.image} alt="" />
+                  <span>{projectInfo?.projectName}</span>
                 </div>
                 <div className="icon-box">
-                  <a href="">
+                  <a href={projectInfo.xLink}>
                     <img src="/assets/images/icon-twitter-2.png" alt="" />
                   </a>
-                  <a href="">
+                  <a href={projectInfo.twitterLink}>
                     <img src="/assets/images/icon-telegram-2.png" alt="" />
                   </a>
-                  <a href="">
-                    <img src="/assets/images/icon-discord-2.png" alt="" />
-                  </a>
-                  <a href="">
-                    <img src="/assets/images/icon-dexscreener-2.png" alt="" />
-                  </a>
+                  {/* <a href="https://x.com/AimonicaBrands">
+                      <img src="/assets/images/icon-discord-2.png" alt="" />
+                      https://x.com/AimonicaBrands
+                    </a>
+                    <a href="https://x.com/AimonicaBrands">
+                      <img src="/assets/images/icon-medium-2.png" alt="" />
+                      https://x.com/AimonicaBrands
+                    </a> */}
                 </div>
               </div>
-              <div className="text1">Project Introduction Copywriting</div>
+              <div className="text1">{projectInfo.description?.slice(0, 100)}...</div>
               <div className="text2">
                 <div>
                   <span>Users</span>
@@ -415,8 +409,8 @@ export default function Stake() {
               </div>
               <div className="avatar-box-box">
                 <div className="avatar-box">
-                  <img src="/assets/images/avatar.png" alt="" />
-                  <span>{getContractConfig(chainId)?.stakeTokenName || ''}</span>
+                  <img src={projectInfo?.image} alt="" />
+                  <span>{projectInfo?.projectName}</span>
                 </div>
                 <div className="number-box">
                   <div className="number">{utils.formatNumber(tokenBalance)}</div>

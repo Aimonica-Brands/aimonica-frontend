@@ -43,9 +43,8 @@ export const modal = createAppKit({
   }
 });
 
-import StakeTokenABI from '@/wallet/abi/BKIBSHI.json';
 import AimStakingABI from '@/wallet/abi/AimStaking.json';
-import aim_staking_program from '@/wallet/idl/aim_staking_program.json';
+import aim_staking_program from '@/wallet/idl/aim_staking_program_v2.json';
 
 /**合约配置 */
 export const getContractConfig = (chainId: any = ''): any => {
@@ -57,9 +56,7 @@ export const getContractConfig = (chainId: any = ''): any => {
         {
           network: base,
           stakeTokenName: 'BKIBSHI',
-          StakeToken: '0x3d1c275aa98d45c99258a51be98b08fc8572c074',
           AimStaking: '0x9EdA594952EC0E0b99E2095756290BFf2a6f472D',
-          StakeTokenABI,
           AimStakingABI
         },
         {

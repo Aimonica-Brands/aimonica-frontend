@@ -229,11 +229,12 @@
 
     .level-box {
       width: 90vw;
+      height: 5rem;
       margin: 0.5rem auto;
       .level-item {
         width: 2rem;
         height: 4.7rem;
-        &:nth-child(2) {
+        &:nth-child(1) {
           transform: scale(1.1);
         }
         .level {

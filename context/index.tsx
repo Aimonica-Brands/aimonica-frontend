@@ -44,6 +44,10 @@ interface PageContextType {
   setIsLoading: (loading: boolean) => void;
   error: string | null;
   setError: (error: string | null) => void;
+
+  // 项目数据
+  projectsData: any[];
+  setProjectsData: (data: any[]) => void;
 }
 
 const Context = createContext<PageContextType | undefined>(undefined);
@@ -71,6 +75,7 @@ export function PageProvider({ children }: PageProviderProps) {
   const [currentNetworkType, setCurrentNetworkType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [projectsData, setProjectsData] = useState([]);
 
   const contextValue: PageContextType = {
     walletAddress,
@@ -98,7 +103,9 @@ export function PageProvider({ children }: PageProviderProps) {
     isLoading,
     setIsLoading,
     error,
-    setError
+    setError,
+    projectsData,
+    setProjectsData
   };
 
   return <Context.Provider value={contextValue}>{children}</Context.Provider>;

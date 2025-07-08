@@ -506,19 +506,32 @@ footer {
 
   .level-box {
     width: 14rem;
+    height: 4.5rem;
     margin: 1rem auto;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
+    position: relative;
     .level-item {
       width: 4.2rem;
       height: 4.2rem;
-      position: relative;
       border-radius: 0.2rem;
       box-shadow: 0px 10px 8.4px 0px #00000040;
-      &:nth-child(2) {
+      &:nth-child(1) {
         transform: scale(1.2);
         transform-origin: center bottom;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto;
+      }
+      &:nth-child(2) {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+      }
+      &:nth-child(3) {
+        position: absolute;
+        right: 0;
+        bottom: 0;
       }
       .bg {
         width: 100%;

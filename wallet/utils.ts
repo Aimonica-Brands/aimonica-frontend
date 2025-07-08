@@ -24,6 +24,38 @@ export const getRewardPoints = (duration: number) => {
 const EVM_PROJECT_CONFIG = '0x64656d6f00000000000000000000000000000000000000000000000000000000';
 
 export const evmUtils = {
+  /**获取项目信息 */
+  getProjects: async () => {
+    const endpoint = 'https://gateway.thegraph.com/api/subgraphs/id/2TCfqqmAFv4LpnJRVxjJ192C3sHJoCxu29rPTxgooch7';
+    const query = `{
+      projects(first: 1000, orderBy: createdAt, orderDirection: asc) {
+        id
+        stakingToken
+        registered
+        stakes {
+          id
+        }
+        totalStaked
+        createdAt
+      }
+      users(first: 1000) {
+        id
+        stakes {
+          id
+        }
+        totalStaked
+        activeStakeCount
+      }
+    }`;
+    const headers = {
+      Authorization: 'Bearer 3e2bce3f640324fa2d38b5c73d3984c3'
+    };
+
+    const data = await request(endpoint, query, {}, headers);
+    console.log('EVM 项目记录:', data);
+    return data;
+  },
+
   /**获取质押记录 */
   getStakeRecords: async (address: string) => {
     const query = gql`

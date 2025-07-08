@@ -4,12 +4,17 @@ import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
+import { usePageContext } from '@/context';
 import { modal } from '@/wallet';
 import { aimAPI } from '@/pages/api/aim';
 import { ethers } from 'ethers';
+import { evmUtils } from '@/wallet/utils';
+import { coingeckoAPI } from '@/pages/api/coingecko';
+import utils from '@/utils';
 
 export default function Home() {
   const router = useRouter();
+  const { evmStakingContract, solanaProgram, solanaConnection, projectsData, setProjectsData } = usePageContext();
   const { isConnected, address } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
   const [levelData, setLevelData] = useState([]);
@@ -17,7 +22,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [networkId, setNetworkId] = useState('');
   const [tabIndex2, setTabIndex2] = useState(0);
-  const [projectData, setProjectData] = useState([]);
 
   const align = 'center' as const;
   const projectColumns: ColumnsType<any> = [
@@ -44,37 +48,37 @@ export default function Home() {
                 <div className="project-popover">
                   <div className="title">
                     <div className="name">
-                      <img src={record.avatar} alt="" />
-                      <span>{record.name}</span>
+                      <img src={record.image} alt="" />
+                      <span>{record.projectName}</span>
                     </div>
-                    <div className="number">$ 0.0042370</div>
+                    <div className="number">$ {record.coinPriceUsd}</div>
                   </div>
                   <div className="info">
                     <div className="info-title">
                       <img src="/assets/images/img-18.png" alt="" />
                       <span>Project Introduction</span>
                     </div>
-                    <div className="info-text">The first AI agent and meme focused waifu investor</div>
+                    <div className="info-text">{record.description?.slice(0, 100)}...</div>
                     <div className="info-title">
                       <img src="/assets/images/img-19.png" alt="" />
                       <span>Social Media</span>
                     </div>
-                    <a href="https://x.com/AimonicaBrands">
+                    <a href={record.xLink}>
                       <img src="/assets/images/icon-twitter-2.png" alt="" />
-                      https://x.com/AimonicaBrands
+                      {record.xLink?.slice(0, 30)}...
                     </a>
-                    <a href="https://x.com/AimonicaBrands">
+                    <a href={record.twitterLink}>
                       <img src="/assets/images/icon-telegram-2.png" alt="" />
-                      https://x.com/AimonicaBrands
+                      {record.twitterLink?.slice(0, 30)}...
                     </a>
-                    <a href="https://x.com/AimonicaBrands">
+                    {/* <a href="https://x.com/AimonicaBrands">
                       <img src="/assets/images/icon-discord-2.png" alt="" />
                       https://x.com/AimonicaBrands
                     </a>
                     <a href="https://x.com/AimonicaBrands">
                       <img src="/assets/images/icon-medium-2.png" alt="" />
                       https://x.com/AimonicaBrands
-                    </a>
+                    </a> */}
                   </div>
                 </div>
               );
@@ -82,8 +86,8 @@ export default function Home() {
             arrow={false}>
             <div className="project">
               <div>
-                <img src={record.avatar} alt="" />
-                <span>{record.name}</span>
+                <img src={record.image} alt="" />
+                <span>{record.projectName}</span>
               </div>
               <img src="/assets/images/fire.svg" alt="" />
             </div>
@@ -97,7 +101,7 @@ export default function Home() {
       align,
       width: 80,
       render: (value: any, record: any) => {
-        return <div className="rank">100M</div>;
+        return <div className="rank">{utils.formatNumber(record.totalStaked)}</div>;
       }
     },
     {
@@ -106,7 +110,7 @@ export default function Home() {
       align,
       width: 80,
       render: (value: any, record: any) => {
-        return <div className="rank">100</div>;
+        return <div className="rank">{utils.formatNumber(record.users)}</div>;
       }
     },
     {
@@ -120,7 +124,7 @@ export default function Home() {
             <div className="s-img">
               <img src="/assets/images/img-3.png" alt="" />
             </div>
-            <div className="s-text">1321546521</div>
+            <div className="s-text">{utils.formatNumber(record.points)}</div>
           </div>
         );
       }
@@ -136,7 +140,7 @@ export default function Home() {
             <div className="s-img">
               <img src="/assets/images/img-4.png" alt="" />
             </div>
-            <div className="s-text">$ 1321546521</div>
+            <div className="s-text">$ {utils.formatNumber(record.tvl)}</div>
           </div>
         );
       }
@@ -152,7 +156,7 @@ export default function Home() {
             <div className="s-img">
               <img src="/assets/images/img-5.png" alt="" />
             </div>
-            <div className="s-text">Points 7.5x AIM</div>
+            <div className="s-text">Points -x AIM</div>
           </div>
         );
       }
@@ -199,10 +203,11 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    if (projectData.length > 0) {
-      setLevelData([projectData[1], projectData[0], projectData[2]]);
+    console.log('projectsData', projectsData);
+    if (projectsData.length > 0) {
+      setLevelData(projectsData.slice(0, 3));
     }
-  }, [projectData]);
+  }, [projectsData]);
 
   useEffect(() => {
     if (isConnected && address && caipNetwork && chainId) {
@@ -212,33 +217,150 @@ export default function Home() {
     } else {
       setNetworkId('');
     }
-  }, [isConnected, address, caipNetwork, chainId]);
+  }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram, solanaConnection]);
+
+  // const getProjectData = async () => {
+  //   aimAPI
+  //     .GetProjects()
+  //     .then(async (res) => {
+  //       console.log('全部项目', res);
+
+  //       if (caipNetwork.chainNamespace === 'eip155') {
+  //         const projects = res.filter((item: any) => item.chain == 'Base');
+  //         const projects2 = projects.map((item: any, index: number) => {
+  //           return { ...item, rank: index + 1 };
+  //         });
+  //         console.log('evmProjects------------', projects2);
+  //         setProjectData(projects2);
+  //       } else if (caipNetwork.chainNamespace === 'solana') {
+  //         const projects = res.filter((item: any) => item.chain == 'Solana');
+  //         const projects2 = projects.map((item: any, index: number) => {
+  //           return { ...item, rank: index + 1 };
+  //         });
+  //         console.log('solanaProjects------------', projects2);
+  //         setProjectData(projects2);
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error(error);
+  //     });
+  // };
 
   const getProjectData = async () => {
-    aimAPI
-      .GetProjects()
-      .then(async (res) => {
-        console.log('全部项目', res);
+    if (caipNetwork.chainNamespace === 'eip155') {
+      if (evmStakingContract) {
+        getEVMProjects();
+      }
+    } else if (caipNetwork.chainNamespace === 'solana') {
+      if (solanaProgram && solanaConnection) {
+        getSolanaProjects();
+      }
+    }
+  };
 
-        if (caipNetwork.chainNamespace === 'eip155') {
-          const projects = res.filter((item: any) => item.chain == 'Base');
-          const projects2 = projects.map((item: any, index: number) => {
-            return { ...item, rank: index + 1 };
-          });
-          console.log('evmProjects------------', projects2);
-          setProjectData(projects2);
-        } else if (caipNetwork.chainNamespace === 'solana') {
-          const projects = res.filter((item: any) => item.chain == 'Solana');
-          const projects2 = projects.map((item: any, index: number) => {
-            return { ...item, rank: index + 1 };
-          });
-          console.log('solanaProjects------------', projects2);
-          setProjectData(projects2);
+  const getSolanaProjects = async () => {
+    if (loading) return;
+    setLoading(true);
+    setProjectsData([]);
+    setLoading(false);
+  };
+
+  const getEVMProjects = async () => {
+    if (loading) return;
+    setLoading(true);
+    setProjectsData([]);
+
+    try {
+      const projectsRes: any = await evmUtils.getProjects();
+
+      const projects = projectsRes.projects.filter((item: any) => item.registered);
+      const users = projectsRes.users;
+
+      const points_leaderboard = await aimAPI.GetPointsLeaderboard();
+      console.log('points_leaderboard', points_leaderboard);
+      const points_projects = await aimAPI.GetProjects();
+      console.log('points_projects', points_projects);
+
+      // 使用函数式更新来确保状态更新的正确性
+      const updateProjectData = (newProject: any) => {
+        const existingIndex = projectsData.findIndex((item) => item.id === newProject.id);
+        if (existingIndex >= 0) {
+          // 如果存在，更新该项目
+          const updatedData = [...projectsData];
+          updatedData[existingIndex] = newProject;
+          setProjectsData(updatedData);
+        } else {
+          // 如果不存在，添加到列表开头
+          setProjectsData([newProject, ...projectsData]);
         }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      };
+
+      for (let index = 0; index < projects.length; index++) {
+        const project = projects[index];
+
+        const projectName = ethers.decodeBytes32String(project.id);
+        const totalStaked = ethers.formatEther(project.totalStaked);
+
+        const total_score = points_leaderboard.projects.find((item: any) => item.id === project.id);
+        console.log('total_score', total_score);
+        const total_staked = points_projects.find((item: any) => item.id === project.id);
+        console.log('total_staked', total_staked);
+
+        const baseProject = {
+          index,
+          id: project.id,
+          projectName,
+          stakingToken: project.stakingToken,
+          totalStaked: totalStaked,
+          createdAt: project.createdAt,
+          staked: total_staked?.total_staked || 0,
+          points: total_score?.total_score || 0
+        };
+
+        // console.log('baseProject', baseProject);
+
+        try {
+          const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
+          // console.log('coinDetailsRes', coinDetailsRes);
+
+          if (coinDetailsRes) {
+            const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
+
+            // console.log(projectName, coinPrice);
+            const coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
+
+            const tvl = Number(totalStaked) * coinPriceUsd;
+
+            const xLink = coinDetailsRes.links.homepage[0];
+            const twitterLink = `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`;
+
+            const newProject = {
+              ...baseProject,
+              rank: coinDetailsRes.market_cap_rank,
+              platformId: coinDetailsRes.asset_platform_id,
+              contractAddress: coinDetailsRes.contract_address,
+              description: coinDetailsRes.description.en,
+              image: coinDetailsRes.image.small,
+              xLink,
+              twitterLink,
+              coinPriceUsd,
+              tvl
+            };
+            console.log('newProject', newProject);
+
+            // 更新为增强后的项目信息
+            updateProjectData(newProject);
+          }
+        } catch (coinError) {
+          console.error(`CoinGecko API error for ${projectName}:`, coinError);
+          // 保持基础项目信息不变
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTabClick = (network: any) => async () => {
@@ -278,14 +400,14 @@ export default function Home() {
             her goal.
           </div>
         </div>
-        <div className="text2">
+        {/* <div className="text2">
           <div>Total Stakers</div>
           <div>7,766</div>
         </div>
         <div className="text3">
           <div>Total TVL</div>
           <div>7,766</div>
-        </div>
+        </div> */}
       </div>
 
       <div className="rolling-box rolling-box-1">
@@ -351,62 +473,63 @@ export default function Home() {
           </div>
 
           <div className="level-box">
-            {levelData.map((item) => (
-              <div className="level-item" key={item.id}>
-                <img src={`/assets/images/level-bg-${item.rank}.png`} className="bg" />
-                <img src={`/assets/images/level-${item.rank}.png`} className="level" />
-                <div className="avatar-box">
-                  <div className="avatar">
-                    <img src={item.avatar} className="avatar" />
+            {levelData &&
+              levelData.map((item, index) => (
+                <div className="level-item" key={item.id}>
+                  <img src={`/assets/images/level-bg-${index + 1}.png`} className="bg" />
+                  <img src={`/assets/images/level-${index + 1}.png`} className="level" />
+                  <div className="avatar-box">
+                    <div className="avatar">
+                      <img src={item.image} className="avatar" />
+                    </div>
+                    <div className="name">{item.projectName}</div>
                   </div>
-                  <div className="name">{item.name}</div>
+                  <div className="info-box">
+                    <div className="info-box-item">
+                      <div className="s-box">
+                        <div className="s-img">
+                          <img src="/assets/images/img-3.png" alt="" />
+                        </div>
+                        <div className="s-text">{utils.formatNumber(item.points)}</div>
+                      </div>
+                      <div className="s-box">
+                        <div className="s-img">
+                          <img src="/assets/images/img-4.png" alt="" />
+                        </div>
+                        <div className="s-text">{utils.formatNumber(item.tvl)}</div>
+                      </div>
+                      <div className="s-box">
+                        <div className="s-img">
+                          <img src="/assets/images/img-5.png" alt="" />
+                        </div>
+                        <div className="s-text">Points -x AIM</div>
+                      </div>
+                    </div>
+                    <div className="info-box-item">
+                      <div className="info-item">
+                        <div>Staked</div>
+                        <div>{utils.formatNumber(item.staked)}</div>
+                      </div>
+                      <div className="info-item">
+                        <div>Users</div>
+                        <div>{utils.formatNumber(item.users)}</div>
+                      </div>
+                      <div className="info-item2">
+                        <button className="stake-btn" onClick={() => toStake(item)}>
+                          Stake
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="info-box">
-                  <div className="info-box-item">
-                    <div className="s-box">
-                      <div className="s-img">
-                        <img src="/assets/images/img-3.png" alt="" />
-                      </div>
-                      <div className="s-text">1321546521</div>
-                    </div>
-                    <div className="s-box">
-                      <div className="s-img">
-                        <img src="/assets/images/img-4.png" alt="" />
-                      </div>
-                      <div className="s-text">1321546521</div>
-                    </div>
-                    <div className="s-box">
-                      <div className="s-img">
-                        <img src="/assets/images/img-5.png" alt="" />
-                      </div>
-                      <div className="s-text">1321546521</div>
-                    </div>
-                  </div>
-                  <div className="info-box-item">
-                    <div className="info-item">
-                      <div>Staked</div>
-                      <div>100M</div>
-                    </div>
-                    <div className="info-item">
-                      <div>Users</div>
-                      <div>100</div>
-                    </div>
-                    <div className="info-item2">
-                      <button className="stake-btn" onClick={() => toStake(item)}>
-                        Stake
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
 
           <div className="tablebox">
             <Table
               scroll={{ x: 'max-content' }}
               columns={projectColumns}
-              dataSource={projectData}
+              dataSource={projectsData}
               pagination={false}
               loading={loading}
               rowKey={(record) => record.id}

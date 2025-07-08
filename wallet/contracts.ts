@@ -5,7 +5,7 @@ import { getContractConfig } from './index';
 import { message } from 'antd';
 
 /**初始化 EVM 合约*/
-export const initEVMContracts = async (chainId: any) => {
+export const initEVMTokenContract = async (chainId: any, token: any, abi: any) => {
   try {
     const tokenConfig = getContractConfig(chainId);
     if (!tokenConfig) {
@@ -19,15 +19,32 @@ export const initEVMContracts = async (chainId: any) => {
     const provider = new ethers.BrowserProvider(window.ethereum as any);
     const signer = await provider.getSigner();
 
-    const tokenContract = new ethers.Contract(tokenConfig.StakeToken, tokenConfig.StakeTokenABI, signer);
+    const evmTokenContract = new ethers.Contract(token, abi, signer);
 
-    const stakingContract = new ethers.Contract(tokenConfig.AimStaking, tokenConfig.AimStakingABI, signer);
+    return evmTokenContract;
+  } catch (error) {
+    console.error('EVM contract initialization error:', error);
+    throw error;
+  }
+};
 
-    return {
-      provider,
-      evmTokenContract: tokenContract,
-      evmStakingContract: stakingContract
-    };
+export const initEVMStakingContract = async (chainId: any) => {
+  try {
+    const tokenConfig = getContractConfig(chainId);
+    if (!tokenConfig) {
+      throw new Error(`No token configuration found for network ${chainId}`);
+    }
+
+    if (!window.ethereum) {
+      throw new Error('MetaMask or other Ethereum wallet not found');
+    }
+
+    const provider = new ethers.BrowserProvider(window.ethereum as any);
+    const signer = await provider.getSigner();
+
+    const evmStakingContract = new ethers.Contract(tokenConfig.AimStaking, tokenConfig.AimStakingABI, signer);
+
+    return evmStakingContract;
   } catch (error) {
     console.error('EVM contract initialization error:', error);
     throw error;
