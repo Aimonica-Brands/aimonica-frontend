@@ -24,10 +24,6 @@ interface PageContextType {
   isTwitterConnected: boolean;
 
   // EVM 合约状态
-  provider: any;
-  setProvider: (provider: any) => void;
-  evmTokenContract: any;
-  setEvmTokenContract: (contract: any) => void;
   evmStakingContract: any;
   setEvmStakingContract: (contract: any) => void;
 
@@ -63,8 +59,6 @@ export function PageProvider({ children }: PageProviderProps) {
   const [twitterUser, setTwitterUser] = useState<TwitterUser | null>(null);
 
   // EVM 状态
-  const [provider, setProvider] = useState(null);
-  const [evmTokenContract, setEvmTokenContract] = useState(null);
   const [evmStakingContract, setEvmStakingContract] = useState(null);
 
   // Solana 状态
@@ -81,15 +75,10 @@ export function PageProvider({ children }: PageProviderProps) {
     walletAddress,
     setWalletAddress,
 
-    // Twitter 状态
     twitterUser,
     setTwitterUser,
     isTwitterConnected: !!twitterUser,
 
-    provider,
-    setProvider,
-    evmTokenContract,
-    setEvmTokenContract,
     evmStakingContract,
     setEvmStakingContract,
 

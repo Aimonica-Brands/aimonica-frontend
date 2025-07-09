@@ -11,14 +11,7 @@ export const WalletComponent = () => {
   const { caipNetwork, chainId } = useAppKitNetwork();
   const { connection } = useAppKitConnection();
   const { walletProvider } = useAppKitProvider<Provider>('solana');
-  const {
-    setProvider,
-    setEvmTokenContract,
-    setEvmStakingContract,
-    setSolanaConnection,
-    setSolanaProgram,
-    setCurrentNetworkType
-  } = usePageContext();
+  const { setEvmStakingContract, setSolanaConnection, setSolanaProgram, setCurrentNetworkType } = usePageContext();
 
   useEffect(() => {
     const initContracts = async () => {
@@ -64,8 +57,6 @@ export const WalletComponent = () => {
   }, [isConnected, address, caipNetwork, chainId, connection, walletProvider]);
 
   const clearContractStates = () => {
-    setProvider(null);
-    setEvmTokenContract(null);
     setEvmStakingContract(null);
     setSolanaConnection(null);
     setSolanaProgram(null);

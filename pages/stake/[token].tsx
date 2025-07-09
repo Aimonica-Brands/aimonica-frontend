@@ -6,7 +6,7 @@ import { getContractConfig } from '@/wallet';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
 import { durationDays, evmUtils, solanaUtils, getRewardPoints } from '@/wallet/utils';
-import { handleContractError, initEVMTokenContract, initEVMStakingContract } from '@/wallet/contracts';
+import { handleContractError, initEVMTokenContract } from '@/wallet/contracts';
 import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
 import { aimAPI } from '@/pages/api/aim';
@@ -20,9 +20,9 @@ export default function Stake() {
 
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
-  const { evmTokenContract, evmStakingContract, solanaProgram, solanaConnection, projectsData, setEvmTokenContract } =
-    usePageContext();
+  const { evmStakingContract, solanaProgram, solanaConnection, projectsData } = usePageContext();
 
+  const [evmTokenContract, setEvmTokenContract] = useState<any>(null);
   const [projectInfo, setProjectInfo] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
