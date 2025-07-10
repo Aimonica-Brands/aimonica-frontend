@@ -19,59 +19,6 @@ export default function Dashboard() {
   const { evmStakingContract, solanaProgram } = usePageContext();
 
   const [networkId, setNetworkId] = useState('');
-
-  const align = 'center' as const;
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const historyDataSource = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }];
-  const historyColumns: ColumnsType<any> = [
-    {
-      title: 'Project',
-      dataIndex: '',
-      align,
-      width: 80,
-      render: (value: any, record: any) => {
-        return <div className="text">Aimonica</div>;
-      }
-    },
-    {
-      title: 'Staked',
-      dataIndex: '',
-      align,
-      width: 120,
-      render: (value: any, record: any) => {
-        return (
-          <>
-            {/* <div className="staked-status Completed">Completed</div> */}
-            <div className="staked-status Redeemed">Redeemed</div>
-          </>
-        );
-      }
-    },
-    {
-      title: 'Redemption Time',
-      dataIndex: '',
-      align,
-      width: 160,
-      render: (value: any, record: any) => {
-        return <div className="text">2025-5-25 17:26:46</div>;
-      }
-    },
-    {
-      title: 'Hash',
-      dataIndex: '',
-      align,
-      width: 160,
-      render: (value: any, record: any) => {
-        return (
-          <a className="hash">
-            <span>51cqdv.....BU4</span>
-            <ExportOutlined />
-          </a>
-        );
-      }
-    }
-  ];
-
   const [totalPoints, setTotalPoints] = useState(0);
   const [totalStaked, setTotalStaked] = useState(0);
   const [totalProject, setTotalProject] = useState(0);
@@ -83,7 +30,56 @@ export default function Dashboard() {
   const [unstakeRecord, setUnstakeRecord] = useState(null);
   const [unstakeFeeRate, setUnstakeFeeRate] = useState(0);
   const [emergencyUnstakeFeeRate, setEmergencyUnstakeFeeRate] = useState(0);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyDataSource, setHistoryDataSource] = useState([]);
 
+  const align = 'center' as const;
+  const historyColumns: ColumnsType<any> = [
+    {
+      title: 'Project',
+      dataIndex: 'projectName'
+    },
+    {
+      title: 'Stake ID',
+      dataIndex: 'id'
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'amount',
+      render: (value: number) => `${utils.formatNumber(value)} tokens`
+    },
+    {
+      title: 'Duration',
+      dataIndex: 'duration',
+      render: (value: number) => `${value} Day`
+    },
+    {
+      title: 'Redemption Time',
+      dataIndex: 'created_at',
+      render: (value: number) => new Date(value).toLocaleString()
+    },
+    {
+      title: 'Status',
+      dataIndex: '',
+      render: (value: any, record: any) => {
+        return <Tag color="#bdbdbd">Redeemed</Tag>;
+      }
+    },
+    {
+      title: 'Hash',
+      dataIndex: 'transaction_hash',
+      render: (value: any, record: any) => {
+        return (
+          <a className="hash" href={`${caipNetwork.blockExplorers.default.url}/tx/${value}`} target="_blank">
+            <span>
+              {value.slice(0, 6)}...{value.slice(-6)}
+            </span>
+            <ExportOutlined />
+          </a>
+        );
+      }
+    }
+  ];
   const stakeColumns: any[] = [
     {
       title: 'Project',
@@ -188,6 +184,7 @@ export default function Dashboard() {
         setNetworkId(chainId.toString());
         getStakeRecords();
         getFeeRate();
+        getPointsDashboard();
       } else {
         setNetworkId('');
         setStakeRecords([]);
@@ -320,7 +317,7 @@ export default function Dashboard() {
         try {
           console.log(`🔍 查询EVM质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
           const records = await evmUtils.getStakeRecords(address);
-          console.log('🔍 查询到的EVM质押记录:', records);
+          // console.log('🔍 查询到的EVM质押记录:', records);
           const newRecords = records.map((record) => {
             record.points = record.amount * getRewardPoints(record.duration);
             // record.tvl = record.amount * 0.0015;
@@ -382,7 +379,7 @@ export default function Dashboard() {
         try {
           console.log(`🔍 查询质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
           const records = await solanaUtils.getStakeRecords(solanaProgram);
-          console.log('🔍 查询到的质押记录:', records);
+          // console.log('🔍 查询到的质押记录:', records);
           const newRecords = records.map((record) => {
             record.points = record.amount * getRewardPoints(record.duration);
             // record.tvl = record.amount * 0.0015;
@@ -561,6 +558,48 @@ export default function Dashboard() {
     }
   };
 
+  const getPointsDashboard = async () => {
+    if (historyLoading) return;
+    setHistoryLoading(true);
+    aimAPI
+      .GetPointsDashboard(address)
+      .then((res) => {
+        // console.log('GetPointsDashboard', res);
+
+        let stakes = [];
+        if (caipNetwork.chainNamespace === 'eip155') {
+          stakes = res.stakes.filter((item: any) => item.chain == 'Base');
+        } else if (caipNetwork.chainNamespace === 'solana') {
+          stakes = res.stakes.filter((item: any) => item.chain == 'Solana');
+        }
+
+        const records = [];
+        for (const stake of stakes) {
+          if (!stake.processed) continue;
+
+          records.push({
+            id: Number(stake.id),
+            user_id: stake.user_id,
+            project_id: stake.project_id,
+            projectName: ethers.decodeBytes32String(stake.project_id),
+            amount: Number(ethers.formatEther(stake.amount)),
+            duration: Number(stake.duration) / 86400,
+            created_at: stake.created_at,
+            transaction_hash: stake.transaction_hash
+          });
+        }
+        const sortedRecords = records.sort((a: any, b: any) => b.created_at - a.created_at);
+
+        setHistoryDataSource(sortedRecords);
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setHistoryLoading(false);
+      });
+  };
+
   return (
     <div className="dashboard-page">
       <div className="page-box">
@@ -628,7 +667,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* <div className="title-box-2">
+        <div className="title-box-2">
           Staking History
           <img src="/assets/images/star.png" alt="" className="star-img" />
         </div>
@@ -640,8 +679,9 @@ export default function Dashboard() {
             dataSource={historyDataSource}
             pagination={false}
             loading={historyLoading}
+            rowKey={(record) => `${record.project_id}-${record.id}`}
           />
-        </div> */}
+        </div>
       </div>
 
       <Modal
