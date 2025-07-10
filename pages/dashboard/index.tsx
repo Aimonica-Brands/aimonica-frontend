@@ -564,7 +564,7 @@ export default function Dashboard() {
     aimAPI
       .GetPointsDashboard(address)
       .then((res) => {
-        // console.log('GetPointsDashboard', res);
+        console.log('GetPointsDashboard', res);
 
         let stakes = [];
         if (caipNetwork.chainNamespace === 'eip155') {

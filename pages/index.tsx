@@ -156,7 +156,7 @@ export default function Home() {
             <div className="s-img">
               <img src="/assets/images/img-5.png" alt="" />
             </div>
-            <div className="s-text">Points -x AIM</div>
+            <div className="s-text">AIM Points</div>
           </div>
         );
       }
@@ -275,12 +275,9 @@ export default function Home() {
 
       const projects = projectsRes.projects.filter((item: any) => item.registered);
       console.log('EVMProjects', projects);
-      // const users = projectsRes.users;
 
       const pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
       console.log('pointsLeaderboard', pointsLeaderboard);
-      // const points_projects = await aimAPI.GetProjects();
-      // console.log('points_projects', points_projects);
 
       const newProjectsData = [];
 
@@ -292,8 +289,6 @@ export default function Home() {
 
         const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === project.id);
         console.log('pointsLeaderboardItem', pointsLeaderboardItem);
-        // const total_staked = points_projects.find((item: any) => item.id === project.id);
-        // console.log('total_staked', total_staked);
 
         const baseProject = {
           index,
@@ -302,12 +297,11 @@ export default function Home() {
           stakingToken: project.stakingToken,
           totalStaked: totalStaked,
           createdAt: project.createdAt,
-          // staked: total_staked?.total_staked,
           points: pointsLeaderboardItem?.total_score
         };
 
         const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
-        // console.log('coinDetailsRes', coinDetailsRes);
+        console.log('coinDetailsRes', coinDetailsRes);
 
         const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
         // console.log(projectName, coinPrice);
@@ -317,16 +311,17 @@ export default function Home() {
 
         const xLink = coinDetailsRes.links.homepage[0];
         const twitterLink = `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`;
+        const dexLink = `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`;
 
         const newProject = {
           ...baseProject,
-          rank: coinDetailsRes.market_cap_rank,
           platformId: coinDetailsRes.asset_platform_id,
           contractAddress: coinDetailsRes.contract_address,
           description: coinDetailsRes.description.en,
           image: coinDetailsRes.image.small,
           xLink,
           twitterLink,
+          dexLink,
           coinPriceUsd,
           tvl
         };
@@ -335,7 +330,13 @@ export default function Home() {
         newProjectsData.push(newProject);
       }
 
-      setProjectsData(newProjectsData);
+      const sortedProjectsData = newProjectsData
+        .sort((a: any, b: any) => b.tvl - a.tvl)
+        .map((item: any, index: number) => {
+          return { ...item, rank: index + 1 };
+        });
+
+      setProjectsData(sortedProjectsData);
     } catch (error) {
       console.log(error);
     } finally {
@@ -485,7 +486,7 @@ export default function Home() {
                         <div className="s-img">
                           <img src="/assets/images/img-5.png" alt="" />
                         </div>
-                        <div className="s-text">Points -x AIM</div>
+                        <div className="s-text">AIM Points</div>
                       </div>
                     </div>
                     <div className="info-box-item">

@@ -58,31 +58,30 @@ export const evmUtils = {
 
   /**获取质押记录 */
   getStakeRecords: async (address: string) => {
-    const query = gql`
-      query ($user: Bytes!) {
-        stakes(where: { user: $user }) {
-          id
-          stakeId
-          user {
-            id
-          }
-          project {
-            id
-          }
-          amount
-          stakingToken
-          stakedAt
-          duration
-          unlockedAt
-          status
-          transactionHash
-        }
-      }
-    `;
-    const variables = { user: address.toLowerCase() };
-    const headers = { Authorization: `Bearer 3e2bce3f640324fa2d38b5c73d3984c3` };
     const endpoint = 'https://gateway.thegraph.com/api/subgraphs/id/2TCfqqmAFv4LpnJRVxjJ192C3sHJoCxu29rPTxgooch7';
-    const data: any = await request(endpoint, query, variables, headers);
+
+    const query = `{
+      stakes(where: { user: "${address.toLowerCase()}" }) {
+        id
+        stakeId
+        user {
+          id
+        }
+        project {
+          id
+        }
+        amount
+        stakingToken
+        stakedAt
+        duration
+        unlockedAt
+        status
+        transactionHash
+      }
+    }`;
+    const headers = { Authorization: `Bearer 3e2bce3f640324fa2d38b5c73d3984c3` };
+
+    const data: any = await request(endpoint, query, {}, headers);
     console.log('EVM 原始质押记录:', data);
 
     if (!data.stakes) return [];

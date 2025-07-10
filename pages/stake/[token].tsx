@@ -30,7 +30,6 @@ export default function Stake() {
   const [durationDay, setDurationDay] = useState(7);
   const [expectedPoints, setExpectedPoints] = useState(0);
   const [tokenBalance, setTokenBalance] = useState(0);
-  const [tokenPrice, setTokenPrice] = useState(1);
   const [tokenWorth, setTokenWorth] = useState(0);
   const [totalUser, setTotalUser] = useState(0);
   const [totalTVL, setTotalTVL] = useState(0);
@@ -85,67 +84,45 @@ export default function Stake() {
   }, [projectInfo]);
 
   useEffect(() => {
-    if (!projectId || !projectsData) {
-      return;
+    if (projectId && projectsData && isConnected && address && caipNetwork && chainId) {
+      getProjectData();
     }
-    getProjectData();
-  }, [projectId, projectsData]);
+  }, [projectId, projectsData, isConnected, address, caipNetwork, chainId]);
 
   useEffect(() => {
-    if (isConnected && address && caipNetwork && chainId) {
-      const contractConfig = getContractConfig(chainId);
-
-      if (caipNetwork.chainNamespace === 'eip155') {
-        setPoolAddress(contractConfig.AimStaking);
-        const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
-        setPoolLink(link);
-        if (evmStakingContract && evmTokenContract) {
-          getEvmTokenBalance();
-        }
-      } else if (caipNetwork.chainNamespace === 'solana') {
-        setPoolAddress(contractConfig.programId);
-        const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
-        setPoolLink(link);
-        if (solanaProgram && solanaConnection) {
-          getSolTokenBalance();
-        }
-      }
+    if (evmTokenContract && evmStakingContract) {
+      getEvmTokenBalance();
     }
-  }, [
-    isConnected,
-    address,
-    caipNetwork,
-    chainId,
-    evmTokenContract,
-    evmStakingContract,
-    solanaProgram,
-    solanaConnection
-  ]);
+    if (solanaProgram && solanaConnection) {
+      getSolTokenBalance();
+    }
+  }, [evmTokenContract, evmStakingContract, solanaProgram, solanaConnection]);
 
   useEffect(() => {
     setExpectedPoints(Number(amount));
   }, [amount]);
 
   const getProjectData = async () => {
-    aimAPI
-      .GetProjects()
-      .then(async (res) => {
-        console.log('全部项目', res);
+    const project = projectsData.find((item: any) => item.id == projectId);
+    console.log('project------------', project);
+    setProjectInfo(project);
+    if (!project) return router.push('/');
 
-        const project = projectsData.find((item: any) => item.id == projectId);
-        console.log('project------------', project);
-        setProjectInfo(project);
+    const contractConfig = getContractConfig(chainId);
 
-        if (caipNetwork.chainNamespace === 'eip155') {
-          const contract = await initEVMTokenContract(chainId, project.stakingToken, StakeTokenABI);
-          console.log(`✅ 质押代币合约初始化成功`, contract);
-          setEvmTokenContract(contract);
-        } else if (caipNetwork.chainNamespace === 'solana') {
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    if (caipNetwork.chainNamespace === 'eip155') {
+      setPoolAddress(contractConfig.AimStaking);
+      const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
+      setPoolLink(link);
+
+      const contract = await initEVMTokenContract(chainId, project.stakingToken, StakeTokenABI);
+      console.log(`✅ 质押代币合约初始化成功`, contract);
+      setEvmTokenContract(contract);
+    } else if (caipNetwork.chainNamespace === 'solana') {
+      setPoolAddress(contractConfig.programId);
+      const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
+      setPoolLink(link);
+    }
   };
 
   const getEvmTokenBalance = async () => {
@@ -153,7 +130,7 @@ export default function Stake() {
       .getTokenBalance(evmTokenContract, address)
       .then((balance) => {
         setTokenBalance(balance);
-        setTokenWorth(balance * tokenPrice);
+        setTokenWorth(balance * projectInfo.coinPriceUsd);
 
         if (balance > 0) {
           const stakeAddress = getContractConfig(chainId).AimStaking;
@@ -198,7 +175,7 @@ export default function Stake() {
       .getTokenBalance(solanaProgram, solanaConnection, Number(projectId))
       .then((balance) => {
         setTokenBalance(Math.floor(balance));
-        setTokenWorth(Math.floor(balance * tokenPrice));
+        setTokenWorth(Math.floor(balance * projectInfo.coinPriceUsd));
       })
       .catch((error) => {
         console.error(error);
@@ -356,23 +333,23 @@ export default function Stake() {
                   <span>{projectInfo?.projectName}</span>
                 </div>
                 <div className="icon-box">
-                  <a href={projectInfo.xLink}>
+                  <a href={projectInfo?.xLink}>
                     <img src="/assets/images/icon-twitter-2.png" alt="" />
                   </a>
-                  <a href={projectInfo.twitterLink}>
+                  <a href={projectInfo?.twitterLink}>
                     <img src="/assets/images/icon-telegram-2.png" alt="" />
+                  </a>
+                  <a href={projectInfo?.dexLink}>
+                    <img src="/assets/images/icon-dexscreener-2.png" alt="" />
                   </a>
                   {/* <a href="https://x.com/AimonicaBrands">
                       <img src="/assets/images/icon-discord-2.png" alt="" />
                       https://x.com/AimonicaBrands
                     </a>
-                    <a href="https://x.com/AimonicaBrands">
-                      <img src="/assets/images/icon-medium-2.png" alt="" />
-                      https://x.com/AimonicaBrands
-                    </a> */}
+                    */}
                 </div>
               </div>
-              <div className="text1">{projectInfo.description?.slice(0, 100)}...</div>
+              <div className="text1">{projectInfo?.description?.slice(0, 100)}...</div>
               <div className="text2">
                 <div>
                   <span>Users</span>
@@ -414,7 +391,7 @@ export default function Stake() {
                 </div>
                 <div className="number-box">
                   <div className="number">{utils.formatNumber(tokenBalance)}</div>
-                  <div className="number2">$ {utils.formatNumber(tokenWorth)}</div>
+                  <div className="number2">$ {utils.formatNumber(tokenWorth, 2)}</div>
                 </div>
               </div>
               <div className="inputbox">
