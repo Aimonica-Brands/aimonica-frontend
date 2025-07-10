@@ -81,6 +81,8 @@ export default function Dashboard() {
   const [unstakeLoading, setUnstakeLoading] = useState(false);
   const [stakeRecordsLoading, setStakeRecordsLoading] = useState(false);
   const [unstakeRecord, setUnstakeRecord] = useState(null);
+  const [unstakeFeeRate, setUnstakeFeeRate] = useState(0);
+  const [emergencyUnstakeFeeRate, setEmergencyUnstakeFeeRate] = useState(0);
 
   const stakeColumns: any[] = [
     {
@@ -185,6 +187,7 @@ export default function Dashboard() {
       if (isConnected && address && caipNetwork && chainId) {
         setNetworkId(chainId.toString());
         getStakeRecords();
+        getFeeRate();
       } else {
         setNetworkId('');
         setStakeRecords([]);
@@ -212,6 +215,22 @@ export default function Dashboard() {
       setTotalProject(0);
     }
   }, [stakeRecords]);
+
+  const getFeeRate = async () => {
+    if (caipNetwork.chainNamespace === 'eip155') {
+      if (evmStakingContract) {
+        evmStakingContract.unstakeFeeRate().then((res) => {
+          setUnstakeFeeRate(Number(res) / 100);
+        });
+        evmStakingContract.emergencyUnstakeFeeRate().then((res) => {
+          setEmergencyUnstakeFeeRate(Number(res) / 100);
+        });
+      }
+    } else if (caipNetwork.chainNamespace === 'solana') {
+      if (solanaProgram) {
+      }
+    }
+  };
 
   const getStakeRecords = async () => {
     // 获取所有项目信息
@@ -637,17 +656,21 @@ export default function Dashboard() {
             <img src="/assets/images/img-26.png" alt="" className="img-26" />
             <div className="title">Emergency Unstake</div>
             <div className="text">(*Warning: Unstaking in advance will result in a 30% deduction of rewards*)</div>
+            <div className="text-box2">
+              <div>Unstaking Fee</div>
+              <div>{emergencyUnstakeFeeRate}%</div>
+            </div>
             <div className="text2">
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
-                <div>
-                  {unstakeRecord.amount} Aimonica(≈${unstakeRecord.amount})
-                </div>
+                <div>{utils.formatNumber(unstakeRecord.amount * (1 - emergencyUnstakeFeeRate / 100), 1)} Aimonica</div>
                 <div className="s-box">
                   <div className="s-img">
                     <img src="/assets/images/img-3.png" alt="" />
                   </div>
-                  <div className="s-text">{unstakeRecord.amount}</div>
+                  <div className="s-text">
+                    {utils.formatNumber(unstakeRecord.amount * (1 - emergencyUnstakeFeeRate / 100), 1)}
+                  </div>
                 </div>
               </div>
             </div>
@@ -676,19 +699,19 @@ export default function Dashboard() {
             <div className="title">Unstake</div>
             <div className="text-box2">
               <div>Unstaking Fee</div>
-              <div>5%</div>
+              <div>{unstakeFeeRate}%</div>
             </div>
             <div className="text2 text3">
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
-                <div>
-                  {unstakeRecord.amount} Aimonica(≈${unstakeRecord.amount})
-                </div>
+                <div>{utils.formatNumber(unstakeRecord.amount * (1 - unstakeFeeRate / 100), 1)} Aimonica</div>
                 <div className="s-box">
                   <div className="s-img">
                     <img src="/assets/images/img-3.png" alt="" />
                   </div>
-                  <div className="s-text">{unstakeRecord.amount}</div>
+                  <div className="s-text">
+                    {utils.formatNumber(unstakeRecord.amount * (1 - unstakeFeeRate / 100), 1)}
+                  </div>
                 </div>
               </div>
             </div>
