@@ -509,6 +509,15 @@ footer {
     height: 4.5rem;
     margin: 1rem auto;
     position: relative;
+    .ant-spin,
+    .ant-spin-dot-holder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+    }
     .level-item {
       width: 4.2rem;
       height: 4.2rem;

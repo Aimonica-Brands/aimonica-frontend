@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Popover, Collapse } from 'antd';
+import { Button, Table, Popover, Collapse, Spin } from 'antd';
 import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
@@ -97,7 +97,7 @@ export default function Home() {
     },
     {
       title: 'Staked',
-      key: 'staked',
+      key: 'totalStaked',
       align,
       width: 80,
       render: (value: any, record: any) => {
@@ -274,37 +274,26 @@ export default function Home() {
       const projectsRes: any = await evmUtils.getProjects();
 
       const projects = projectsRes.projects.filter((item: any) => item.registered);
-      const users = projectsRes.users;
+      console.log('EVMProjects', projects);
+      // const users = projectsRes.users;
 
-      const points_leaderboard = await aimAPI.GetPointsLeaderboard();
-      console.log('points_leaderboard', points_leaderboard);
-      const points_projects = await aimAPI.GetProjects();
-      console.log('points_projects', points_projects);
+      const pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
+      console.log('pointsLeaderboard', pointsLeaderboard);
+      // const points_projects = await aimAPI.GetProjects();
+      // console.log('points_projects', points_projects);
 
-      // 使用函数式更新来确保状态更新的正确性
-      const updateProjectData = (newProject: any) => {
-        const existingIndex = projectsData.findIndex((item) => item.id === newProject.id);
-        if (existingIndex >= 0) {
-          // 如果存在，更新该项目
-          const updatedData = [...projectsData];
-          updatedData[existingIndex] = newProject;
-          setProjectsData(updatedData);
-        } else {
-          // 如果不存在，添加到列表开头
-          setProjectsData([newProject, ...projectsData]);
-        }
-      };
+      const newProjectsData = [];
 
       for (let index = 0; index < projects.length; index++) {
         const project = projects[index];
 
         const projectName = ethers.decodeBytes32String(project.id);
-        const totalStaked = ethers.formatEther(project.totalStaked);
+        const totalStaked = Number(ethers.formatEther(project.totalStaked));
 
-        const total_score = points_leaderboard.projects.find((item: any) => item.id === project.id);
-        console.log('total_score', total_score);
-        const total_staked = points_projects.find((item: any) => item.id === project.id);
-        console.log('total_staked', total_staked);
+        const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === project.id);
+        console.log('pointsLeaderboardItem', pointsLeaderboardItem);
+        // const total_staked = points_projects.find((item: any) => item.id === project.id);
+        // console.log('total_staked', total_staked);
 
         const baseProject = {
           index,
@@ -313,49 +302,40 @@ export default function Home() {
           stakingToken: project.stakingToken,
           totalStaked: totalStaked,
           createdAt: project.createdAt,
-          staked: total_staked?.total_staked || 0,
-          points: total_score?.total_score || 0
+          // staked: total_staked?.total_staked,
+          points: pointsLeaderboardItem?.total_score
         };
 
-        // console.log('baseProject', baseProject);
+        const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
+        // console.log('coinDetailsRes', coinDetailsRes);
 
-        try {
-          const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
-          // console.log('coinDetailsRes', coinDetailsRes);
+        const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
+        // console.log(projectName, coinPrice);
 
-          if (coinDetailsRes) {
-            const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
+        const coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
+        const tvl = Number(totalStaked) * coinPriceUsd;
 
-            // console.log(projectName, coinPrice);
-            const coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
+        const xLink = coinDetailsRes.links.homepage[0];
+        const twitterLink = `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`;
 
-            const tvl = Number(totalStaked) * coinPriceUsd;
+        const newProject = {
+          ...baseProject,
+          rank: coinDetailsRes.market_cap_rank,
+          platformId: coinDetailsRes.asset_platform_id,
+          contractAddress: coinDetailsRes.contract_address,
+          description: coinDetailsRes.description.en,
+          image: coinDetailsRes.image.small,
+          xLink,
+          twitterLink,
+          coinPriceUsd,
+          tvl
+        };
+        // console.log('newProject', newProject);
 
-            const xLink = coinDetailsRes.links.homepage[0];
-            const twitterLink = `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`;
-
-            const newProject = {
-              ...baseProject,
-              rank: coinDetailsRes.market_cap_rank,
-              platformId: coinDetailsRes.asset_platform_id,
-              contractAddress: coinDetailsRes.contract_address,
-              description: coinDetailsRes.description.en,
-              image: coinDetailsRes.image.small,
-              xLink,
-              twitterLink,
-              coinPriceUsd,
-              tvl
-            };
-            console.log('newProject', newProject);
-
-            // 更新为增强后的项目信息
-            updateProjectData(newProject);
-          }
-        } catch (coinError) {
-          console.error(`CoinGecko API error for ${projectName}:`, coinError);
-          // 保持基础项目信息不变
-        }
+        newProjectsData.push(newProject);
       }
+
+      setProjectsData(newProjectsData);
     } catch (error) {
       console.log(error);
     } finally {
@@ -473,7 +453,10 @@ export default function Home() {
           </div>
 
           <div className="level-box">
-            {levelData &&
+            {loading ? (
+              <Spin />
+            ) : (
+              levelData &&
               levelData.map((item, index) => (
                 <div className="level-item" key={item.id}>
                   <img src={`/assets/images/level-bg-${index + 1}.png`} className="bg" />
@@ -508,7 +491,7 @@ export default function Home() {
                     <div className="info-box-item">
                       <div className="info-item">
                         <div>Staked</div>
-                        <div>{utils.formatNumber(item.staked)}</div>
+                        <div>{utils.formatNumber(item.totalStaked)}</div>
                       </div>
                       <div className="info-item">
                         <div>Users</div>
@@ -522,7 +505,8 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+            )}
           </div>
 
           <div className="tablebox">
