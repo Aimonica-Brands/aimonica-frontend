@@ -11,7 +11,7 @@ import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
 import { aimAPI } from '@/pages/api/aim';
 import { ethers } from 'ethers';
-import StakeTokenABI from '@/wallet/abi/BKIBSHI.json';
+import StakeTokenABI from '@/wallet/abi/EVMTOKEN.json';
 
 export default function Stake() {
   const { message } = App.useApp();
@@ -174,6 +174,7 @@ export default function Stake() {
     solanaUtils
       .getTokenBalance(solanaProgram, solanaConnection, Number(projectId))
       .then((balance) => {
+        console.log('balance', balance);
         setTokenBalance(Math.floor(balance));
         setTokenWorth(Math.floor(balance * projectInfo.coinPriceUsd));
       })
@@ -204,26 +205,40 @@ export default function Stake() {
           setLoading(false);
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
-      const nextStakeId = await solanaUtils.getNextStakeId(solanaProgram, Number(projectId));
+      try {
+        const nextStakeId = await solanaUtils.getNextStakeId(solanaProgram, Number(projectId));
 
-      solanaUtils
-        .stake(solanaProgram, nextStakeId, Number(amount), durationDay, Number(projectId))
-        .then((tx) => {
-          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
-            getContractConfig(chainId).cluster
-          }`;
-          console.log('🔗质押交易链接:', txLink);
-          message.success('Transaction submitted, please wait...');
-          setIsStakeModalOpen(true);
-          getSolTokenBalance();
-          setAmount('');
-        })
-        .catch((error) => {
-          handleContractError(error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+        solanaUtils
+          .stake(solanaProgram, nextStakeId, Number(amount), durationDay, Number(projectId))
+          .then((tx) => {
+            const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
+              getContractConfig(chainId).cluster
+            }`;
+            console.log('🔗质押交易链接:', txLink);
+            message.success('Transaction submitted, please wait...');
+            setIsStakeModalOpen(true);
+            setAmount('');
+            getSolTokenBalance();
+          })
+          .catch((error) => {
+            handleContractError(error);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } catch (error) {
+        console.log('handleStake', error);
+        setLoading(false);
+      }
+    }
+  };
+
+  const closeStakeModal = () => {
+    setIsStakeModalOpen(false);
+    if (caipNetwork.chainNamespace === 'eip155') {
+      getEvmTokenBalance();
+    } else if (caipNetwork.chainNamespace === 'solana') {
+      getSolTokenBalance();
     }
   };
 
@@ -546,8 +561,8 @@ export default function Stake() {
         closable={false}
         footer={null}
         open={isStakeModalOpen}
-        onOk={() => setIsStakeModalOpen(false)}
-        onCancel={() => setIsStakeModalOpen(false)}>
+        onOk={closeStakeModal}
+        onCancel={closeStakeModal}>
         <div className="stake-modal-box">
           <img src="/assets/images/img-27.png" alt="" className="img-27" />
           <img src="/assets/images/img-28.png" alt="" className="img-28" />
@@ -555,7 +570,7 @@ export default function Stake() {
           <img src="/assets/images/img-30.png" alt="" className="img-30" />
           <img src="/assets/images/img-31.png" alt="" className="img-31" />
           <img src="/assets/images/img-32.png" alt="" className="img-32" />
-          <img src="/assets/images/img-33.png" alt="" className="img-33" onClick={() => setIsStakeModalOpen(false)} />
+          <img src="/assets/images/img-33.png" alt="" className="img-33" onClick={closeStakeModal} />
 
           <div className="text1">
             Stake <br /> Success
@@ -568,7 +583,7 @@ export default function Stake() {
           <div className="text3">
             <a>https://aimonicabrands.ai</a>
             <div className="btn-box">
-              <button className="btn-close" onClick={() => setIsStakeModalOpen(false)}>
+              <button className="btn-close" onClick={closeStakeModal}>
                 close
               </button>
               <button className="btn-share">

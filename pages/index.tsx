@@ -6,10 +6,7 @@ import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
 import { usePageContext } from '@/context';
 import { modal } from '@/wallet';
-import { aimAPI } from '@/pages/api/aim';
-import { ethers } from 'ethers';
-import { evmUtils } from '@/wallet/utils';
-import { coingeckoAPI } from '@/pages/api/coingecko';
+import { evmUtils, solanaUtils } from '@/wallet/utils';
 import utils from '@/utils';
 
 export default function Home() {
@@ -29,7 +26,6 @@ export default function Home() {
       title: 'Rank',
       key: 'rank',
       align,
-      width: 60,
       render: (value: any, record: any) => {
         return <div className="rank">{record.rank}</div>;
       }
@@ -38,7 +34,6 @@ export default function Home() {
       title: 'Project',
       key: 'project',
       align,
-      width: 130,
       render: (value: any, record: any) => {
         return (
           <Popover
@@ -99,7 +94,6 @@ export default function Home() {
       title: 'Staked',
       key: 'totalStaked',
       align,
-      width: 80,
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatNumber(record.totalStaked)}</div>;
       }
@@ -108,7 +102,6 @@ export default function Home() {
       title: 'Users',
       key: 'users',
       align,
-      width: 80,
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatNumber(record.users)}</div>;
       }
@@ -117,7 +110,6 @@ export default function Home() {
       title: 'Points',
       key: 'points',
       align,
-      width: 160,
       render: (value: any, record: any) => {
         return (
           <div className="s-box">
@@ -133,7 +125,6 @@ export default function Home() {
       title: 'TVL($)',
       key: 'tvl',
       align,
-      width: 160,
       render: (value: any, record: any) => {
         return (
           <div className="s-box">
@@ -149,7 +140,6 @@ export default function Home() {
       title: 'Rewards',
       key: 'rewards',
       align,
-      width: 160,
       render: (value: any, record: any) => {
         return (
           <div className="s-box">
@@ -219,33 +209,6 @@ export default function Home() {
     }
   }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram, solanaConnection]);
 
-  // const getProjectData = async () => {
-  //   aimAPI
-  //     .GetProjects()
-  //     .then(async (res) => {
-  //       console.log('全部项目', res);
-
-  //       if (caipNetwork.chainNamespace === 'eip155') {
-  //         const projects = res.filter((item: any) => item.chain == 'Base');
-  //         const projects2 = projects.map((item: any, index: number) => {
-  //           return { ...item, rank: index + 1 };
-  //         });
-  //         console.log('evmProjects------------', projects2);
-  //         setProjectData(projects2);
-  //       } else if (caipNetwork.chainNamespace === 'solana') {
-  //         const projects = res.filter((item: any) => item.chain == 'Solana');
-  //         const projects2 = projects.map((item: any, index: number) => {
-  //           return { ...item, rank: index + 1 };
-  //         });
-  //         console.log('solanaProjects------------', projects2);
-  //         setProjectData(projects2);
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       console.error(error);
-  //     });
-  // };
-
   const getProjectData = async () => {
     if (caipNetwork.chainNamespace === 'eip155') {
       if (evmStakingContract) {
@@ -262,7 +225,18 @@ export default function Home() {
     if (loading) return;
     setLoading(true);
     setProjectsData([]);
-    setLoading(false);
+    solanaUtils
+      .getProjects(solanaProgram)
+      .then((sortedProjects) => {
+        console.log('SolanaProjects', sortedProjects);
+        setProjectsData(sortedProjects);
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const getEVMProjects = async () => {
@@ -270,78 +244,18 @@ export default function Home() {
     setLoading(true);
     setProjectsData([]);
 
-    try {
-      const projectsRes: any = await evmUtils.getProjects();
-
-      const projects = projectsRes.projects.filter((item: any) => item.registered);
-      console.log('EVMProjects', projects);
-
-      const pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
-      console.log('pointsLeaderboard', pointsLeaderboard);
-
-      const newProjectsData = [];
-
-      for (let index = 0; index < projects.length; index++) {
-        const project = projects[index];
-
-        const projectName = ethers.decodeBytes32String(project.id);
-        const totalStaked = Number(ethers.formatEther(project.totalStaked));
-
-        const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === project.id);
-        console.log('pointsLeaderboardItem', pointsLeaderboardItem);
-
-        const baseProject = {
-          index,
-          id: project.id,
-          projectName,
-          stakingToken: project.stakingToken,
-          totalStaked: totalStaked,
-          createdAt: project.createdAt,
-          points: pointsLeaderboardItem?.total_score
-        };
-
-        const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
-        console.log('coinDetailsRes', coinDetailsRes);
-
-        const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
-        // console.log(projectName, coinPrice);
-
-        const coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
-        const tvl = Number(totalStaked) * coinPriceUsd;
-
-        const xLink = coinDetailsRes.links.homepage[0];
-        const twitterLink = `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`;
-        const dexLink = `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`;
-
-        const newProject = {
-          ...baseProject,
-          platformId: coinDetailsRes.asset_platform_id,
-          contractAddress: coinDetailsRes.contract_address,
-          description: coinDetailsRes.description.en,
-          image: coinDetailsRes.image.small,
-          xLink,
-          twitterLink,
-          dexLink,
-          coinPriceUsd,
-          tvl
-        };
-        // console.log('newProject', newProject);
-
-        newProjectsData.push(newProject);
-      }
-
-      const sortedProjectsData = newProjectsData
-        .sort((a: any, b: any) => b.tvl - a.tvl)
-        .map((item: any, index: number) => {
-          return { ...item, rank: index + 1 };
-        });
-
-      setProjectsData(sortedProjectsData);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
+    evmUtils
+      .getProjects()
+      .then((sortedProjects) => {
+        console.log('EVMProjects', sortedProjects);
+        setProjectsData(sortedProjects);
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   const handleTabClick = (network: any) => async () => {

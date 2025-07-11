@@ -3,6 +3,8 @@ import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
 import * as anchor from '@coral-xyz/anchor';
 import { request, gql } from 'graphql-request';
+import { aimAPI, subgraphsAPI } from '@/pages/api/aim';
+import { coingeckoAPI } from '@/pages/api/coingecko';
 
 /**质押时长 */
 export const durationDays = [1, 7, 14, 30];
@@ -26,34 +28,89 @@ const EVM_PROJECT_CONFIG = '0x64656d6f000000000000000000000000000000000000000000
 export const evmUtils = {
   /**获取项目信息 */
   getProjects: async () => {
-    const endpoint = 'https://gateway.thegraph.com/api/subgraphs/id/2TCfqqmAFv4LpnJRVxjJ192C3sHJoCxu29rPTxgooch7';
-    const query = `{
-      projects(first: 1000, orderBy: createdAt, orderDirection: asc) {
-        id
-        stakingToken
-        registered
-        stakes {
-          id
-        }
-        totalStaked
-        createdAt
-      }
-      users(first: 1000) {
-        id
-        stakes {
-          id
-        }
-        totalStaked
-        activeStakeCount
-      }
-    }`;
-    const headers = {
-      Authorization: 'Bearer 3e2bce3f640324fa2d38b5c73d3984c3'
-    };
+    try {
+      const projectsRes: any = await subgraphsAPI.getProjects();
 
-    const data = await request(endpoint, query, {}, headers);
-    console.log('EVM 项目记录:', data);
-    return data;
+      const projects = projectsRes.projects.filter((item: any) => item.registered);
+
+      const users = projectsRes.users;
+
+      console.log('users', users);
+
+      console.log('EVMProjects', projects);
+
+      const pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
+      console.log('pointsLeaderboard', pointsLeaderboard);
+
+      const newProjects = [];
+
+      for (let index = 0; index < projects.length; index++) {
+        const project = projects[index];
+
+        const newProject = {
+          index: index,
+          id: project.id,
+          projectName: ethers.decodeBytes32String(project.id),
+          stakingToken: project.stakingToken,
+          totalStaked: Number(ethers.formatEther(project.totalStaked)),
+          createdAt: project.createdAt,
+          points: 0,
+          platformId: 'base',
+          contractAddress: '',
+          description: '',
+          image: '',
+          xLink: '',
+          twitterLink: '',
+          dexLink: '',
+          coinPriceUsd: 0,
+          tvl: 0
+        };
+
+        const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === project.id);
+        console.log('pointsLeaderboardItem', pointsLeaderboardItem);
+        newProject.points = pointsLeaderboardItem?.total_score;
+
+        try {
+          const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
+          console.log('coinDetailsRes', coinDetailsRes);
+
+          const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
+          // console.log(projectName, coinPrice);
+
+          newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
+          newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
+
+          // newProject.platformId = coinDetailsRes.asset_platform_id;
+          // newProject.contractAddress = coinDetailsRes.contract_address;
+          newProject.description = coinDetailsRes.description.en;
+          newProject.image = coinDetailsRes.image.small;
+          newProject.xLink = coinDetailsRes.links.homepage[0];
+          newProject.twitterLink = `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`;
+          newProject.dexLink = `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`;
+        } catch (error) {
+          console.error(`获取项目 ${newProject.projectName} 的信息失败:`, error);
+          // 使用默认值，继续处理项目
+        }
+
+        console.log('newProject', newProject);
+
+        newProjects.push(newProject);
+      }
+      if (newProjects.length > 0) {
+        const sortedProjects = newProjects
+          .sort((a: any, b: any) => b.tvl - a.tvl)
+          .map((item: any, index: number) => {
+            return { ...item, rank: index + 1 };
+          });
+
+        return sortedProjects;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('获取 EVM 项目错误:', error);
+      return [];
+    }
   },
 
   /**获取质押记录 */
@@ -253,6 +310,129 @@ const getProjectConfig = async (solanaProgram: any, projectId: number) => {
 };
 
 export const solanaUtils = {
+  /**获取当前平台所有项目信息 */
+  getProjects: async (solanaProgram: any) => {
+    try {
+      // 检查平台
+      const [platformConfigPda] = await PublicKey.findProgramAddress(
+        [Buffer.from('platform')],
+        solanaProgram.programId
+      );
+      const platformConfig = await solanaProgram.account.platformConfig.fetch(platformConfigPda);
+
+      if (!platformConfig) {
+        console.log('平台未初始化');
+        return [];
+      }
+
+      const projectCount = platformConfig.projectCount.toNumber();
+      console.log('总项目数量:', projectCount);
+      if (projectCount <= 0) return [];
+
+      const pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
+      console.log('pointsLeaderboard', pointsLeaderboard);
+
+      const newProjects = [];
+
+      for (let i = 0; i < projectCount; i++) {
+        try {
+          // Get project config PDA
+          const [projectConfigPda] = await PublicKey.findProgramAddress(
+            [Buffer.from('project'), new anchor.BN(i).toArrayLike(Buffer, 'le', 8)],
+            solanaProgram.programId
+          );
+
+          // Get project config
+          const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
+          console.log(`项目 ${i} 配置:`, projectConfig);
+
+          // Get vault PDA
+          const [vaultPda] = await PublicKey.findProgramAddress(
+            [Buffer.from('vault'), new anchor.BN(i).toArrayLike(Buffer, 'le', 8)],
+            solanaProgram.programId
+          );
+
+          // Get vault balance
+          let totalStaked = 0;
+          try {
+            const vaultAccount = await solanaProgram.provider.connection.getTokenAccountBalance(vaultPda);
+            totalStaked = vaultAccount.value.uiAmount || 0;
+          } catch (error) {
+            console.log(`无法获取项目 ${i} 的 totalStaked:`, error);
+          }
+
+          // const project = { i, projectConfig, totalStaked };
+          // projects.push(project);
+
+          const newProject = {
+            index: i,
+            id: i.toString(),
+            projectName: projectConfig.name,
+            stakingToken: projectConfig.tokenMint.toBase58(),
+            totalStaked: totalStaked,
+            createdAt: projectConfig.projectId.toNumber(), // 使用项目ID作为创建时间
+            points: 0,
+            platformId: 'solana',
+            contractAddress: '',
+            description: '',
+            image: '',
+            xLink: '',
+            twitterLink: '',
+            dexLink: '',
+            coinPriceUsd: 0,
+            tvl: 0
+          };
+
+          const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === newProject.id);
+          console.log('pointsLeaderboardItem', pointsLeaderboardItem);
+          newProject.points = pointsLeaderboardItem?.total_score;
+
+          try {
+            const coinDetailsRes = await coingeckoAPI.getCoinByContract(newProject.platformId, newProject.stakingToken);
+            console.log('coinDetailsRes', coinDetailsRes);
+
+            const coinPrice = await coingeckoAPI.getCoinPrice(newProject.platformId, coinDetailsRes.contract_address);
+            console.log(newProject.projectName, coinPrice);
+
+            newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
+            newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
+
+            // newProject.platformId = coinDetailsRes.asset_platform_id;
+            // newProject.contractAddress = coinDetailsRes.contract_address;
+            newProject.description = coinDetailsRes.description.en;
+            newProject.image = coinDetailsRes.image.small;
+            newProject.xLink = coinDetailsRes.links.homepage[0];
+            newProject.twitterLink = `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`;
+            newProject.dexLink = `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`;
+          } catch (error) {
+            console.error(`获取项目 ${newProject.projectName} 的信息失败:`, error);
+            // 使用默认值，继续处理项目
+          }
+
+          newProjects.push(newProject);
+        } catch (error) {
+          console.error(`获取项目 ${i} 信息失败:`, error);
+        }
+      }
+
+      console.log('newProjects', newProjects);
+
+      if (newProjects.length > 0) {
+        const sortedProjects = newProjects
+          .sort((a: any, b: any) => b.tvl - a.tvl)
+          .map((item: any, index: number) => {
+            return { ...item, rank: index + 1 };
+          });
+
+        return sortedProjects;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('获取 Solana 项目错误:', error);
+      return [];
+    }
+  },
   /**获取用户所有质押记录 */
   getStakeRecords: async (solanaProgram: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
@@ -379,12 +559,13 @@ export const solanaUtils = {
     const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
     console.log('Solana 原始质押记录:', userStakes);
 
-    if (!userStakes) return [];
+    if (userStakes.length === 0) return 0;
 
     const records = userStakes.map((stake) => {
       const stakeId = stake.account.stakeId.toNumber();
       return { stakeId };
     });
+
     const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
     const nextStakeId = sortedRecords[0].stakeId + 1;
     console.log('下一个质押ID:', nextStakeId);
