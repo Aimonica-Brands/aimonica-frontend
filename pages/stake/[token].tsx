@@ -104,8 +104,9 @@ export default function Stake() {
 
   const getProjectData = async () => {
     const project = projectsData.find((item: any) => item.id == projectId);
-    console.log('project------------', project);
+    console.log('当前项目：', project);
     setProjectInfo(project);
+
     if (!project) return router.push('/');
 
     const contractConfig = getContractConfig(chainId);
@@ -129,6 +130,7 @@ export default function Stake() {
     evmUtils
       .getTokenBalance(evmTokenContract, address)
       .then((balance) => {
+        console.log('EVM 代币余额：', balance);
         setTokenBalance(balance);
         setTokenWorth(balance * projectInfo.coinPriceUsd);
 
@@ -137,7 +139,6 @@ export default function Stake() {
           evmUtils
             .getAllowance(evmTokenContract, address, stakeAddress)
             .then((allowance) => {
-              // console.log('EVM 代币授权:', allowance, balance, allowance >= balance);
               setIsApproved(allowance >= balance);
             })
             .catch((error) => {
@@ -174,7 +175,7 @@ export default function Stake() {
     solanaUtils
       .getTokenBalance(solanaProgram, solanaConnection, Number(projectId))
       .then((balance) => {
-        console.log('balance', balance);
+        console.log('Solana 代币余额：', balance);
         setTokenBalance(Math.floor(balance));
         setTokenWorth(Math.floor(balance * projectInfo.coinPriceUsd));
       })
@@ -194,9 +195,10 @@ export default function Stake() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
-          setIsStakeModalOpen(true);
-          getEvmTokenBalance();
-          setAmount('');
+          closeStakeModal();
+          setTimeout(() => {
+            getEvmTokenBalance();
+          }, 3000);
         })
         .catch((error) => {
           handleContractError(error);
@@ -216,9 +218,10 @@ export default function Stake() {
             }`;
             console.log('🔗质押交易链接:', txLink);
             message.success('Transaction submitted, please wait...');
-            setIsStakeModalOpen(true);
-            setAmount('');
-            getSolTokenBalance();
+            closeStakeModal();
+            setTimeout(() => {
+              getSolTokenBalance();
+            }, 3000);
           })
           .catch((error) => {
             handleContractError(error);
@@ -227,7 +230,7 @@ export default function Stake() {
             setLoading(false);
           });
       } catch (error) {
-        console.log('handleStake', error);
+        console.log(error);
         setLoading(false);
       }
     }
@@ -235,11 +238,7 @@ export default function Stake() {
 
   const closeStakeModal = () => {
     setIsStakeModalOpen(false);
-    if (caipNetwork.chainNamespace === 'eip155') {
-      getEvmTokenBalance();
-    } else if (caipNetwork.chainNamespace === 'solana') {
-      getSolTokenBalance();
-    }
+    setAmount('');
   };
 
   const getMetricsGraph = () => {
@@ -247,27 +246,23 @@ export default function Stake() {
       .GetMetricsGraph('0', '1', projectInfo.name)
       .then((res) => {
         if (res.success && res.ok) {
-          // console.log('GetMetricsGraph Engagements', res.ok);
           const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
-          console.log('Engagements', total);
           setEngagements(total);
         }
       })
       .catch((error) => {
-        console.log('Engagements', error);
+        console.log(error);
       });
     cookieAPI
       .GetMetricsGraph('1', '1', projectInfo.name)
       .then((res) => {
         if (res.success && res.ok) {
-          // console.log('GetMetricsGraph Impressions', res.ok);
           const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
-          console.log('Impressions', total);
           setImpressions(total);
         }
       })
       .catch((error) => {
-        console.log('Impressions', error);
+        console.log(error);
       });
   };
 
@@ -276,14 +271,12 @@ export default function Stake() {
       .GetProjectMindshareGraph(projectInfo.name)
       .then((res) => {
         if (res.success && res.ok) {
-          // console.log('GetProjectMindshareGraph Mindshare', res.ok);
           const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
-          console.log('Mindshare', total);
           setMindshare(total);
         }
       })
       .catch((error) => {
-        console.log('GetProjectMindshareGraph', error);
+        console.log(error);
       });
   };
 
@@ -291,20 +284,17 @@ export default function Stake() {
     try {
       const projectDetailsRes = await cookieAPI.GetProjectDetails(projectInfo.name);
       if (projectDetailsRes.success && projectDetailsRes.ok) {
-        // console.log('GetProjectDetails', projectDetailsRes.ok);
         const username = projectDetailsRes.ok.twitterUsernames[0];
         if (username) {
           const smartFollowersRes = await cookieAPI.GetAccountSmartFollowers(username);
           if (smartFollowersRes.success && smartFollowersRes.ok) {
-            // console.log('GetAccountSmartFollowers', smartFollowersRes.ok);
             const total = smartFollowersRes.ok.totalCount;
-            console.log('Smart Followers', total);
             setSmartFollowers(total);
           }
         }
       }
     } catch (error) {
-      console.log('GetProjectDetails', error);
+      console.log(error);
     }
   };
 
@@ -313,13 +303,12 @@ export default function Stake() {
       .SearchTweets(projectInfo.name, projectInfo.name)
       .then((res) => {
         if (res.success && res.ok) {
-          // console.log('SearchTweets', res.ok);
           const tweets = res.ok.entries.slice(0, 5);
           setTopTweets(tweets);
         }
       })
       .catch((error) => {
-        console.log('SearchTweets', error);
+        console.log(error);
       });
   };
   return (

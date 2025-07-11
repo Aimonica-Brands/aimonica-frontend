@@ -34,7 +34,6 @@ export const WalletComponent = () => {
             try {
               const result = initSolanaContracts(chainId, walletProvider);
               console.log(`✅ ${caipNetwork.name} 合约初始化成功`, result);
-
               setSolanaConnection(result.solanaConnection);
               setSolanaProgram(result.solanaProgram);
             } catch (error) {

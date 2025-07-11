@@ -193,7 +193,6 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    console.log('projectsData', projectsData);
     if (projectsData.length > 0) {
       setLevelData(projectsData.slice(0, 3));
     }
@@ -228,7 +227,6 @@ export default function Home() {
     solanaUtils
       .getProjects(solanaProgram)
       .then((sortedProjects) => {
-        console.log('SolanaProjects', sortedProjects);
         setProjectsData(sortedProjects);
       })
       .catch((error) => {
@@ -247,7 +245,6 @@ export default function Home() {
     evmUtils
       .getProjects()
       .then((sortedProjects) => {
-        console.log('EVMProjects', sortedProjects);
         setProjectsData(sortedProjects);
       })
       .catch((error) => {
@@ -259,13 +256,10 @@ export default function Home() {
   };
 
   const handleTabClick = (network: any) => async () => {
-    // modal.open({ view: "Networks" });
-    console.log('目标网络:', network);
     if (network) {
       modal
         .switchNetwork(network)
         .then(() => {
-          console.log('切换网络成功');
           setNetworkId(network.id.toString());
         })
         .catch((error) => {
