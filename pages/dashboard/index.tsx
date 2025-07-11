@@ -28,8 +28,6 @@ export default function Dashboard() {
   const [unstakeLoading, setUnstakeLoading] = useState(false);
   const [stakeRecordsLoading, setStakeRecordsLoading] = useState(false);
   const [unstakeRecord, setUnstakeRecord] = useState(null);
-  const [unstakeFeeRate, setUnstakeFeeRate] = useState(0);
-  const [emergencyUnstakeFeeRate, setEmergencyUnstakeFeeRate] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyDataSource, setHistoryDataSource] = useState([]);
 
@@ -183,8 +181,7 @@ export default function Dashboard() {
       if (isConnected && address && caipNetwork && chainId) {
         setNetworkId(chainId.toString());
         getStakeRecords();
-        getFeeRate();
-        getPointsDashboard();
+        // getPointsDashboard();
       } else {
         setNetworkId('');
         setStakeRecords([]);
@@ -212,22 +209,6 @@ export default function Dashboard() {
       setTotalProject(0);
     }
   }, [stakeRecords]);
-
-  const getFeeRate = async () => {
-    if (caipNetwork.chainNamespace === 'eip155') {
-      if (evmStakingContract) {
-        evmStakingContract.unstakeFeeRate().then((res) => {
-          setUnstakeFeeRate(Number(res) / 100);
-        });
-        evmStakingContract.emergencyUnstakeFeeRate().then((res) => {
-          setEmergencyUnstakeFeeRate(Number(res) / 100);
-        });
-      }
-    } else if (caipNetwork.chainNamespace === 'solana') {
-      if (solanaProgram) {
-      }
-    }
-  };
 
   const getStakeRecords = async () => {
     if (caipNetwork.chainNamespace === 'eip155') {
@@ -517,12 +498,13 @@ export default function Dashboard() {
           if (!stake.processed) continue;
 
           records.push({
-            id: Number(stake.id),
+            id: stake.id,
             user_id: stake.user_id,
             project_id: stake.project_id,
-            projectName: ethers.decodeBytes32String(stake.project_id),
+            projectName:
+              caipNetwork.chainNamespace === 'solana' ? stake.project_id : ethers.decodeBytes32String(stake.project_id),
             amount: Number(ethers.formatEther(stake.amount)),
-            duration: Number(stake.duration) / 86400,
+            duration: caipNetwork.chainNamespace === 'solana' ? stake.duration : Number(stake.duration) / 86400,
             created_at: stake.created_at,
             transaction_hash: stake.transaction_hash
           });
@@ -606,7 +588,7 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="title-box-2">
+        {/* <div className="title-box-2">
           Staking History
           <img src="/assets/images/star.png" alt="" className="star-img" />
         </div>
@@ -620,7 +602,7 @@ export default function Dashboard() {
             loading={historyLoading}
             rowKey={(record) => `${record.project_id}-${record.id}`}
           />
-        </div>
+        </div> */}
       </div>
 
       <Modal
@@ -642,7 +624,10 @@ export default function Dashboard() {
             <div className="text2">
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
-                <div>{utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.emergencyUnstakeFeeRate / 100), 1)} Aimonica</div>
+                <div>
+                  {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.emergencyUnstakeFeeRate / 100), 1)}{' '}
+                  Aimonica
+                </div>
                 <div className="s-box">
                   <div className="s-img">
                     <img src="/assets/images/img-3.png" alt="" />
@@ -683,7 +668,9 @@ export default function Dashboard() {
             <div className="text2 text3">
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
-                <div>{utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.unstakeFeeRate / 100), 1)} Aimonica</div>
+                <div>
+                  {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.unstakeFeeRate / 100), 1)} Aimonica
+                </div>
                 <div className="s-box">
                   <div className="s-img">
                     <img src="/assets/images/img-3.png" alt="" />

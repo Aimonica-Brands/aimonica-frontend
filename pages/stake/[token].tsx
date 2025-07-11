@@ -189,7 +189,7 @@ export default function Stake() {
 
     if (caipNetwork.chainNamespace === 'eip155') {
       evmUtils
-        .stake(evmStakingContract, amount.toString(), durationDay)
+        .stake(evmStakingContract, amount.toString(), durationDay, projectInfo.id)
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗质押交易链接:', txLink);
