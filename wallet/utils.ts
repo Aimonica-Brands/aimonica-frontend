@@ -1,8 +1,7 @@
 import { ethers } from 'ethers';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import * as anchor from '@coral-xyz/anchor';
-import { request, gql } from 'graphql-request';
 import { aimAPI, subgraphsAPI } from '@/pages/api/aim';
 import { coingeckoAPI } from '@/pages/api/coingecko';
 
@@ -29,12 +28,10 @@ export const evmUtils = {
       const projectsRes: any = await subgraphsAPI.getProjects();
 
       const projects = projectsRes.projects.filter((item: any) => item.registered);
+      console.log('EVM 项目:', projects);
 
       const users = projectsRes.users;
-
       console.log('users', users);
-
-      console.log('EVMProjects', projects);
 
       const pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
       console.log('pointsLeaderboard', pointsLeaderboard);
@@ -56,9 +53,12 @@ export const evmUtils = {
           contractAddress: '',
           description: '',
           image: '',
-          xLink: '',
-          twitterLink: '',
-          dexLink: '',
+          links: {
+            website: '',
+            x: '',
+            twitter: '',
+            dex: ''
+          },
           coinPriceUsd: 0,
           tvl: 0
         };
@@ -81,15 +81,16 @@ export const evmUtils = {
           // newProject.contractAddress = coinDetailsRes.contract_address;
           newProject.description = coinDetailsRes.description.en;
           newProject.image = coinDetailsRes.image.small;
-          newProject.xLink = coinDetailsRes.links.homepage[0];
-          newProject.twitterLink = `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`;
-          newProject.dexLink = `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`;
+          newProject.links = {
+            website: coinDetailsRes.links.homepage[0],
+            x: `https://x.com/${coinDetailsRes.links.twitter_screen_name}`,
+            twitter: `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`,
+            dex: `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`
+          };
         } catch (error) {
           console.error(`获取项目 ${newProject.projectName} 的信息失败:`, error);
           // 使用默认值，继续处理项目
         }
-
-        console.log('newProject', newProject);
 
         newProjects.push(newProject);
       }
@@ -100,6 +101,7 @@ export const evmUtils = {
             return { ...item, rank: index + 1 };
           });
 
+        console.log('EVM 项目:', sortedProjects);
         return sortedProjects;
       }
 
@@ -112,64 +114,46 @@ export const evmUtils = {
 
   /**获取质押记录 */
   getStakeRecords: async (address: string) => {
-    const endpoint = 'https://gateway.thegraph.com/api/subgraphs/id/2TCfqqmAFv4LpnJRVxjJ192C3sHJoCxu29rPTxgooch7';
+    try {
+      const data: any = await subgraphsAPI.getStakeRecords(address);
+      console.log('EVM 质押记录:', data);
 
-    const query = `{
-      stakes(where: { user: "${address.toLowerCase()}" }) {
-        id
-        stakeId
-        user {
-          id
-        }
-        project {
-          id
-        }
-        amount
-        stakingToken
-        stakedAt
-        duration
-        unlockedAt
-        status
-        transactionHash
+      if (!data.stakes) return [];
+
+      const records = [];
+      for (const stake of data.stakes) {
+        // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
+        // status: "Active"
+        if (stake.status != 'Active') continue;
+
+        const project_id = stake.project.id;
+        const projectName = ethers.decodeBytes32String(project_id);
+
+        const staked_at = Number(stake.stakedAt) * 1000;
+        const unlocked_at = Number(stake.unlockedAt) * 1000;
+        const now = new Date().getTime();
+        const canUnstake = now >= unlocked_at;
+
+        records.push({
+          id: Number(stake.stakeId),
+          user_id: stake.user.id,
+          project_id,
+          projectName,
+          amount: Number(ethers.formatEther(stake.amount)),
+          duration: Number(stake.duration) / 86400,
+          staked_at,
+          unlocked_at,
+          canUnstake
+        });
       }
-    }`;
-    const headers = { Authorization: `Bearer 3e2bce3f640324fa2d38b5c73d3984c3` };
+      const sortedRecords = records.sort((a: any, b: any) => b.staked_at - a.staked_at);
+      console.log('EVM 质押记录:', sortedRecords);
 
-    const data: any = await request(endpoint, query, {}, headers);
-    console.log('EVM 原始质押记录:', data);
-
-    if (!data.stakes) return [];
-
-    const records = [];
-    for (const stake of data.stakes) {
-      // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
-      // status: "Active"
-      if (stake.status != 'Active') continue;
-
-      const project_id = stake.project.id;
-      const projectName = ethers.decodeBytes32String(project_id);
-
-      const staked_at = Number(stake.stakedAt) * 1000;
-      const unlocked_at = Number(stake.unlockedAt) * 1000;
-      const now = new Date().getTime();
-      const canUnstake = now >= unlocked_at;
-
-      records.push({
-        id: Number(stake.stakeId),
-        user_id: stake.user.id,
-        project_id,
-        projectName,
-        amount: Number(ethers.formatEther(stake.amount)),
-        duration: Number(stake.duration) / 86400,
-        staked_at,
-        unlocked_at,
-        canUnstake
-      });
+      return sortedRecords;
+    } catch (error) {
+      console.error('获取 EVM 质押记录错误:', error);
+      return [];
     }
-    const sortedRecords = records.sort((a: any, b: any) => b.staked_at - a.staked_at);
-    console.log('EVM 质押记录:', sortedRecords);
-
-    return sortedRecords;
   },
 
   /**获取代币余额 */
@@ -300,7 +284,7 @@ export const solanaUtils = {
       }
 
       const projectCount = platformConfig.projectCount.toNumber();
-      console.log('总项目数量:', projectCount);
+      console.log('Solana 项目:', projectCount);
       if (projectCount <= 0) return [];
 
       const pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
@@ -347,9 +331,12 @@ export const solanaUtils = {
             contractAddress: '',
             description: '',
             image: '',
-            xLink: '',
-            twitterLink: '',
-            dexLink: '',
+            links: {
+              website: '',
+              x: '',
+              twitter: '',
+              dex: ''
+            },
             coinPriceUsd: 0,
             tvl: 0
           };
@@ -372,9 +359,12 @@ export const solanaUtils = {
             // newProject.contractAddress = coinDetailsRes.contract_address;
             newProject.description = coinDetailsRes.description.en;
             newProject.image = coinDetailsRes.image.small;
-            newProject.xLink = coinDetailsRes.links.homepage[0];
-            newProject.twitterLink = `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`;
-            newProject.dexLink = `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`;
+            newProject.links = {
+              website: coinDetailsRes.links.homepage[0],
+              x: `https://x.com/${coinDetailsRes.links.twitter_screen_name}`,
+              twitter: `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`,
+              dex: `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`
+            };
           } catch (error) {
             console.error(`获取项目 ${newProject.projectName} 的信息失败:`, error);
             // 使用默认值，继续处理项目
@@ -386,8 +376,6 @@ export const solanaUtils = {
         }
       }
 
-      console.log('newProjects', newProjects);
-
       if (newProjects.length > 0) {
         const sortedProjects = newProjects
           .sort((a: any, b: any) => b.tvl - a.tvl)
@@ -395,6 +383,7 @@ export const solanaUtils = {
             return { ...item, rank: index + 1 };
           });
 
+        console.log('Solana 项目:', sortedProjects);
         return sortedProjects;
       }
 
@@ -414,7 +403,7 @@ export const solanaUtils = {
     };
 
     const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
-    console.log('Solana 原始质押记录:', userStakes);
+    console.log('Solana 质押记录:', userStakes);
 
     if (!userStakes) return [];
 
@@ -473,8 +462,6 @@ export const solanaUtils = {
 
     const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
 
-    console.log('Solana 原始质押记录:', userStakes);
-
     if (userStakes.length === 0) return 0;
 
     const records = userStakes.map((stake) => {
@@ -492,9 +479,6 @@ export const solanaUtils = {
   /**获取代币余额 */
   getTokenBalance: async (solanaProgram: any, solanaConnection: any, projectId: number) => {
     const { userTokenAccount, tokenMint } = await getProjectConfig(solanaProgram, projectId);
-    console.log('userTokenAccount', userTokenAccount.toBase58());
-    console.log('tokenMint', tokenMint.toBase58());
-    console.log('user wallet', solanaProgram.provider.wallet.publicKey.toBase58());
 
     try {
       const tokenAccount = await solanaConnection.getTokenAccountBalance(userTokenAccount);
@@ -516,14 +500,14 @@ export const solanaUtils = {
 
   /**质押 */
   stake: async (solanaProgram: any, stakeId: number, stakeAmount: number, stakeDuration: number, projectId: number) => {
+    console.log('项目ID:', projectId, '质押ID:', stakeId, '数量:', stakeAmount);
+
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
     const { projectConfigPubkey, vault, userTokenAccount, tokenProgram } = await getProjectConfig(
       solanaProgram,
       projectId
     );
-
-    console.log('项目ID:', projectId, '质押ID:', stakeId, '数量:', stakeAmount);
 
     const [stakeInfoPda] = await PublicKey.findProgramAddress(
       [
@@ -563,12 +547,12 @@ export const solanaUtils = {
 
   /**解质押 */
   unstake: async (solanaProgram: any, record: any, projectId: number) => {
+    console.log('项目ID:', projectId, '解质押ID:', record.id, '数量:', record.amount);
+
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
     const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount, feeWalletTokenAccount, tokenProgram } =
       await getProjectConfig(solanaProgram, projectId);
-
-    console.log('项目ID:', projectId, '解质押ID:', record.id, '数量:', record.amount);
 
     const [stakeInfoPda] = await PublicKey.findProgramAddress(
       [
@@ -603,12 +587,12 @@ export const solanaUtils = {
 
   /**紧急解质押 */
   emergencyUnstake: async (solanaProgram: any, record: any, projectId: number) => {
+    console.log('项目ID:', projectId, '紧急解质押ID:', record.id, '数量:', record.amount);
+
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
     const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount, feeWalletTokenAccount, tokenProgram } =
       await getProjectConfig(solanaProgram, projectId);
-
-    console.log('项目ID:', projectId, '紧急解质押ID:', record.id, '数量:', record.amount);
 
     const [stakeInfoPda] = await PublicKey.findProgramAddress(
       [

@@ -19,19 +19,19 @@ export default function FooterComponent() {
           </div>
           <div className="footer-right">
             <a href="">
-              <img src="/assets/images/icon-twitter.png" alt="" />
+              <img src="/assets/images/icon-twitter.svg" alt="" />
             </a>
             <a href="">
-              <img src="/assets/images/icon-telegram.png" alt="" />
+              <img src="/assets/images/icon-telegram.svg" alt="" />
             </a>
             <a href="">
-              <img src="/assets/images/icon-discord.png" alt="" />
+              <img src="/assets/images/icon-discord.svg" alt="" />
             </a>
             <a href="">
-              <img src="/assets/images/icon-medium.png" alt="" />
+              <img src="/assets/images/icon-medium.svg" alt="" />
             </a>
             <a href="">
-              <img src="/assets/images/icon-doc.png" alt="" />
+              <img src="/assets/images/icon-doc.svg" alt="" />
             </a>
           </div>
         </div>

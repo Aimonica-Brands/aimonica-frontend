@@ -42,9 +42,35 @@ export const subgraphsAPI = {
         activeStakeCount
       }
     }`;
-    const headers = {
-      Authorization: 'Bearer 3e2bce3f640324fa2d38b5c73d3984c3'
-    };
+    const headers = { Authorization: 'Bearer 3e2bce3f640324fa2d38b5c73d3984c3' };
+
+    const res = await request(endpoint, query, {}, headers);
+    return res;
+  },
+
+  /**获取质押记录 */
+  getStakeRecords: async (address: string) => {
+    const endpoint = 'https://gateway.thegraph.com/api/subgraphs/id/2TCfqqmAFv4LpnJRVxjJ192C3sHJoCxu29rPTxgooch7';
+    const query = `{
+        stakes(where: { user: "${address.toLowerCase()}" }) {
+          id
+          stakeId
+          user {
+            id
+          }
+          project {
+            id
+          }
+          amount
+          stakingToken
+          stakedAt
+          duration
+          unlockedAt
+          status
+          transactionHash
+        }
+      }`;
+    const headers = { Authorization: `Bearer 3e2bce3f640324fa2d38b5c73d3984c3` };
 
     const res = await request(endpoint, query, {}, headers);
     return res;

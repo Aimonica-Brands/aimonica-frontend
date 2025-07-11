@@ -44,7 +44,7 @@ export default function Dashboard() {
     {
       title: 'Amount',
       dataIndex: 'amount',
-      render: (value: number) => `${utils.formatNumber(value)} tokens`
+      render: (value: number) => `${utils.formatNumber(value)}`
     },
     {
       title: 'Duration',
@@ -90,7 +90,7 @@ export default function Dashboard() {
     {
       title: 'Amount',
       dataIndex: 'amount',
-      render: (value: number) => `${utils.formatNumber(value)} tokens`
+      render: (value: number) => `${utils.formatNumber(value)}`
     },
     {
       title: 'Duration',
@@ -181,7 +181,7 @@ export default function Dashboard() {
       if (isConnected && address && caipNetwork && chainId) {
         setNetworkId(chainId.toString());
         getStakeRecords();
-        // getPointsDashboard();
+        getPointsDashboard();
       } else {
         setNetworkId('');
         setStakeRecords([]);
@@ -588,7 +588,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* <div className="title-box-2">
+        <div className="title-box-2">
           Staking History
           <img src="/assets/images/star.png" alt="" className="star-img" />
         </div>
@@ -602,7 +602,7 @@ export default function Dashboard() {
             loading={historyLoading}
             rowKey={(record) => `${record.project_id}-${record.id}`}
           />
-        </div> */}
+        </div>
       </div>
 
       <Modal

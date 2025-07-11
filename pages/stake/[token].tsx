@@ -348,20 +348,18 @@ export default function Stake() {
                   <span>{projectInfo?.projectName}</span>
                 </div>
                 <div className="icon-box">
-                  <a href={projectInfo?.xLink}>
-                    <img src="/assets/images/icon-twitter-2.png" alt="" />
+                  <a href={projectInfo?.links?.website} target="_blank">
+                    <img src="/assets/images/icon-website-blue.svg" alt="" />
                   </a>
-                  <a href={projectInfo?.twitterLink}>
-                    <img src="/assets/images/icon-telegram-2.png" alt="" />
+                  <a href={projectInfo?.links?.x} target="_blank">
+                    <img src="/assets/images/icon-twitter-blue.svg" alt="" />
                   </a>
-                  <a href={projectInfo?.dexLink}>
-                    <img src="/assets/images/icon-dexscreener-2.png" alt="" />
+                  <a href={projectInfo?.links?.twitter} target="_blank">
+                    <img src="/assets/images/icon-telegram-blue.svg" alt="" />
                   </a>
-                  {/* <a href="https://x.com/AimonicaBrands">
-                      <img src="/assets/images/icon-discord-2.png" alt="" />
-                      https://x.com/AimonicaBrands
-                    </a>
-                    */}
+                  <a href={projectInfo?.links?.dex} target="_blank">
+                    <img src="/assets/images/icon-dexscreener-blue.svg" alt="" />
+                  </a>
                 </div>
               </div>
               <div className="text1">{projectInfo?.description?.slice(0, 100)}...</div>
@@ -525,10 +523,7 @@ export default function Stake() {
         </div>
         <div className="cookie-box2">
           <div className="title">Why This Agent Is Bullish</div>
-          <div className="des">
-            Aimonica is the first Meme focused AI Investor, with the goal of outperforming all Web3 VCs in memes
-            investing Made with vvaifu.fun Create AI Agents with tokens. https://x.com/AimonicaBrands
-          </div>
+          <div className="des">{projectInfo?.description?.slice(0, 100)}...</div>
           <div className="textbox">
             <div className="text-item">
               <div>Links</div>
@@ -588,7 +583,7 @@ export default function Stake() {
               </button>
               <button className="btn-share">
                 Share On
-                <img src="/assets/images/icon-twitter.png" alt="" />
+                <img src="/assets/images/icon-twitter.svg" alt="" />
               </button>
             </div>
           </div>

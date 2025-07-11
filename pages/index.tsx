@@ -58,22 +58,22 @@ export default function Home() {
                       <img src="/assets/images/img-19.png" alt="" />
                       <span>Social Media</span>
                     </div>
-                    <a href={record.xLink}>
-                      <img src="/assets/images/icon-twitter-2.png" alt="" />
-                      {record.xLink?.slice(0, 30)}...
+                    <a href={record.links?.website} target="_blank">
+                      <img src="/assets/images/icon-website-blue.svg" alt="" />
+                      {record.links?.website?.slice(0, 30)}...
                     </a>
-                    <a href={record.twitterLink}>
-                      <img src="/assets/images/icon-telegram-2.png" alt="" />
-                      {record.twitterLink?.slice(0, 30)}...
+                    <a href={record.links?.x} target="_blank">
+                      <img src="/assets/images/icon-twitter-blue.svg" alt="" />
+                      {record.links?.x?.slice(0, 30)}...
                     </a>
-                    {/* <a href="https://x.com/AimonicaBrands">
-                      <img src="/assets/images/icon-discord-2.png" alt="" />
-                      https://x.com/AimonicaBrands
+                    <a href={record.links?.twitter} target="_blank">
+                      <img src="/assets/images/icon-telegram-blue.svg" alt="" />
+                      {record.links?.twitter?.slice(0, 30)}...
                     </a>
-                    <a href="https://x.com/AimonicaBrands">
-                      <img src="/assets/images/icon-medium-2.png" alt="" />
-                      https://x.com/AimonicaBrands
-                    </a> */}
+                    <a href={record.links?.dex} target="_blank">
+                      <img src="/assets/images/icon-dexscreener-blue.svg" alt="" />
+                      {record.links?.dex?.slice(0, 30)}...
+                    </a>
                   </div>
                 </div>
               );
