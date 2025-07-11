@@ -5,7 +5,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig } from '@/wallet';
 import { modal } from '@/wallet';
-import { evmUtils, solanaUtils, getRewardPoints } from '@/wallet/utils';
+import { evmUtils, solanaUtils, getRewardPoints, timeOutNumber } from '@/wallet/utils';
 import { usePageContext } from '@/context';
 import { handleContractError } from '@/wallet/contracts';
 import utils from '@/utils';
@@ -367,7 +367,7 @@ export default function Dashboard() {
             setUnstakeLoading(false);
             closeUnstakeModal();
             getEvmStakeRecords(record.id, record.amount);
-          }, 10000);
+          }, timeOutNumber);
         })
         .catch((error) => {
           handleContractError(error);
@@ -390,7 +390,7 @@ export default function Dashboard() {
             setUnstakeLoading(false);
             closeUnstakeModal();
             getSolanaStakeRecords(record.id, record.amount);
-          }, 10000);
+          }, timeOutNumber);
         })
         .catch((error) => {
           handleContractError(error);
@@ -416,7 +416,7 @@ export default function Dashboard() {
             setUnstakeLoading(false);
             closeEmergencyUnstakeModal();
             getEvmStakeRecords(record.id, record.amount);
-          }, 10000);
+          }, timeOutNumber);
         })
         .catch((error) => {
           handleContractError(error);
@@ -436,7 +436,7 @@ export default function Dashboard() {
             setUnstakeLoading(false);
             closeEmergencyUnstakeModal();
             getSolanaStakeRecords(record.id, record.amount);
-          }, 10000);
+          }, timeOutNumber);
         })
         .catch((error) => {
           handleContractError(error);

@@ -5,6 +5,8 @@ import * as anchor from '@coral-xyz/anchor';
 import { aimAPI, subgraphsAPI } from '@/pages/api/aim';
 import { coingeckoAPI } from '@/pages/api/coingecko';
 
+export const timeOutNumber = 8000;
+
 /**质押时长 */
 export const durationDays = [1, 7, 14, 30];
 
