@@ -230,72 +230,6 @@ export default function Dashboard() {
   };
 
   const getStakeRecords = async () => {
-    // 获取所有项目信息
-    // const allProjects = await solanaUtils.getAllProjects(solanaProgram);
-    // console.log('所有项目:', allProjects);
-    // if (stakeRecordsLoading) return;
-    // setStakeRecordsLoading(true);
-    // setStakeRecords([]);
-
-    // evmAPI
-    //   .GetPointsDashboard(address)
-    //   .then((res) => {
-    //     console.log('GetPointsDashboard------------', res);
-    //     setTotalPoints(Number(res.totalScore));
-
-    //     const records = res.stakes.map((stake) => {
-    //       // if (stake.status != 'Active') return;
-
-    //       const projectName = stake.chain == 'Solana' ? stake.project_id : ethers.decodeBytes32String(stake.project_id);
-    //       const duration = stake.chain == 'Solana' ? Number(stake.duration) : Number(stake.duration) / 86400;
-
-    //       const amount = Number(ethers.formatEther(stake.amount));
-    //       const points = amount * getRewardPoints(duration);
-
-    //       return {
-    //         ...stake,
-    //         // id: '9',
-    //         // user_id: '0x6716eec26c82a8a025cef05d301e0af8cb8da33d',
-    //         // project_id: '0x64656d6f00000000000000000000000000000000000000000000000000000000',
-    //         projectName,
-    //         // chain: 'Base',
-    //         // amount: '150000000000000000000',
-    //         amount,
-    //         // staked_at: '2025-07-03T09:17:21.000Z',
-    //         // duration: 86400,
-    //         duration,
-    //         // unlocked_at: '2025-07-04T09:17:21.000Z',
-    //         // status: 'Active',
-    //         // transaction_hash: '0x0c81651036bd1675d37b3c83cebf664321f04ed668a00721848f3936d03eee3f',
-    //         // processed: true,
-    //         // created_at: '2025-07-05T16:45:00.028Z',
-    //         points
-    //       };
-    //     });
-
-    //     setStakeRecords(records);
-    //   })
-    //   .catch((error) => {
-    //     console.error(error);
-    //     setStakeRecords([]);
-    //   })
-    //   .finally(() => {
-    //     setStakeRecordsLoading(false);
-    //   });
-
-    // evmAPI.GetPointsLeaderboard().then((res) => {
-    //   const { projects, users } = res;
-    //   console.log('projects------------', projects);
-    //   console.log('users------------', users);
-    //   const evmTotalScore = projects.filter((item: any) => item.chain == 'Base');
-    //   const solanaTotalScore = projects.filter((item: any) => item.chain == 'Solana');
-    //   const userTotalScore = users.find((item: any) => item.user_id.toLowerCase() == address.toLowerCase());
-
-    //   console.log('evmTotalScore------------', evmTotalScore);
-    //   console.log('solanaTotalScore------------', solanaTotalScore);
-    //   console.log('userTotalScore------------', userTotalScore);
-    // });
-
     if (caipNetwork.chainNamespace === 'eip155') {
       if (evmStakingContract) {
         getEvmStakeRecords();
@@ -313,6 +247,9 @@ export default function Dashboard() {
       const maxRetries = 10;
       let retryCount = 0;
 
+      const unstakeFeeRate = await evmStakingContract.unstakeFeeRate();
+      const emergencyUnstakeFeeRate = await evmStakingContract.emergencyUnstakeFeeRate();
+
       const fetchStakes = async () => {
         try {
           console.log(`🔍 查询EVM质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
@@ -321,6 +258,8 @@ export default function Dashboard() {
           const newRecords = records.map((record) => {
             record.points = record.amount * getRewardPoints(record.duration);
             // record.tvl = record.amount * 0.0015;
+            record.unstakeFeeRate = Number(unstakeFeeRate) / 100;
+            record.emergencyUnstakeFeeRate = Number(emergencyUnstakeFeeRate) / 100;
             return record;
           });
           return newRecords;
@@ -698,18 +637,18 @@ export default function Dashboard() {
             <div className="text">(*Warning: Unstaking in advance will result in a 30% deduction of rewards*)</div>
             <div className="text-box2">
               <div>Unstaking Fee</div>
-              <div>{emergencyUnstakeFeeRate}%</div>
+              <div>{unstakeRecord.emergencyUnstakeFeeRate}%</div>
             </div>
             <div className="text2">
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
-                <div>{utils.formatNumber(unstakeRecord.amount * (1 - emergencyUnstakeFeeRate / 100), 1)} Aimonica</div>
+                <div>{utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.emergencyUnstakeFeeRate / 100), 1)} Aimonica</div>
                 <div className="s-box">
                   <div className="s-img">
                     <img src="/assets/images/img-3.png" alt="" />
                   </div>
                   <div className="s-text">
-                    {utils.formatNumber(unstakeRecord.amount * (1 - emergencyUnstakeFeeRate / 100), 1)}
+                    {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.emergencyUnstakeFeeRate / 100), 1)}
                   </div>
                 </div>
               </div>
@@ -739,18 +678,18 @@ export default function Dashboard() {
             <div className="title">Unstake</div>
             <div className="text-box2">
               <div>Unstaking Fee</div>
-              <div>{unstakeFeeRate}%</div>
+              <div>{unstakeRecord.unstakeFeeRate}%</div>
             </div>
             <div className="text2 text3">
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
-                <div>{utils.formatNumber(unstakeRecord.amount * (1 - unstakeFeeRate / 100), 1)} Aimonica</div>
+                <div>{utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.unstakeFeeRate / 100), 1)} Aimonica</div>
                 <div className="s-box">
                   <div className="s-img">
                     <img src="/assets/images/img-3.png" alt="" />
                   </div>
                   <div className="s-text">
-                    {utils.formatNumber(unstakeRecord.amount * (1 - unstakeFeeRate / 100), 1)}
+                    {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.unstakeFeeRate / 100), 1)}
                   </div>
                 </div>
               </div>

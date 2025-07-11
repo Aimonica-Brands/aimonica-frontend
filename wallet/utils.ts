@@ -283,7 +283,7 @@ const getProjectConfig = async (solanaProgram: any, projectId: number) => {
 
   const projectConfigPubkey = new PublicKey(projectAddress);
 
-  // console.log('Solana 项目配置:', projectConfig);
+  console.log('Solana 项目配置:', projectConfig);
 
   const vaultAuthority = await getVaultAuthorityPda(solanaProgram, projectConfig.projectId);
   const userTokenAccount = getUserTokenAccount(solanaProgram.provider.wallet.publicKey, projectConfig.tokenMint);
@@ -298,7 +298,9 @@ const getProjectConfig = async (solanaProgram: any, projectId: number) => {
     projectName: projectConfig.name,
     vaultAuthority,
     userTokenAccount,
-    feeWalletTokenAccount
+    feeWalletTokenAccount,
+    unstakeFeeBps: projectConfig.unstakeFeeBps,
+    emergencyUnstakeFeeBps: projectConfig.emergencyUnstakeFeeBps
   };
 
   // console.log(
@@ -433,6 +435,7 @@ export const solanaUtils = {
       return [];
     }
   },
+
   /**获取用户所有质押记录 */
   getStakeRecords: async (solanaProgram: any) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
@@ -456,16 +459,7 @@ export const solanaUtils = {
 
       const projectId = account.projectId.toNumber();
 
-      // 获取项目配置信息
-      let projectName = ''; // 默认名称
-      try {
-        const projectConfig = await solanaProgram.account.projectConfig.fetch(account.projectConfig);
-        projectName = projectConfig.name;
-        // console.log(`项目 ${projectId} 配置:`, projectConfig);
-      } catch (error) {
-        // console.warn(`无法获取项目 ${projectId} 的配置信息`);
-        continue;
-      }
+      const { projectName, unstakeFeeBps, emergencyUnstakeFeeBps } = await getProjectConfig(solanaProgram, projectId);
 
       const staked_at = account.stakeTimestamp.toNumber() * 1000;
       const unlocked_at = staked_at + account.durationDays * 86400 * 1000;
@@ -481,7 +475,9 @@ export const solanaUtils = {
         duration: account.durationDays,
         staked_at,
         unlocked_at,
-        canUnstake
+        canUnstake,
+        unstakeFeeRate: unstakeFeeBps / 100,
+        emergencyUnstakeFeeRate: emergencyUnstakeFeeBps / 100
       });
     }
 
@@ -491,72 +487,23 @@ export const solanaUtils = {
     return sortedRecords;
   },
 
-  /**获取所有项目信息 */
-  // getAllProjects: async (solanaProgram: any) => {
-  //   try {
-  //     // 获取所有项目配置
-  //     const allProjectConfigs = await solanaProgram.account.projectConfig.all();
-  //     console.log('Solana 所有项目配置:', allProjectConfigs);
-
-  //     const projects = [];
-
-  //     for (const project of allProjectConfigs) {
-  //       const projectConfig = project.account;
-  //       const projectId = projectConfig.projectId.toNumber();
-
-  //       // 获取该项目的所有质押记录
-  //       const projectFilter = {
-  //         memcmp: { offset: 8 + 32, bytes: project.publicKey.toBase58() }
-  //       };
-
-  //       const projectStakes = await solanaProgram.account.userStakeInfo.all([projectFilter]);
-  //       const activeStakes = projectStakes.filter((stake) => stake.account.isStaked);
-
-  //       // 计算总质押量
-  //       const totalStaked = activeStakes.reduce((sum, stake) => {
-  //         return sum + stake.account.amount.toNumber();
-  //       }, 0);
-
-  //       projects.push({
-  //         id: projectId,
-  //         name: projectConfig.name,
-  //         tokenMint: projectConfig.tokenMint.toBase58(),
-  //         vault: projectConfig.vault.toBase58(),
-  //         authority: projectConfig.authority.toBase58(),
-  //         feeWallet: projectConfig.feeWallet.toBase58(),
-  //         unstakeFeeBps: projectConfig.unstakeFeeBps,
-  //         emergencyUnstakeFeeBps: projectConfig.emergencyUnstakeFeeBps,
-  //         totalStaked: totalStaked / Math.pow(10, 9), // 转换为可读格式
-  //         stakeCount: activeStakes.length,
-  //         projectConfigAddress: project.publicKey.toBase58()
-  //       });
-  //     }
-
-  //     const sortedProjects = projects.sort((a, b) => a.id - b.id);
-  //     console.log('Solana 所有项目:', sortedProjects);
-
-  //     return sortedProjects;
-  //   } catch (error) {
-  //     console.error('获取所有项目信息失败:', error);
-  //     return [];
-  //   }
-  // },
-
   /**获取下一个质押ID */
   getNextStakeId: async (solanaProgram: any, projectId: number) => {
     const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
-    const { projectConfigPubkey } = await getProjectConfig(solanaProgram, projectId);
+    // const { projectConfigPubkey } = await getProjectConfig(solanaProgram, projectId);
 
     const userFilter = {
       memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
     };
 
-    const projectFilter = {
-      memcmp: { offset: 8 + 32, bytes: projectConfigPubkey.toBase58() }
-    };
+    // const projectFilter = {
+    //   memcmp: { offset: 8 + 32, bytes: projectConfigPubkey.toBase58() }
+    // };
+    // const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
 
-    const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
+    const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
+
     console.log('Solana 原始质押记录:', userStakes);
 
     if (userStakes.length === 0) return 0;
