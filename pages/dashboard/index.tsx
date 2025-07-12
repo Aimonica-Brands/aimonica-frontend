@@ -632,7 +632,7 @@ export default function Dashboard() {
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
                 <div>
-                  {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.emergencyUnstakeFeeRate / 100), 1)}{' '}
+                  {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.emergencyUnstakeFeeRate / 100), 2)}{' '}
                   {unstakeRecord.projectName}
                 </div>
                 <div className="s-box">
@@ -674,7 +674,7 @@ export default function Dashboard() {
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
                 <div>
-                  {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.unstakeFeeRate / 100), 1)}{' '}
+                  {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.unstakeFeeRate / 100), 2)}{' '}
                   {unstakeRecord.projectName}
                 </div>
                 <div className="s-box">
@@ -682,7 +682,7 @@ export default function Dashboard() {
                     <img src="/assets/images/img-3.png" alt="" />
                   </div>
                   <div className="s-text">
-                    {utils.formatNumber(unstakeRecord.amount * getRewardPoints(unstakeRecord.duration), 1)}
+                    {utils.formatNumber(unstakeRecord.amount * getRewardPoints(unstakeRecord.duration), 2)}
                   </div>
                 </div>
               </div>

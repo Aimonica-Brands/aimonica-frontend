@@ -24,9 +24,11 @@ export const getRewardPoints = (duration: number) => {
 };
 
 /**获取积分 */
-const getPoints = async (pointsLeaderboard: any, id: any) => {
-  const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id == id);
-  return pointsLeaderboardItem?.total_score || 0;
+const getPoints = async (pointsLeaderboardProjects: any, id: any) => {
+  if (pointsLeaderboardProjects.length == 0) return 0;
+  const pointsLeaderboardItem = pointsLeaderboardProjects.find((item: any) => item.id == id);
+  console.log('getPoints', pointsLeaderboardItem);
+  return Number(pointsLeaderboardItem?.total_score);
 };
 
 export const evmUtils = {
@@ -39,10 +41,11 @@ export const evmUtils = {
       console.log('EVM 项目:', projects);
 
       // 获取积分排行榜，如果失败则使用空数据继续执行
-      let pointsLeaderboard = { projects: [] };
+      let pointsLeaderboardProjects = [];
       try {
-        pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
-        console.log('积分排行榜', pointsLeaderboard);
+        const leaderboardRes = await aimAPI.GetPointsLeaderboard();
+        pointsLeaderboardProjects = leaderboardRes.projects;
+        console.log('积分排行榜', pointsLeaderboardProjects);
       } catch (error) {
         console.error('获取积分排行榜失败，使用默认值继续执行:', error);
       }
@@ -60,7 +63,7 @@ export const evmUtils = {
           totalStaked: Number(ethers.formatEther(project.totalStaked)),
           createdAt: project.createdAt,
           userCount: Number(project.userCount),
-          points: getPoints(pointsLeaderboard, project.id),
+          points: getPoints(pointsLeaderboardProjects, project.id),
           platformId: 'base',
           contractAddress: '',
           description: '',
@@ -352,10 +355,11 @@ export const solanaUtils = {
       if (projectCount <= 0) return [];
 
       // 获取积分排行榜，如果失败则使用空数据继续执行
-      let pointsLeaderboard = { projects: [] };
+      let pointsLeaderboardProjects = [];
       try {
-        pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
-        console.log('积分排行榜', pointsLeaderboard);
+        const leaderboardRes = await aimAPI.GetPointsLeaderboard();
+        pointsLeaderboardProjects = leaderboardRes.projects;
+        console.log('积分排行榜', pointsLeaderboardProjects);
       } catch (error) {
         console.error('获取积分排行榜失败，使用默认值继续执行:', error);
       }
@@ -378,7 +382,7 @@ export const solanaUtils = {
             totalStaked: totalStaked,
             createdAt: projectConfig.projectId.toNumber(),
             userCount: userCount,
-            points: getPoints(pointsLeaderboard, i),
+            points: getPoints(pointsLeaderboardProjects, i),
             platformId: 'solana',
             contractAddress: '',
             description: '',

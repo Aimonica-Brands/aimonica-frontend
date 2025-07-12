@@ -42,11 +42,3 @@ export const shareOnTwitter = (text: string, url?: string): void => {
   const shareUrl = createTwitterShareUrl(text, url);
   window.open(shareUrl, '_blank', 'width=550,height=420');
 };
-
-/**创建分享消息 */
-export const createShareMessages = {
-  connected: (username: string) => `Just connected my Twitter account @${username} on @AimonicaBrands! 🚀 #AIMonica #Web3`,
-  staked: (amount: string, token: string) => `Staked ${amount} ${token} on @AimonicaBrands! 💎 #AIMonica #Staking`,
-  nft: (nftName: string) => `Minted NFT "${nftName}" on @AimonicaBrands! 🎨 #AIMonica #NFT`,
-  general: () => `Exploring Web3 on @AimonicaBrands! 🌟 #AIMonica #Web3`
-};

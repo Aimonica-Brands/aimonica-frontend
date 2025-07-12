@@ -9,9 +9,8 @@ import { durationDays, evmUtils, solanaUtils, getRewardPoints } from '@/wallet/u
 import { handleContractError, initEVMTokenContract } from '@/wallet/contracts';
 import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
-import { aimAPI } from '@/pages/api/aim';
-import { ethers } from 'ethers';
 import StakeTokenABI from '@/wallet/abi/EVMTOKEN.json';
+import { shareOnTwitter } from '@/pages/api/auth';
 
 export default function Stake() {
   const { message } = App.useApp();
@@ -20,7 +19,7 @@ export default function Stake() {
 
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
-  const { evmStakingContract, solanaProgram, solanaConnection, projectsData } = usePageContext();
+  const { evmStakingContract, solanaProgram, solanaConnection, projectsData, isTwitterConnected } = usePageContext();
 
   const [evmTokenContract, setEvmTokenContract] = useState<any>(null);
   const [projectInfo, setProjectInfo] = useState<any>({});
@@ -204,7 +203,7 @@ export default function Stake() {
           message.success('Transaction submitted, please wait...');
 
           setLoading(false);
-          closeStakeModal();
+          setIsStakeModalOpen(true);
           // 质押成功后立即手动更新余额
           updateBalanceAfterStake(Number(amount));
         })
@@ -226,7 +225,7 @@ export default function Stake() {
             message.success('Transaction submitted, please wait...');
 
             setLoading(false);
-            closeStakeModal();
+            setIsStakeModalOpen(true);
             // 质押成功后立即手动更新余额
             updateBalanceAfterStake(Number(amount));
           })
@@ -316,6 +315,17 @@ export default function Stake() {
         console.log(error);
       });
   };
+
+  const handleShare = () => {
+    console.log('share');
+    if (!isTwitterConnected) {
+      message.error('Please connect your Twitter account first');
+      return;
+    }
+    const shareText = `Staked ${amount} ${projectInfo.projectName} on @AimonicaBrands! 💎 #AIMonica #Staking`;
+    shareOnTwitter(shareText);
+  };
+
   return (
     <div className="stake-page">
       <img src="/assets/images/img-37.png" alt="" className="img-37" />
@@ -575,7 +585,7 @@ export default function Stake() {
               <button className="btn-close" onClick={closeStakeModal}>
                 close
               </button>
-              <button className="btn-share">
+              <button className="btn-share" onClick={handleShare}>
                 Share On
                 <img src="/assets/images/icon-twitter.svg" alt="" />
               </button>
