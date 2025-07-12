@@ -55,7 +55,7 @@ export const evmUtils = {
       for (let index = 0; index < projects.length; index++) {
         const project = projects[index];
 
-        const points = getPoints(pointsLeaderboardProjects, project.id);
+        const points = await getPoints(pointsLeaderboardProjects, project.id);
 
         const newProject = {
           index: index,
@@ -375,7 +375,7 @@ export const solanaUtils = {
           console.log(`项目 ${i} 配置:`, projectConfig);
           const totalStaked = await getProjectTotalStaked(solanaProgram, i);
           const userCount = await getProjectUserCount(solanaProgram, projectConfigPda);
-          const points = getPoints(pointsLeaderboardProjects, i);
+          const points = await getPoints(pointsLeaderboardProjects, i);
 
           const newProject = {
             index: i,
