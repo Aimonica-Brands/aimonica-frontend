@@ -55,6 +55,8 @@ export const evmUtils = {
       for (let index = 0; index < projects.length; index++) {
         const project = projects[index];
 
+        const points = getPoints(pointsLeaderboardProjects, project.id);
+
         const newProject = {
           index: index,
           id: project.id,
@@ -63,7 +65,7 @@ export const evmUtils = {
           totalStaked: Number(ethers.formatEther(project.totalStaked)),
           createdAt: project.createdAt,
           userCount: Number(project.userCount),
-          points: getPoints(pointsLeaderboardProjects, project.id),
+          points,
           platformId: 'base',
           contractAddress: '',
           description: '',
@@ -373,6 +375,7 @@ export const solanaUtils = {
           console.log(`项目 ${i} 配置:`, projectConfig);
           const totalStaked = await getProjectTotalStaked(solanaProgram, i);
           const userCount = await getProjectUserCount(solanaProgram, projectConfigPda);
+          const points = getPoints(pointsLeaderboardProjects, i);
 
           const newProject = {
             index: i,
@@ -382,7 +385,7 @@ export const solanaUtils = {
             totalStaked: totalStaked,
             createdAt: projectConfig.projectId.toNumber(),
             userCount: userCount,
-            points: getPoints(pointsLeaderboardProjects, i),
+            points,
             platformId: 'solana',
             contractAddress: '',
             description: '',
