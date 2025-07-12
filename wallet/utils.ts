@@ -245,73 +245,55 @@ export const evmUtils = {
   }
 };
 
-/**获取项目配置 */
-const getProjectConfig = async (solanaProgram: any, projectId: number) => {
-  try {
-    const [projectConfigPda] = await PublicKey.findProgramAddress(
-      [Buffer.from('project'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
-      solanaProgram.programId
-    );
+/**获取项目配置 PDA */
+const getProjectConfigPda = async (solanaProgram: any, projectId: number) => {
+  const [projectConfigPda] = await PublicKey.findProgramAddress(
+    [Buffer.from('project'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
+    solanaProgram.programId
+  );
+  return projectConfigPda;
+};
 
-    const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
-      [Buffer.from('vault-authority'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
-      solanaProgram.programId
-    );
+const getstakeInfoPda = async (solanaProgram: any, projectConfigPda: any, userPublicKey: any, stakeId: number) => {
+  const [stakeInfoPda] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from('stake'),
+      projectConfigPda.toBuffer(),
+      userPublicKey.toBuffer(),
+      new anchor.BN(stakeId).toArrayLike(Buffer, 'le', 8)
+    ],
+    solanaProgram.programId
+  );
+  return stakeInfoPda;
+};
 
-    const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
+const getVaultAuthorityPda = async (solanaProgram: any, projectId: number) => {
+  const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
+    [Buffer.from('vault-authority'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
+    solanaProgram.programId
+  );
+  return vaultAuthorityPda;
+};
 
-    const projectConfigPubkey = new PublicKey(projectConfigPda);
+const getVaultPda = async (solanaProgram: any, projectId: number) => {
+  const [vaultPda] = await PublicKey.findProgramAddress(
+    [Buffer.from('vault'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
+    solanaProgram.programId
+  );
+  return vaultPda;
+};
 
-    console.log(
-      'Solana 项目配置:',
-      JSON.stringify(projectConfig, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-    );
+const getUserTokenAccount = async (solanaProgram: any, projectConfig: any, userPublicKey: any) => {
+  // 获取用户的实际代币账户
+  const tokenAccounts = await solanaProgram.provider.connection.getParsedTokenAccountsByOwner(userPublicKey, {
+    mint: projectConfig.tokenMint
+  });
+  const userTokenAccount =
+    tokenAccounts.value.length > 0
+      ? tokenAccounts.value[0].pubkey
+      : getAssociatedTokenAddressSync(projectConfig.tokenMint, userPublicKey);
 
-    // 获取用户的实际代币账户
-    const userPublicKey = solanaProgram.provider.wallet.publicKey;
-    const tokenAccounts = await solanaProgram.provider.connection.getParsedTokenAccountsByOwner(userPublicKey, {
-      mint: projectConfig.tokenMint
-    });
-
-    let userTokenAccount;
-    if (tokenAccounts.value.length > 0) {
-      // 使用实际的代币账户
-      userTokenAccount = tokenAccounts.value[0].pubkey;
-    } else {
-      // 如果没有找到，使用关联代币账户
-      userTokenAccount = getAssociatedTokenAddressSync(
-        projectConfig.tokenMint,
-        solanaProgram.provider.wallet.publicKey
-      );
-    }
-
-    const feeWalletTokenAccount = getAssociatedTokenAddressSync(projectConfig.tokenMint, projectConfig.feeWallet);
-
-    const config = {
-      projectConfigPubkey,
-      projectId: projectConfig.projectId.toNumber(),
-      authority: projectConfig.authority,
-      tokenMint: projectConfig.tokenMint,
-      vault: projectConfig.vault,
-      projectName: projectConfig.name,
-      vaultAuthority: vaultAuthorityPda,
-      userTokenAccount,
-      feeWalletTokenAccount,
-      tokenProgram: projectConfig.tokenProgram,
-      unstakeFeeBps: projectConfig.unstakeFeeBps,
-      emergencyUnstakeFeeBps: projectConfig.emergencyUnstakeFeeBps
-    };
-
-    // console.log(
-    //   'Solana 项目配置:',
-    //   JSON.stringify(config, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-    // );
-
-    return config;
-  } catch (error) {
-    console.error(`获取项目 ${projectId} 配置失败:`, error);
-    throw error;
-  }
+  return userTokenAccount;
 };
 
 export const solanaUtils = {
@@ -342,20 +324,14 @@ export const solanaUtils = {
       for (let i = 0; i < projectCount; i++) {
         try {
           // Get project config PDA
-          const [projectConfigPda] = await PublicKey.findProgramAddress(
-            [Buffer.from('project'), new anchor.BN(i).toArrayLike(Buffer, 'le', 8)],
-            solanaProgram.programId
-          );
+          const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
 
           // Get project config
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
           console.log(`项目 ${i} 配置:`, projectConfig);
 
           // Get vault PDA
-          const [vaultPda] = await PublicKey.findProgramAddress(
-            [Buffer.from('vault'), new anchor.BN(i).toArrayLike(Buffer, 'le', 8)],
-            solanaProgram.programId
-          );
+          const vaultPda = await getVaultPda(solanaProgram, i);
 
           // Get vault balance
           let totalStaked = 0;
@@ -466,10 +442,12 @@ export const solanaUtils = {
 
           const projectId = account.projectId.toNumber();
 
-          const { projectName, unstakeFeeBps, emergencyUnstakeFeeBps } = await getProjectConfig(
-            solanaProgram,
-            projectId
-          );
+          const projectConfigPda = await getProjectConfigPda(solanaProgram, projectId);
+
+          const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
+          const projectName = projectConfig.name;
+          const unstakeFeeBps = projectConfig.unstakeFeeBps;
+          const emergencyUnstakeFeeBps = projectConfig.emergencyUnstakeFeeBps;
 
           const staked_at = account.stakeTimestamp.toNumber() * 1000;
           const unlocked_at = staked_at + account.durationDays * 86400 * 1000;
@@ -510,16 +488,9 @@ export const solanaUtils = {
     try {
       const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
-      // const { projectConfigPubkey } = await getProjectConfig(solanaProgram, projectId);
-
       const userFilter = {
         memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
       };
-
-      // const projectFilter = {
-      //   memcmp: { offset: 8 + 32, bytes: projectConfigPubkey.toBase58() }
-      // };
-      // const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter, projectFilter]);
 
       const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
 
@@ -544,7 +515,10 @@ export const solanaUtils = {
   /**获取代币余额 */
   getTokenBalance: async (solanaProgram: any, solanaConnection: any, projectId: number) => {
     try {
-      const { userTokenAccount, tokenMint } = await getProjectConfig(solanaProgram, projectId);
+      const projectConfigPda = await getProjectConfigPda(solanaProgram, projectId);
+      const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
+      const userPublicKey = solanaProgram.provider.wallet.publicKey;
+      const userTokenAccount = await getUserTokenAccount(solanaProgram, projectConfig, userPublicKey);
 
       try {
         const tokenAccount = await solanaConnection.getTokenAccountBalance(userTokenAccount);
@@ -573,34 +547,22 @@ export const solanaUtils = {
     try {
       console.log('项目ID:', projectId, '质押ID:', stakeId, '数量:', stakeAmount);
 
+      const projectConfigPda = await getProjectConfigPda(solanaProgram, projectId);
+      const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
       const userPublicKey = solanaProgram.provider.wallet.publicKey;
-
-      const { projectConfigPubkey, vault, userTokenAccount, tokenProgram } = await getProjectConfig(
-        solanaProgram,
-        projectId
-      );
-
-      const [stakeInfoPda] = await PublicKey.findProgramAddress(
-        [
-          Buffer.from('stake'),
-          projectConfigPubkey.toBuffer(),
-          userPublicKey.toBuffer(),
-          new anchor.BN(stakeId).toArrayLike(Buffer, 'le', 8)
-        ],
-        solanaProgram.programId
-      );
-
+      const userTokenAccount = await getUserTokenAccount(solanaProgram, projectConfig, userPublicKey);
       const stakeAmountLamports = new anchor.BN(stakeAmount * Math.pow(10, 9));
       const stakeIdBN = new anchor.BN(stakeId);
+      const stakeInfoPda = await getstakeInfoPda(solanaProgram, projectConfigPda, userPublicKey, stakeId);
 
       const stakeAccounts = {
-        projectConfig: projectConfigPubkey,
+        projectConfig: projectConfigPda,
         stakeInfo: stakeInfoPda,
         user: userPublicKey,
         userTokenAccount: userTokenAccount,
-        vault: vault,
+        vault: projectConfig.vault,
         systemProgram: SystemProgram.programId,
-        tokenProgram: tokenProgram
+        tokenProgram: projectConfig.tokenProgram
       };
 
       console.log(
@@ -625,30 +587,23 @@ export const solanaUtils = {
     try {
       console.log('项目ID:', projectId, '解质押ID:', record.id, '数量:', record.amount);
 
+      const vaultAuthorityPda = await getVaultAuthorityPda(solanaProgram, projectId);
+      const projectConfigPda = await getProjectConfigPda(solanaProgram, projectId);
+      const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
       const userPublicKey = solanaProgram.provider.wallet.publicKey;
-
-      const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount, feeWalletTokenAccount, tokenProgram } =
-        await getProjectConfig(solanaProgram, projectId);
-
-      const [stakeInfoPda] = await PublicKey.findProgramAddress(
-        [
-          Buffer.from('stake'),
-          projectConfigPubkey.toBuffer(),
-          userPublicKey.toBuffer(),
-          new anchor.BN(record.id).toArrayLike(Buffer, 'le', 8)
-        ],
-        solanaProgram.programId
-      );
+      const userTokenAccount = await getUserTokenAccount(solanaProgram, projectConfig, userPublicKey);
+      const feeWalletTokenAccount = getAssociatedTokenAddressSync(projectConfig.tokenMint, projectConfig.feeWallet);
+      const stakeInfoPda = await getstakeInfoPda(solanaProgram, projectConfigPda, userPublicKey, record.id);
 
       const unstakeAccounts = {
-        projectConfig: projectConfigPubkey,
+        projectConfig: projectConfigPda,
         stakeInfo: stakeInfoPda,
         user: userPublicKey,
         userTokenAccount: userTokenAccount,
-        vault: vault,
-        vaultAuthority: vaultAuthority,
+        vault: projectConfig.vault,
+        vaultAuthority: vaultAuthorityPda,
         feeWallet: feeWalletTokenAccount,
-        tokenProgram: tokenProgram
+        tokenProgram: projectConfig.tokenProgram
       };
 
       console.log(
@@ -670,30 +625,23 @@ export const solanaUtils = {
     try {
       console.log('项目ID:', projectId, '紧急解质押ID:', record.id, '数量:', record.amount);
 
+      const vaultAuthorityPda = await getVaultAuthorityPda(solanaProgram, projectId);
+      const projectConfigPda = await getProjectConfigPda(solanaProgram, projectId);
+      const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
       const userPublicKey = solanaProgram.provider.wallet.publicKey;
-
-      const { projectConfigPubkey, vault, vaultAuthority, userTokenAccount, feeWalletTokenAccount, tokenProgram } =
-        await getProjectConfig(solanaProgram, projectId);
-
-      const [stakeInfoPda] = await PublicKey.findProgramAddress(
-        [
-          Buffer.from('stake'),
-          projectConfigPubkey.toBuffer(),
-          userPublicKey.toBuffer(),
-          new anchor.BN(record.id).toArrayLike(Buffer, 'le', 8)
-        ],
-        solanaProgram.programId
-      );
+      const userTokenAccount = await getUserTokenAccount(solanaProgram, projectConfig, userPublicKey);
+      const feeWalletTokenAccount = getAssociatedTokenAddressSync(projectConfig.tokenMint, projectConfig.feeWallet);
+      const stakeInfoPda = await getstakeInfoPda(solanaProgram, projectConfigPda, userPublicKey, record.id);
 
       const emergencyUnstakeAccounts = {
-        projectConfig: projectConfigPubkey,
+        projectConfig: projectConfigPda,
         stakeInfo: stakeInfoPda,
         user: userPublicKey,
         userTokenAccount: userTokenAccount,
-        vault: vault,
-        vaultAuthority: vaultAuthority,
+        vault: projectConfig.vault,
+        vaultAuthority: vaultAuthorityPda,
         feeWallet: feeWalletTokenAccount,
-        tokenProgram: tokenProgram
+        tokenProgram: projectConfig.tokenProgram
       };
 
       console.log(
