@@ -184,6 +184,15 @@ export default function Stake() {
       });
   };
 
+  // 手动更新余额 - 质押后直接减少余额
+  const updateBalanceAfterStake = (stakeAmount: number) => {
+    const currentBalance = tokenBalance;
+    const newBalance = Math.max(0, currentBalance - stakeAmount);
+    const newWorth = newBalance * projectInfo.coinPriceUsd;
+    setTokenBalance(newBalance);
+    setTokenWorth(Math.floor(newWorth));
+  };
+
   const handleStake = async () => {
     if (loading) return;
     setLoading(true);
@@ -195,15 +204,14 @@ export default function Stake() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗质押交易链接:', txLink);
           message.success('Transaction submitted, please wait...');
+
+          setLoading(false);
           closeStakeModal();
-          setTimeout(() => {
-            getEvmTokenBalance();
-          }, 3000);
+          // 质押成功后立即手动更新余额
+          updateBalanceAfterStake(Number(amount));
         })
         .catch((error) => {
           handleContractError(error);
-        })
-        .finally(() => {
           setLoading(false);
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
@@ -218,15 +226,14 @@ export default function Stake() {
             }`;
             console.log('🔗质押交易链接:', txLink);
             message.success('Transaction submitted, please wait...');
+
+            setLoading(false);
             closeStakeModal();
-            setTimeout(() => {
-              getSolTokenBalance();
-            }, 3000);
+            // 质押成功后立即手动更新余额
+            updateBalanceAfterStake(Number(amount));
           })
           .catch((error) => {
             handleContractError(error);
-          })
-          .finally(() => {
             setLoading(false);
           });
       } catch (error) {

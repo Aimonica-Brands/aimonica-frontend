@@ -35,8 +35,14 @@ export const evmUtils = {
       const users = projectsRes.users;
       console.log('用户列表', users);
 
-      const pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
-      console.log('积分排行榜', pointsLeaderboard);
+      // 获取积分排行榜，如果失败则使用空数据继续执行
+      let pointsLeaderboard = { projects: [] };
+      try {
+        pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
+        console.log('积分排行榜', pointsLeaderboard);
+      } catch (error) {
+        console.error('获取积分排行榜失败，使用默认值继续执行:', error);
+      }
 
       const newProjects = [];
 
@@ -65,9 +71,17 @@ export const evmUtils = {
           tvl: 0
         };
 
-        const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === project.id);
-        console.log('pointsLeaderboardItem', pointsLeaderboardItem);
-        newProject.points = pointsLeaderboardItem?.total_score;
+        // 安全地获取积分信息
+        let pointsLeaderboardItem = null;
+        try {
+          if (pointsLeaderboard.projects && Array.isArray(pointsLeaderboard.projects)) {
+            pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === project.id);
+          }
+          newProject.points = pointsLeaderboardItem?.total_score || 0;
+        } catch (error) {
+          console.error('处理积分信息失败:', error);
+          newProject.points = 0;
+        }
 
         try {
           const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
@@ -316,8 +330,14 @@ export const solanaUtils = {
       console.log('Solana 项目:', projectCount);
       if (projectCount <= 0) return [];
 
-      const pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
-      console.log('积分排行榜', pointsLeaderboard);
+      // 获取积分排行榜，如果失败则使用空数据继续执行
+      let pointsLeaderboard = { projects: [] };
+      try {
+        pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
+        console.log('积分排行榜', pointsLeaderboard);
+      } catch (error) {
+        console.error('获取积分排行榜失败，使用默认值继续执行:', error);
+      }
 
       const newProjects = [];
 
@@ -364,9 +384,17 @@ export const solanaUtils = {
             tvl: 0
           };
 
-          const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === newProject.id);
-          console.log('pointsLeaderboardItem', pointsLeaderboardItem);
-          newProject.points = pointsLeaderboardItem?.total_score;
+          // 安全地获取积分信息
+          let pointsLeaderboardItem = null;
+          try {
+            if (pointsLeaderboard.projects && Array.isArray(pointsLeaderboard.projects)) {
+              pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === newProject.id);
+            }
+            newProject.points = pointsLeaderboardItem?.total_score || 0;
+          } catch (error) {
+            console.error('处理积分信息失败:', error);
+            newProject.points = 0;
+          }
 
           try {
             const coinDetailsRes = await coingeckoAPI.getCoinByContract(newProject.platformId, newProject.stakingToken);
