@@ -32,6 +32,7 @@ export const subgraphsAPI = {
         }
         totalStaked
         createdAt
+        userCount
       }
       users(first: 1000) {
         id

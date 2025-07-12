@@ -623,7 +623,7 @@ export default function Dashboard() {
           <div className="unstake-modal-box">
             <img src="/assets/images/img-26.png" alt="" className="img-26" />
             <div className="title">Emergency Unstake</div>
-            <div className="text">(*Warning: Unstaking in advance will result in a 30% deduction of rewards*)</div>
+            <div className="text">(*Warning: Emergency Unstake will deduct all points*)</div>
             <div className="text-box2">
               <div>Unstaking Fee</div>
               <div>{unstakeRecord.emergencyUnstakeFeeRate}%</div>
@@ -639,9 +639,7 @@ export default function Dashboard() {
                   <div className="s-img">
                     <img src="/assets/images/img-3.png" alt="" />
                   </div>
-                  <div className="s-text">
-                    {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.emergencyUnstakeFeeRate / 100), 1)}
-                  </div>
+                  <div className="s-text">0</div>
                 </div>
               </div>
             </div>
@@ -684,7 +682,7 @@ export default function Dashboard() {
                     <img src="/assets/images/img-3.png" alt="" />
                   </div>
                   <div className="s-text">
-                    {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.unstakeFeeRate / 100), 1)}
+                    {utils.formatNumber(unstakeRecord.amount * getRewardPoints(unstakeRecord.duration), 1)}
                   </div>
                 </div>
               </div>

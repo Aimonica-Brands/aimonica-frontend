@@ -100,10 +100,10 @@ export default function Home() {
     },
     {
       title: 'Users',
-      key: 'users',
+      key: 'userCount',
       align,
       render: (value: any, record: any) => {
-        return <div className="rank">{utils.formatNumber(record.users)}</div>;
+        return <div className="rank">{utils.formatNumber(record.userCount)}</div>;
       }
     },
     {
@@ -209,6 +209,8 @@ export default function Home() {
   }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram, solanaConnection]);
 
   const getProjectData = async () => {
+    setLoading(true);
+    setProjectsData([]);
     if (caipNetwork.chainNamespace === 'eip155') {
       if (evmStakingContract) {
         getEVMProjects();
@@ -221,9 +223,6 @@ export default function Home() {
   };
 
   const getSolanaProjects = async () => {
-    if (loading) return;
-    setLoading(true);
-    setProjectsData([]);
     solanaUtils
       .getProjects(solanaProgram)
       .then((sortedProjects) => {
@@ -238,10 +237,6 @@ export default function Home() {
   };
 
   const getEVMProjects = async () => {
-    if (loading) return;
-    setLoading(true);
-    setProjectsData([]);
-
     evmUtils
       .getProjects()
       .then((sortedProjects) => {
@@ -404,7 +399,7 @@ export default function Home() {
                       </div>
                       <div className="info-item">
                         <div>Users</div>
-                        <div>{utils.formatNumber(item.users)}</div>
+                        <div>{utils.formatNumber(item.userCount)}</div>
                       </div>
                       <div className="info-item2">
                         <button className="stake-btn" onClick={() => toStake(item)}>

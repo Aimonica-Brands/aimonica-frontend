@@ -23,6 +23,12 @@ export const getRewardPoints = (duration: number) => {
   }
 };
 
+/**获取积分 */
+const getPoints = async (pointsLeaderboard: any, id: any) => {
+  const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id == id);
+  return pointsLeaderboardItem?.total_score || 0;
+};
+
 export const evmUtils = {
   /**获取项目信息 */
   getProjects: async () => {
@@ -31,9 +37,6 @@ export const evmUtils = {
 
       const projects = projectsRes.projects.filter((item: any) => item.registered);
       console.log('EVM 项目:', projects);
-
-      const users = projectsRes.users;
-      console.log('用户列表', users);
 
       // 获取积分排行榜，如果失败则使用空数据继续执行
       let pointsLeaderboard = { projects: [] };
@@ -56,7 +59,8 @@ export const evmUtils = {
           stakingToken: project.stakingToken,
           totalStaked: Number(ethers.formatEther(project.totalStaked)),
           createdAt: project.createdAt,
-          points: 0,
+          userCount: Number(project.userCount),
+          points: getPoints(pointsLeaderboard, project.id),
           platformId: 'base',
           contractAddress: '',
           description: '',
@@ -71,24 +75,12 @@ export const evmUtils = {
           tvl: 0
         };
 
-        // 安全地获取积分信息
-        let pointsLeaderboardItem = null;
-        try {
-          if (pointsLeaderboard.projects && Array.isArray(pointsLeaderboard.projects)) {
-            pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === project.id);
-          }
-          newProject.points = pointsLeaderboardItem?.total_score || 0;
-        } catch (error) {
-          console.error('处理积分信息失败:', error);
-          newProject.points = 0;
-        }
-
         try {
           const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
-          console.log('代币详情', coinDetailsRes);
+          console.log(newProject.projectName, coinDetailsRes);
 
           const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
-          console.log('代币价格', coinPrice);
+          console.log(newProject.projectName, coinPrice);
 
           newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
           newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
@@ -268,6 +260,7 @@ const getProjectConfigPda = async (solanaProgram: any, projectId: number) => {
   return projectConfigPda;
 };
 
+/**获取质押信息 PDA */
 const getstakeInfoPda = async (solanaProgram: any, projectConfigPda: any, userPublicKey: any, stakeId: number) => {
   const [stakeInfoPda] = await PublicKey.findProgramAddress(
     [
@@ -281,6 +274,7 @@ const getstakeInfoPda = async (solanaProgram: any, projectConfigPda: any, userPu
   return stakeInfoPda;
 };
 
+/**获取质押授权 PDA */
 const getVaultAuthorityPda = async (solanaProgram: any, projectId: number) => {
   const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
     [Buffer.from('vault-authority'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
@@ -289,16 +283,8 @@ const getVaultAuthorityPda = async (solanaProgram: any, projectId: number) => {
   return vaultAuthorityPda;
 };
 
-const getVaultPda = async (solanaProgram: any, projectId: number) => {
-  const [vaultPda] = await PublicKey.findProgramAddress(
-    [Buffer.from('vault'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
-    solanaProgram.programId
-  );
-  return vaultPda;
-};
-
+/**获取用户代币账户 */
 const getUserTokenAccount = async (solanaProgram: any, projectConfig: any, userPublicKey: any) => {
-  // 获取用户的实际代币账户
   const tokenAccounts = await solanaProgram.provider.connection.getParsedTokenAccountsByOwner(userPublicKey, {
     mint: projectConfig.tokenMint
   });
@@ -308,6 +294,41 @@ const getUserTokenAccount = async (solanaProgram: any, projectConfig: any, userP
       : getAssociatedTokenAddressSync(projectConfig.tokenMint, userPublicKey);
 
   return userTokenAccount;
+};
+
+/**获取项目用户数量 */
+const getProjectUserCount = async (solanaProgram: any, projectConfigPda: any) => {
+  try {
+    const projectFilter = {
+      memcmp: { offset: 40, bytes: projectConfigPda.toBase58() }
+    };
+    const allStakes = await solanaProgram.account.userStakeInfo.all([projectFilter]);
+    const activeUsers = new Set();
+    for (const stake of allStakes) {
+      if (stake.account.isStaked) {
+        activeUsers.add(stake.account.user.toBase58());
+      }
+    }
+    const userCount = activeUsers.size;
+    return userCount;
+  } catch (error) {
+    return 0;
+  }
+};
+
+/**获取质押总量 */
+const getProjectTotalStaked = async (solanaProgram: any, projectId: any) => {
+  try {
+    const [vaultPda] = await PublicKey.findProgramAddress(
+      [Buffer.from('vault'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
+      solanaProgram.programId
+    );
+    const vaultAccount = await solanaProgram.provider.connection.getTokenAccountBalance(vaultPda);
+    const totalStaked = vaultAccount.value.uiAmount || 0;
+    return totalStaked;
+  } catch (error) {
+    return 0;
+  }
 };
 
 export const solanaUtils = {
@@ -343,24 +364,11 @@ export const solanaUtils = {
 
       for (let i = 0; i < projectCount; i++) {
         try {
-          // Get project config PDA
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
-
-          // Get project config
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
           console.log(`项目 ${i} 配置:`, projectConfig);
-
-          // Get vault PDA
-          const vaultPda = await getVaultPda(solanaProgram, i);
-
-          // Get vault balance
-          let totalStaked = 0;
-          try {
-            const vaultAccount = await solanaProgram.provider.connection.getTokenAccountBalance(vaultPda);
-            totalStaked = vaultAccount.value.uiAmount || 0;
-          } catch (error) {
-            console.log(`无法获取项目 ${i} 的 totalStaked:`, error);
-          }
+          const totalStaked = await getProjectTotalStaked(solanaProgram, i);
+          const userCount = await getProjectUserCount(solanaProgram, projectConfigPda);
 
           const newProject = {
             index: i,
@@ -368,8 +376,9 @@ export const solanaUtils = {
             projectName: projectConfig.name,
             stakingToken: projectConfig.tokenMint.toBase58(),
             totalStaked: totalStaked,
-            createdAt: projectConfig.projectId.toNumber(), // 使用项目ID作为创建时间
-            points: 0,
+            createdAt: projectConfig.projectId.toNumber(),
+            userCount: userCount,
+            points: getPoints(pointsLeaderboard, i),
             platformId: 'solana',
             contractAddress: '',
             description: '',
@@ -384,24 +393,12 @@ export const solanaUtils = {
             tvl: 0
           };
 
-          // 安全地获取积分信息
-          let pointsLeaderboardItem = null;
-          try {
-            if (pointsLeaderboard.projects && Array.isArray(pointsLeaderboard.projects)) {
-              pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id === newProject.id);
-            }
-            newProject.points = pointsLeaderboardItem?.total_score || 0;
-          } catch (error) {
-            console.error('处理积分信息失败:', error);
-            newProject.points = 0;
-          }
-
           try {
             const coinDetailsRes = await coingeckoAPI.getCoinByContract(newProject.platformId, newProject.stakingToken);
-            console.log('代币详情', coinDetailsRes);
+            console.log(newProject.projectName, coinDetailsRes);
 
             const coinPrice = await coingeckoAPI.getCoinPrice(newProject.platformId, coinDetailsRes.contract_address);
-            console.log('代币价格', coinPrice);
+            console.log(newProject.projectName, coinPrice);
 
             newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
             newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;

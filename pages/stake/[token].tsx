@@ -31,8 +31,6 @@ export default function Stake() {
   const [expectedPoints, setExpectedPoints] = useState(0);
   const [tokenBalance, setTokenBalance] = useState(0);
   const [tokenWorth, setTokenWorth] = useState(0);
-  const [totalUser, setTotalUser] = useState(0);
-  const [totalTVL, setTotalTVL] = useState(0);
   const [poolAddress, setPoolAddress] = useState('');
   const [poolLink, setPoolLink] = useState('');
   const [isApproved, setIsApproved] = useState(false);
@@ -99,8 +97,8 @@ export default function Stake() {
   }, [evmTokenContract, evmStakingContract, solanaProgram, solanaConnection]);
 
   useEffect(() => {
-    setExpectedPoints(Number(amount));
-  }, [amount]);
+    setExpectedPoints(Number(amount) * getRewardPoints(durationDay));
+  }, [amount, durationDay]);
 
   const getProjectData = async () => {
     const project = projectsData.find((item: any) => item.id == projectId);
@@ -362,11 +360,11 @@ export default function Stake() {
               <div className="text2">
                 <div>
                   <span>Users</span>
-                  <span>{utils.formatNumber(totalUser)}</span>
+                  <span>{utils.formatNumber(projectInfo.userCount)}</span>
                 </div>
                 <div>
                   <span>TVL</span>
-                  <span>$ {utils.formatNumber(totalTVL)}</span>
+                  <span>$ {utils.formatNumber(projectInfo.tvl)}</span>
                 </div>
               </div>
               <div className="text3">
