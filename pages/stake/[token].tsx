@@ -19,14 +19,14 @@ export default function Stake() {
 
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
-  const { evmStakingContract, solanaProgram, solanaConnection, projectsData, isTwitterConnected } = usePageContext();
+  const { evmStakingContract, solanaProgram, projectsData, isTwitterConnected } = usePageContext();
 
   const [evmTokenContract, setEvmTokenContract] = useState<any>(null);
   const [projectInfo, setProjectInfo] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
-  const [durationDay, setDurationDay] = useState(7);
+  const [durationDay, setDurationDay] = useState(0);
   const [expectedPoints, setExpectedPoints] = useState(0);
   const [tokenBalance, setTokenBalance] = useState(0);
   const [tokenWorth, setTokenWorth] = useState(0);
@@ -81,6 +81,12 @@ export default function Stake() {
   }, [projectInfo]);
 
   useEffect(() => {
+    if (projectInfo && tokenBalance) {
+      setTokenWorth(tokenBalance * projectInfo.coinPriceUsd);
+    }
+  }, [projectInfo, tokenBalance]);
+
+  useEffect(() => {
     if (projectId && projectsData && isConnected && address && caipNetwork && chainId) {
       getProjectData();
     }
@@ -90,10 +96,10 @@ export default function Stake() {
     if (evmTokenContract && evmStakingContract) {
       getEvmTokenBalance();
     }
-    if (solanaProgram && solanaConnection) {
+    if (solanaProgram) {
       getSolTokenBalance();
     }
-  }, [evmTokenContract, evmStakingContract, solanaProgram, solanaConnection]);
+  }, [evmTokenContract, evmStakingContract, solanaProgram]);
 
   useEffect(() => {
     setExpectedPoints(Number(amount) * getRewardPoints(durationDay));
@@ -127,9 +133,7 @@ export default function Stake() {
     evmUtils
       .getTokenBalance(evmTokenContract, address)
       .then((balance) => {
-        console.log('EVM 代币余额：', balance);
         setTokenBalance(balance);
-        setTokenWorth(balance * projectInfo.coinPriceUsd);
 
         if (balance > 0) {
           const stakeAddress = getContractConfig(chainId).AimStaking;
@@ -170,9 +174,8 @@ export default function Stake() {
 
   const getSolTokenBalance = async () => {
     solanaUtils
-      .getTokenBalance(solanaProgram, solanaConnection, Number(projectId))
+      .getTokenBalance(solanaProgram, Number(projectId))
       .then((balance) => {
-        console.log('Solana 代币余额：', balance);
         setTokenBalance(Math.floor(balance));
         setTokenWorth(Math.floor(balance * projectInfo.coinPriceUsd));
       })
@@ -370,11 +373,11 @@ export default function Stake() {
               <div className="text2">
                 <div>
                   <span>Users</span>
-                  <span>{utils.formatNumber(projectInfo.userCount)}</span>
+                  <span>{utils.formatNumber(projectInfo?.userCount)}</span>
                 </div>
                 <div>
                   <span>TVL</span>
-                  <span>$ {utils.formatNumber(projectInfo.tvl)}</span>
+                  <span>$ {utils.formatNumber(projectInfo?.tvl, 2)}</span>
                 </div>
               </div>
               <div className="text3">
@@ -407,7 +410,7 @@ export default function Stake() {
                   <span>{projectInfo?.projectName}</span>
                 </div>
                 <div className="number-box">
-                  <div className="number">{utils.formatNumber(tokenBalance)}</div>
+                  <div className="number">{utils.formatNumber(tokenBalance, 2)}</div>
                   <div className="number2">$ {utils.formatNumber(tokenWorth, 2)}</div>
                 </div>
               </div>
@@ -426,7 +429,7 @@ export default function Stake() {
               <div className="text">
                 <span>Locking Time</span>
                 <div className="days">
-                  {durationDays.map((day) => (
+                  {projectInfo?.allowedDurations?.map((day: any) => (
                     <button
                       key={day}
                       className={durationDay === day ? 'active' : ''}
@@ -438,7 +441,7 @@ export default function Stake() {
               </div>
               <div className="text">
                 <span>Expected Points</span>
-                <div className="number">{utils.formatNumber(expectedPoints)}</div>
+                <div className="number">{utils.formatNumber(expectedPoints, 2)}</div>
               </div>
 
               {caipNetwork.chainNamespace === 'eip155' && !isApproved && tokenBalance > 0 ? (
@@ -458,7 +461,9 @@ export default function Stake() {
                   className="stake-btn"
                   onClick={handleStake}
                   loading={loading}
-                  disabled={!isConnected || !address || !caipNetwork || !chainId || !amount || !tokenBalance}>
+                  disabled={
+                    !isConnected || !address || !caipNetwork || !chainId || !amount || !tokenBalance || !durationDay
+                  }>
                   STAKE
                 </Button>
               )}

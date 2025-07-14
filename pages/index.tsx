@@ -11,7 +11,7 @@ import utils from '@/utils';
 
 export default function Home() {
   const router = useRouter();
-  const { evmStakingContract, solanaProgram, solanaConnection, projectsData, setProjectsData } = usePageContext();
+  const { evmStakingContract, solanaProgram, projectsData, setProjectsData } = usePageContext();
   const { isConnected, address } = useAppKitAccount();
   const { caipNetwork, chainId } = useAppKitNetwork();
   const [levelData, setLevelData] = useState([]);
@@ -206,7 +206,7 @@ export default function Home() {
     } else {
       setNetworkId('');
     }
-  }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram, solanaConnection]);
+  }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram]);
 
   const getProjectData = async () => {
     setLoading(true);
@@ -216,7 +216,7 @@ export default function Home() {
         getEVMProjects();
       }
     } else if (caipNetwork.chainNamespace === 'solana') {
-      if (solanaProgram && solanaConnection) {
+      if (solanaProgram) {
         getSolanaProjects();
       }
     }

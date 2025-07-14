@@ -11,7 +11,7 @@ export const WalletComponent = () => {
   const { caipNetwork, chainId } = useAppKitNetwork();
   const { connection } = useAppKitConnection();
   const { walletProvider } = useAppKitProvider<Provider>('solana');
-  const { setEvmStakingContract, setSolanaConnection, setSolanaProgram, setCurrentNetworkType } = usePageContext();
+  const { setEvmStakingContract, setSolanaProgram, setCurrentNetworkType } = usePageContext();
 
   useEffect(() => {
     const initContracts = async () => {
@@ -32,10 +32,9 @@ export const WalletComponent = () => {
         } else if (caipNetwork.chainNamespace === 'solana') {
           if (connection && walletProvider) {
             try {
-              const result = initSolanaContracts(chainId, walletProvider);
-              console.log(`✅ ${caipNetwork.name} 合约初始化成功`, result);
-              setSolanaConnection(result.solanaConnection);
-              setSolanaProgram(result.solanaProgram);
+              const program = initSolanaContracts(chainId, walletProvider);
+              console.log(`✅ ${caipNetwork.name} 合约初始化成功`, program);
+              setSolanaProgram(program);
             } catch (error) {
               console.error(`❌ ${caipNetwork.name} 合约初始化失败`, error);
             }
@@ -57,7 +56,6 @@ export const WalletComponent = () => {
 
   const clearContractStates = () => {
     setEvmStakingContract(null);
-    setSolanaConnection(null);
     setSolanaProgram(null);
     setCurrentNetworkType(null);
   };

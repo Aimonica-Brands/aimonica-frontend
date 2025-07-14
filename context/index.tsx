@@ -28,8 +28,6 @@ interface PageContextType {
   setEvmStakingContract: (contract: any) => void;
 
   // Solana 合约状态
-  solanaConnection: any;
-  setSolanaConnection: (connection: any) => void;
   solanaProgram: any;
   setSolanaProgram: (program: any) => void;
 
@@ -55,14 +53,13 @@ type PageProviderProps = {
 export function PageProvider({ children }: PageProviderProps) {
   const [walletAddress, setWalletAddress] = useState('');
 
-  // Twitter 状态
+  // Twitter
   const [twitterUser, setTwitterUser] = useState<TwitterUser | null>(null);
 
-  // EVM 状态
+  // EVM
   const [evmStakingContract, setEvmStakingContract] = useState(null);
 
-  // Solana 状态
-  const [solanaConnection, setSolanaConnection] = useState(null);
+  // Solana
   const [solanaProgram, setSolanaProgram] = useState(null);
 
   // 网络状态
@@ -82,8 +79,6 @@ export function PageProvider({ children }: PageProviderProps) {
     evmStakingContract,
     setEvmStakingContract,
 
-    solanaConnection,
-    setSolanaConnection,
     solanaProgram,
     setSolanaProgram,
 

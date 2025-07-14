@@ -44,7 +44,7 @@ export default function Dashboard() {
     {
       title: 'Amount',
       dataIndex: 'amount',
-      render: (value: number) => `${utils.formatNumber(value)}`
+      render: (value: number) => `${utils.formatNumber(value, 2)}`
     },
     {
       title: 'Duration',
@@ -90,7 +90,7 @@ export default function Dashboard() {
     {
       title: 'Amount',
       dataIndex: 'amount',
-      render: (value: number) => `${utils.formatNumber(value)}`
+      render: (value: number) => `${utils.formatNumber(value, 2)}`
     },
     {
       title: 'Duration',
@@ -124,7 +124,7 @@ export default function Dashboard() {
             <div className="s-img">
               <img src="/assets/images/img-3.png" alt="" />
             </div>
-            <div className="s-text">{utils.formatNumber(value)}</div>
+            <div className="s-text">{utils.formatNumber(value, 2)}</div>
           </div>
         );
       }
@@ -139,7 +139,7 @@ export default function Dashboard() {
     //         <div className="s-img">
     //           <img src="/assets/images/img-4.png" alt="" />
     //         </div>
-    //         <div className="s-text">$ {utils.formatNumber(value)}</div>
+    //         <div className="s-text">$ {utils.formatNumber(value,2)}</div>
     //       </div>
     //     );
     //   }
@@ -550,12 +550,12 @@ export default function Dashboard() {
               <div className="s-img">
                 <img src="/assets/images/img-3.png" alt="" />
               </div>
-              <div className="s-text">{utils.formatNumber(totalPoints)}</div>
+              <div className="s-text">{utils.formatNumber(totalPoints, 2)}</div>
             </div>
           </div>
           <div className="banner-item">
             <div className="banner-item-title">Total Staked</div>
-            <div className="text">{utils.formatNumber(totalStaked)}</div>
+            <div className="text">{utils.formatNumber(totalStaked, 2)}</div>
           </div>
           <div className="banner-item">
             <div className="banner-item-title">Total Project</div>

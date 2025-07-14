@@ -382,8 +382,9 @@ export const solanaUtils = {
             id: i.toString(),
             projectName: projectConfig.name,
             stakingToken: projectConfig.tokenMint.toBase58(),
-            totalStaked: totalStaked,
             createdAt: projectConfig.projectId.toNumber(),
+            allowedDurations: projectConfig.allowedDurations,
+            totalStaked: totalStaked,
             userCount: userCount,
             points,
             platformId: 'solana',
@@ -491,7 +492,7 @@ export const solanaUtils = {
             user_id: account.user.toBase58(),
             project_id: projectId,
             projectName,
-            amount: account.amount.toNumber() / Math.pow(10, 9),
+            amount: account.amount.toNumber() / 1e6,
             duration: account.durationDays,
             staked_at,
             unlocked_at,
@@ -545,7 +546,7 @@ export const solanaUtils = {
   },
 
   /**获取代币余额 */
-  getTokenBalance: async (solanaProgram: any, solanaConnection: any, projectId: number) => {
+  getTokenBalance: async (solanaProgram: any, projectId: number) => {
     try {
       const projectConfigPda = await getProjectConfigPda(solanaProgram, projectId);
       const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
@@ -553,7 +554,7 @@ export const solanaUtils = {
       const userTokenAccount = await getUserTokenAccount(solanaProgram, projectConfig, userPublicKey);
 
       try {
-        const tokenAccount = await solanaConnection.getTokenAccountBalance(userTokenAccount);
+        const tokenAccount = await solanaProgram.provider.connection.getTokenAccountBalance(userTokenAccount);
         const balance = tokenAccount.value.uiAmount || 0;
         console.log('获取到余额:', balance);
         return balance;
@@ -583,7 +584,7 @@ export const solanaUtils = {
       const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
       const userPublicKey = solanaProgram.provider.wallet.publicKey;
       const userTokenAccount = await getUserTokenAccount(solanaProgram, projectConfig, userPublicKey);
-      const stakeAmountLamports = new anchor.BN(stakeAmount * Math.pow(10, 9));
+      const amountToStake = new anchor.BN(stakeAmount * 1e6);
       const stakeIdBN = new anchor.BN(stakeId);
       const stakeInfoPda = await getstakeInfoPda(solanaProgram, projectConfigPda, userPublicKey, stakeId);
 
@@ -603,7 +604,7 @@ export const solanaUtils = {
       );
 
       const tx = await solanaProgram.methods
-        .stake(stakeAmountLamports, stakeDuration, stakeIdBN)
+        .stake(amountToStake, stakeDuration, stakeIdBN)
         .accounts(stakeAccounts)
         .rpc();
 

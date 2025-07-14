@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import * as anchor from '@coral-xyz/anchor';
-import { clusterApiUrl, Connection } from '@solana/web3.js';
+import { Connection } from '@solana/web3.js';
 import { getContractConfig } from './index';
 import { message } from 'antd';
 
@@ -19,15 +19,16 @@ export const initEVMTokenContract = async (chainId: any, token: any, abi: any) =
     const provider = new ethers.BrowserProvider(window.ethereum as any);
     const signer = await provider.getSigner();
 
-    const evmTokenContract = new ethers.Contract(token, abi, signer);
+    const contract = new ethers.Contract(token, abi, signer);
 
-    return evmTokenContract;
+    return contract;
   } catch (error) {
     console.error('EVM contract initialization error:', error);
     throw error;
   }
 };
 
+/**初始化 EVM 质押合约*/
 export const initEVMStakingContract = async (chainId: any) => {
   try {
     const tokenConfig = getContractConfig(chainId);
@@ -42,13 +43,31 @@ export const initEVMStakingContract = async (chainId: any) => {
     const provider = new ethers.BrowserProvider(window.ethereum as any);
     const signer = await provider.getSigner();
 
-    const evmStakingContract = new ethers.Contract(tokenConfig.AimStaking, tokenConfig.AimStakingABI, signer);
+    const contract = new ethers.Contract(tokenConfig.AimStaking, tokenConfig.AimStakingABI, signer);
 
-    return evmStakingContract;
+    return contract;
   } catch (error) {
     console.error('EVM contract initialization error:', error);
     throw error;
   }
+};
+
+/**获取可用的 Solana RPC 端点*/
+const getSolanaEndpoint = () => {
+  // 免费公共 RPC 端点列表
+  const mainnetEndpoints = [
+    'https://solana.publicnode.com/',
+    'https://solana-mainnet.g.alchemy.com/v2/demo', // Alchemy 免费端点
+    'https://rpc.ankr.com/solana', // Ankr 免费端点
+    'https://solana-api.projectserum.com', // Project Serum 免费端点
+    'https://api.mainnet-beta.solana.com', // Solana 官方端点（有限制）
+    'https://solana.public-rpc.com', // 公共 RPC
+    'https://rpc.helius.xyz/?api-key=1aec0f89-8b1a-4a5c-9b1a-4a5c9b1a4a5c' // Helius 免费端点
+  ];
+
+  // 随机选择一个端点，避免单一端点过载
+  // const randomIndex = Math.floor(Math.random() * 3); // 只使用前3个最稳定的端点
+  return mainnetEndpoints[0];
 };
 
 /**初始化 Solana 合约*/
@@ -63,8 +82,8 @@ export const initSolanaContracts = (chainId: any, walletProvider: any) => {
       throw new Error('Solana wallet provider not available');
     }
 
-    const endpoint = clusterApiUrl(tokenConfig.cluster);
-    const newConnection = new Connection(endpoint);
+    const endpoint = getSolanaEndpoint();
+    const newConnection = new Connection(endpoint, 'confirmed');
 
     const provider = new anchor.AnchorProvider(newConnection, walletProvider, { commitment: 'confirmed' });
 
@@ -72,10 +91,7 @@ export const initSolanaContracts = (chainId: any, walletProvider: any) => {
 
     const program = new anchor.Program(tokenConfig.aim_staking_program, provider);
 
-    return {
-      solanaConnection: newConnection,
-      solanaProgram: program
-    };
+    return program;
   } catch (error) {
     console.error('❌ Solana contract initialization error:', error);
     throw error;
