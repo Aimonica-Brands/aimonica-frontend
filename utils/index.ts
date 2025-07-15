@@ -8,7 +8,7 @@ export default {
     return value.slice(0, 5) + '...' + value.slice(index - 5, index);
   },
 
-  formatNumber(num: number, decimals: number = 0) {
+  formatNumber(num: number, decimals: number = 2) {
     if (typeof num !== 'number') return '-';
     const formatted = numeral(num).format(`0,0.${'0'.repeat(decimals)}`);
     const [intPart, decPart] = formatted.split('.');

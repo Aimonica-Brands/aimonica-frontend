@@ -377,7 +377,7 @@ export default function Stake() {
                 </div>
                 <div>
                   <span>TVL</span>
-                  <span>$ {utils.formatNumber(projectInfo?.tvl, 2)}</span>
+                  <span>$ {utils.formatNumber(projectInfo?.tvl)}</span>
                 </div>
               </div>
               <div className="text3">
@@ -410,8 +410,8 @@ export default function Stake() {
                   <span>{projectInfo?.projectName}</span>
                 </div>
                 <div className="number-box">
-                  <div className="number">{utils.formatNumber(tokenBalance, 2)}</div>
-                  <div className="number2">$ {utils.formatNumber(tokenWorth, 2)}</div>
+                  <div className="number">{utils.formatNumber(tokenBalance)}</div>
+                  <div className="number2">$ {utils.formatNumber(tokenWorth)}</div>
                 </div>
               </div>
               <div className="inputbox">
@@ -441,7 +441,7 @@ export default function Stake() {
               </div>
               <div className="text">
                 <span>Expected Points</span>
-                <div className="number">{utils.formatNumber(expectedPoints, 2)}</div>
+                <div className="number">{utils.formatNumber(expectedPoints)}</div>
               </div>
 
               {caipNetwork.chainNamespace === 'eip155' && !isApproved && tokenBalance > 0 ? (
