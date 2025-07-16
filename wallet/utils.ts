@@ -21,6 +21,39 @@ export const getRewardPoints = (duration: number) => {
 };
 
 export const evmUtils = {
+  /**获取手续费配置 */
+  getFeeConfig: async (evmStakingContract: any) => {
+    try {
+      // const feeWallet = await evmStakingContract.feeWallet();
+      const unstakeFeeRate = await evmStakingContract.unstakeFeeRate();
+      const emergencyUnstakeFeeRate = await evmStakingContract.emergencyUnstakeFeeRate();
+      return {
+        // feeWallet,
+        unstakeFeeRate: Number(unstakeFeeRate) / 100,
+        emergencyUnstakeFeeRate: Number(emergencyUnstakeFeeRate) / 100
+      };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  /**获取质押时长 */
+  getDurations: async (evmStakingContract: any) => {
+    try {
+      const allowedDurations = [1, 7, 14, 21, 30];
+      let durations: any = [];
+      for (const duration of allowedDurations) {
+        const durationOptions = await evmStakingContract.durationOptions(duration);
+        if (durationOptions) durations.push(duration);
+      }
+      return durations;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
   /**获取项目信息 */
   getProjects: async () => {
     try {
@@ -469,8 +502,8 @@ export const solanaUtils = {
 
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
           const projectName = projectConfig.name;
-          const unstakeFeeBps = projectConfig.unstakeFeeBps;
-          const emergencyUnstakeFeeBps = projectConfig.emergencyUnstakeFeeBps;
+          const unstakeFeeRate = projectConfig.unstakeFeeBps;
+          const emergencyUnstakeFeeRate = projectConfig.emergencyUnstakeFeeBps;
 
           const staked_at = account.stakeTimestamp.toNumber() * 1000;
           const unlocked_at = staked_at + account.durationDays * 86400 * 1000;
@@ -487,8 +520,8 @@ export const solanaUtils = {
             staked_at,
             unlocked_at,
             canUnstake,
-            unstakeFeeRate: unstakeFeeBps / 100,
-            emergencyUnstakeFeeRate: emergencyUnstakeFeeBps / 100
+            unstakeFeeRate: unstakeFeeRate / 100,
+            emergencyUnstakeFeeRate: emergencyUnstakeFeeRate / 100
           });
         } catch (error) {
           console.error('处理质押记录失败:', error);

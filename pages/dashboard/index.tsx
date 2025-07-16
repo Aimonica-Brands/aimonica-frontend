@@ -29,6 +29,9 @@ export default function Dashboard() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyDataSource, setHistoryDataSource] = useState([]);
 
+  const [unstakeFeeRate, setUnstakeFeeRate] = useState(0);
+  const [emergencyUnstakeFeeRate, setEmergencyUnstakeFeeRate] = useState(0);
+
   const align = 'center' as const;
   const historyColumns: ColumnsType<any> = [
     {
@@ -180,6 +183,7 @@ export default function Dashboard() {
         setNetworkId(chainId.toString());
         getStakeRecords();
         getPointsDashboard();
+        getFeeConfig();
       } else {
         setNetworkId('');
         setStakeRecords([]);
@@ -207,6 +211,23 @@ export default function Dashboard() {
       setTotalProject(0);
     }
   }, [stakeRecords]);
+
+  const getFeeConfig = async () => {
+    if (caipNetwork.chainNamespace === 'eip155') {
+      if (evmStakingContract) {
+        evmUtils
+          .getFeeConfig(evmStakingContract)
+          .then((config) => {
+            console.log('✅ 获取手续费配置:', config);
+            setUnstakeFeeRate(config.unstakeFeeRate);
+            setEmergencyUnstakeFeeRate(config.emergencyUnstakeFeeRate);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+    }
+  };
 
   const getStakeRecords = async () => {
     if (caipNetwork.chainNamespace === 'eip155') {
@@ -446,21 +467,29 @@ export default function Dashboard() {
   const openUnstakeModal = (record: any) => {
     setIsUnstakeModalOpen(true);
     setUnstakeRecord(record);
+    setUnstakeFeeRate(record.unstakeFeeRate);
+    setEmergencyUnstakeFeeRate(record.emergencyUnstakeFeeRate);
   };
 
   const openEmergencyUnstakeModal = (record: any) => {
     setIsEmergencyUnstakeModalOpen(true);
     setUnstakeRecord(record);
+    setUnstakeFeeRate(record.unstakeFeeRate);
+    setEmergencyUnstakeFeeRate(record.emergencyUnstakeFeeRate);
   };
 
   const closeUnstakeModal = () => {
     setIsUnstakeModalOpen(false);
     setUnstakeRecord(null);
+    setUnstakeFeeRate(null);
+    setEmergencyUnstakeFeeRate(null);
   };
 
   const closeEmergencyUnstakeModal = () => {
     setIsEmergencyUnstakeModalOpen(false);
     setUnstakeRecord(null);
+    setUnstakeFeeRate(null);
+    setEmergencyUnstakeFeeRate(null);
   };
 
   const handleTabClick = (network: any) => async () => {
@@ -624,13 +653,13 @@ export default function Dashboard() {
             <div className="text">(*Warning: Emergency Unstake will deduct all points*)</div>
             <div className="text-box2">
               <div>Unstaking Fee</div>
-              <div>{unstakeRecord.emergencyUnstakeFeeRate}%</div>
+              <div>{emergencyUnstakeFeeRate}%</div>
             </div>
             <div className="text2">
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
                 <div>
-                  {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.emergencyUnstakeFeeRate / 100))}{' '}
+                  {utils.formatNumber(unstakeRecord.amount * (1 - emergencyUnstakeFeeRate / 100))}{' '}
                   {unstakeRecord.projectName}
                 </div>
                 <div className="s-box">
@@ -666,14 +695,13 @@ export default function Dashboard() {
             <div className="title">Unstake</div>
             <div className="text-box2">
               <div>Unstaking Fee</div>
-              <div>{unstakeRecord.unstakeFeeRate}%</div>
+              <div>{unstakeFeeRate}%</div>
             </div>
             <div className="text2 text3">
               <div className="text2-1">You can only get</div>
               <div className="text2-2">
                 <div>
-                  {utils.formatNumber(unstakeRecord.amount * (1 - unstakeRecord.unstakeFeeRate / 100))}{' '}
-                  {unstakeRecord.projectName}
+                  {utils.formatNumber(unstakeRecord.amount * (1 - unstakeFeeRate / 100))} {unstakeRecord.projectName}
                 </div>
                 <div className="s-box">
                   <div className="s-img">
