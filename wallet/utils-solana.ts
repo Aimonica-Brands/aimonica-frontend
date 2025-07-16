@@ -101,16 +101,16 @@ export const solanaUtils = {
       }
 
       const projectCount = platformConfig.projectCount.toNumber();
-      console.log('Solana 项目:', projectCount);
+      console.log('Solana 项目数量:', projectCount);
       if (projectCount <= 0) return [];
 
       // 获取积分排行榜，如果失败则使用空数据继续执行
       let pointsLeaderboard = { projects: [] };
       try {
         pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
-        console.log('Solana 积分排行榜', pointsLeaderboard);
+        console.log('积分排行榜', pointsLeaderboard);
       } catch (error) {
-        console.error('获取积分排行榜失败，使用默认值继续执行:', error);
+        console.error(error);
       }
 
       const newProjects = [];
@@ -152,10 +152,10 @@ export const solanaUtils = {
 
           try {
             const coinDetailsRes = await coingeckoAPI.getCoinByContract(newProject.platformId, newProject.stakingToken);
-            console.log(newProject.projectName, coinDetailsRes);
+            // console.log(newProject.projectName, coinDetailsRes);
 
             const coinPrice = await coingeckoAPI.getCoinPrice(newProject.platformId, coinDetailsRes.contract_address);
-            console.log(newProject.projectName, coinPrice);
+            // console.log(newProject.projectName, coinPrice);
 
             newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
             newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
@@ -188,14 +188,13 @@ export const solanaUtils = {
             return { ...item, rank: index + 1 };
           });
 
-        console.log('Solana 项目:', sortedProjects);
+        console.log('Solana 项目记录:', sortedProjects);
         return sortedProjects;
       }
 
       return [];
     } catch (error) {
-      console.error('获取 Solana 项目错误:', error);
-      return [];
+      throw error;
     }
   },
 
@@ -209,7 +208,7 @@ export const solanaUtils = {
       };
 
       const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
-      console.log('Solana 质押记录:', userStakes);
+      console.log('Solana 原始质押记录:', userStakes);
 
       if (!userStakes) return [];
 
@@ -230,38 +229,35 @@ export const solanaUtils = {
           const projectName = projectConfig.name;
           const unstakeFeeRate = projectConfig.unstakeFeeBps;
           const emergencyUnstakeFeeRate = projectConfig.emergencyUnstakeFeeBps;
-
-          const staked_at = account.stakeTimestamp.toNumber() * 1000;
-          const unlocked_at = staked_at + account.durationDays * 86400 * 1000;
+          const stakedAt = account.stakeTimestamp.toNumber() * 1000;
+          const unlockedAt = stakedAt + account.durationDays * 86400 * 1000;
           const now = new Date().getTime();
-          const canUnstake = now >= unlocked_at;
+          const canUnstake = now >= unlockedAt;
 
           records.push({
             id: account.stakeId.toNumber(),
-            user_id: account.user.toBase58(),
-            project_id: projectId,
+            userId: account.user.toBase58(),
+            projectId,
             projectName,
             amount: account.amount.toNumber() / 1e6,
             duration: account.durationDays,
-            staked_at,
-            unlocked_at,
+            stakedAt,
+            unlockedAt,
             canUnstake,
             unstakeFeeRate: unstakeFeeRate / 100,
             emergencyUnstakeFeeRate: emergencyUnstakeFeeRate / 100
           });
         } catch (error) {
-          console.error('处理质押记录失败:', error);
-          // 继续处理其他记录
+          console.error(error);
         }
       }
 
-      const sortedRecords = records.sort((a, b) => b.staked_at - a.staked_at);
+      const sortedRecords = records.sort((a, b) => b.stakedAt - a.stakedAt);
       console.log('Solana 质押记录:', sortedRecords);
 
       return sortedRecords;
     } catch (error) {
-      console.error('获取 Solana 质押记录错误:', error);
-      return [];
+      throw error;
     }
   },
 
@@ -289,7 +285,6 @@ export const solanaUtils = {
 
       return nextStakeId;
     } catch (error) {
-      console.error('获取下一个质押ID失败:', error);
       throw error;
     }
   },
@@ -311,15 +306,11 @@ export const solanaUtils = {
         // 如果代币账户不存在，返回 0 余额
         if (error.message && error.message.includes('could not find account')) {
           console.log('代币账户不存在，返回 0 余额');
-          console.log(error.message);
           return 0;
         }
-        // 其他错误则抛出
-        console.log(error.message);
         throw error;
       }
     } catch (error) {
-      console.error(error);
       throw error;
     }
   },
@@ -347,11 +338,6 @@ export const solanaUtils = {
         tokenProgram: projectConfig.tokenProgram
       };
 
-      console.log(
-        '质押账户:',
-        JSON.stringify(stakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-      );
-
       const tx = await solanaProgram.methods
         .stake(amountToStake, stakeDuration, stakeIdBN)
         .accounts(stakeAccounts)
@@ -359,7 +345,6 @@ export const solanaUtils = {
 
       return tx;
     } catch (error) {
-      console.error('质押失败:', error);
       throw error;
     }
   },
@@ -388,16 +373,10 @@ export const solanaUtils = {
         tokenProgram: projectConfig.tokenProgram
       };
 
-      console.log(
-        '解质押账户:',
-        JSON.stringify(unstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-      );
-
       const tx = await solanaProgram.methods.unstake(new anchor.BN(record.id)).accounts(unstakeAccounts).rpc();
 
       return tx;
     } catch (error) {
-      console.error('解质押失败:', error);
       throw error;
     }
   },
@@ -426,11 +405,6 @@ export const solanaUtils = {
         tokenProgram: projectConfig.tokenProgram
       };
 
-      console.log(
-        '紧急解质押账户:',
-        JSON.stringify(emergencyUnstakeAccounts, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-      );
-
       const tx = await solanaProgram.methods
         .emergencyUnstake(new anchor.BN(record.id))
         .accounts(emergencyUnstakeAccounts)
@@ -438,7 +412,6 @@ export const solanaUtils = {
 
       return tx;
     } catch (error) {
-      console.error('紧急解质押失败:', error);
       throw error;
     }
   }

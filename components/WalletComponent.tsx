@@ -24,7 +24,7 @@ export const WalletComponent = () => {
         if (caipNetwork.chainNamespace === 'eip155') {
           try {
             const contract = await getEVMStakeContract(chainId);
-            console.log(`✅ ${caipNetwork.name} 合约初始化成功`, contract);
+            console.log(`✅ ${caipNetwork.name} 合约初始化成功`);
             setEvmStakingContract(contract);
           } catch (error) {
             console.error(`❌ ${caipNetwork.name} 合约初始化失败`, error);
@@ -33,13 +33,11 @@ export const WalletComponent = () => {
           if (connection && walletProvider) {
             try {
               const program = getSolanaContracts(chainId, walletProvider);
-              console.log(`✅ solana 合约初始化成功`, program);
+              console.log(`✅ solana 合约初始化成功`);
               setSolanaProgram(program);
             } catch (error) {
               console.error(`❌ solana 合约初始化失败`, error);
             }
-          } else {
-            console.log(`⏳ 等待 solana 连接...`);
           }
         }
       } else {

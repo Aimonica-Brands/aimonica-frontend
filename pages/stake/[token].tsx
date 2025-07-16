@@ -31,13 +31,13 @@ export default function Stake() {
   const [poolAddress, setPoolAddress] = useState('');
   const [poolLink, setPoolLink] = useState('');
   const [isApproved, setIsApproved] = useState(false);
+  const [durationConfig, setDurationConfig] = useState<any>([]);
 
   const [mindshare, setMindshare] = useState(0);
   const [impressions, setImpressions] = useState(0);
   const [engagements, setEngagements] = useState(0);
   const [smartFollowers, setSmartFollowers] = useState(0);
   const [topTweets, setTopTweets] = useState([]);
-  const [allowedDurations, setAllowedDurations] = useState<any>([]);
 
   const infoItems = [
     {
@@ -66,9 +66,7 @@ export default function Stake() {
     }
   ];
 
-  const onChange = (key: string) => {
-    console.log(key);
-  };
+  const onChange = (key: string) => {};
 
   useEffect(() => {
     if (projectInfo && projectInfo.name) {
@@ -87,13 +85,13 @@ export default function Stake() {
 
   useEffect(() => {
     if (projectId && projectsData && isConnected && address && caipNetwork && chainId) {
-      getProjectData();
+      getProject();
     }
   }, [projectId, projectsData, isConnected, address, caipNetwork, chainId]);
 
   useEffect(() => {
     if (evmTokenContract && evmStakingContract) {
-      getDurations();
+      getDurationConfig();
       getEvmTokenBalance();
     }
     if (solanaProgram) {
@@ -105,7 +103,7 @@ export default function Stake() {
     setExpectedPoints(Number(amount) * getRewardPoints(durationDay));
   }, [amount, durationDay]);
 
-  const getProjectData = async () => {
+  const getProject = async () => {
     const project = projectsData.find((item: any) => item.id == projectId);
     console.log('当前项目：', project);
     setProjectInfo(project);
@@ -120,22 +118,21 @@ export default function Stake() {
       setPoolLink(link);
 
       const contract = await getEVMTokenContract(chainId, project.stakingToken);
-      console.log(`✅ 质押代币合约初始化成功`, contract);
+      console.log(`✅ 质押代币合约初始化成功`);
       setEvmTokenContract(contract);
     } else if (caipNetwork.chainNamespace === 'solana') {
       setPoolAddress(contractConfig.programId);
       const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
       setPoolLink(link);
-      setAllowedDurations(project.allowedDurations);
+      setDurationConfig(project.allowedDurations);
     }
   };
 
-  const getDurations = async () => {
+  const getDurationConfig = async () => {
     evmUtils
-      .getDurations(evmStakingContract)
+      .getDurationConfig(evmStakingContract)
       .then((durations) => {
-        console.log('✅ 获取质押时长:', durations);
-        setAllowedDurations(durations);
+        setDurationConfig(durations);
       })
       .catch((error) => {
         console.log(error);
@@ -441,7 +438,7 @@ export default function Stake() {
               <div className="text">
                 <span>Locking Time</span>
                 <div className="days">
-                  {allowedDurations?.map((day: any) => (
+                  {durationConfig?.map((day: any) => (
                     <button
                       key={day}
                       className={durationDay === day ? 'active' : ''}

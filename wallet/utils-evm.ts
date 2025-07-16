@@ -9,19 +9,21 @@ export const evmUtils = {
       // const feeWallet = await evmStakingContract.feeWallet();
       const unstakeFeeRate = await evmStakingContract.unstakeFeeRate();
       const emergencyUnstakeFeeRate = await evmStakingContract.emergencyUnstakeFeeRate();
-      return {
+      const config = {
         // feeWallet,
         unstakeFeeRate: Number(unstakeFeeRate) / 100,
         emergencyUnstakeFeeRate: Number(emergencyUnstakeFeeRate) / 100
       };
+      console.log('✅ 获取手续费配置:', config);
+
+      return config;
     } catch (error) {
-      console.error(error);
       throw error;
     }
   },
 
   /**获取质押时长 */
-  getDurations: async (evmStakingContract: any) => {
+  getDurationConfig: async (evmStakingContract: any) => {
     try {
       const allowedDurations = [1, 7, 14, 21, 30];
       let durations: any = [];
@@ -29,9 +31,10 @@ export const evmUtils = {
         const durationOptions = await evmStakingContract.durationOptions(duration);
         if (durationOptions) durations.push(duration);
       }
+      console.log('✅ 获取质押时长:', durations);
+
       return durations;
     } catch (error) {
-      console.error(error);
       throw error;
     }
   },
@@ -42,7 +45,7 @@ export const evmUtils = {
       const projectsRes: any = await subgraphsAPI.getProjects();
 
       const projects = projectsRes.projects.filter((item: any) => item.registered);
-      console.log('EVM 项目:', projects);
+      console.log('EVM 原始项目记录:', projects);
 
       // 获取积分排行榜，如果失败则使用空数据继续执行
       let pointsLeaderboard = { projects: [] };
@@ -50,7 +53,7 @@ export const evmUtils = {
         pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
         console.log('积分排行榜', pointsLeaderboard);
       } catch (error) {
-        console.error('获取积分排行榜失败，使用默认值继续执行:', error);
+        console.error(error);
       }
 
       const newProjects = [];
@@ -86,10 +89,10 @@ export const evmUtils = {
 
         try {
           const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
-          console.log(newProject.projectName, coinDetailsRes);
+          // console.log(newProject.projectName, coinDetailsRes);
 
           const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
-          console.log(newProject.projectName, coinPrice);
+          // console.log(newProject.projectName, coinPrice);
 
           newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
           newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
@@ -118,14 +121,13 @@ export const evmUtils = {
             return { ...item, rank: index + 1 };
           });
 
-        console.log('EVM 项目:', sortedProjects);
+        console.log('EVM 项目记录:', sortedProjects);
         return sortedProjects;
       }
 
       return [];
     } catch (error) {
-      console.error('获取 EVM 项目错误:', error);
-      return [];
+      throw error;
     }
   },
 
@@ -133,7 +135,7 @@ export const evmUtils = {
   getStakeRecords: async (address: string) => {
     try {
       const data: any = await subgraphsAPI.getStakeRecords(address);
-      console.log('EVM 质押记录:', data);
+      console.log('EVM 原始质押记录:', data);
 
       if (!data.stakes) return [];
 
@@ -143,33 +145,31 @@ export const evmUtils = {
         // status: "Active"
         if (stake.status != 'Active') continue;
 
-        const project_id = stake.project.id;
-        const projectName = ethers.decodeBytes32String(project_id);
-
-        const staked_at = Number(stake.stakedAt) * 1000;
-        const unlocked_at = Number(stake.unlockedAt) * 1000;
+        const projectId = stake.project.id;
+        const projectName = ethers.decodeBytes32String(projectId);
+        const stakedAt = Number(stake.stakedAt) * 1000;
+        const unlockedAt = Number(stake.unlockedAt) * 1000;
         const now = new Date().getTime();
-        const canUnstake = now >= unlocked_at;
+        const canUnstake = now >= unlockedAt;
 
         records.push({
           id: Number(stake.stakeId),
-          user_id: stake.user.id,
-          project_id,
+          userId: stake.user.id,
+          projectId,
           projectName,
           amount: Number(ethers.formatEther(stake.amount)),
           duration: Number(stake.duration) / 86400,
-          staked_at,
-          unlocked_at,
+          stakedAt,
+          unlockedAt,
           canUnstake
         });
       }
-      const sortedRecords = records.sort((a: any, b: any) => b.staked_at - a.staked_at);
+      const sortedRecords = records.sort((a: any, b: any) => b.stakedAt - a.stakedAt);
       console.log('EVM 质押记录:', sortedRecords);
 
       return sortedRecords;
     } catch (error) {
-      console.error('获取 EVM 质押记录错误:', error);
-      return [];
+      throw error;
     }
   },
 
@@ -212,21 +212,13 @@ export const evmUtils = {
   /**质押 */
   stake: async (evmStakingContract: any, stakeAmount: string, stakeDuration: number, projectId: string) => {
     try {
-      console.log(
-        '项目ID:',
-        ethers.decodeBytes32String(projectId),
-        '质押数量:',
-        stakeAmount,
-        '质押时长:',
-        stakeDuration
-      );
+      console.log('项目ID:', ethers.decodeBytes32String(projectId), '数量:', stakeAmount, '时长:', stakeDuration);
 
       const amount = ethers.parseEther(stakeAmount);
       const tx = await evmStakingContract.stake(amount, stakeDuration, projectId);
       await tx.wait();
       return tx;
     } catch (error) {
-      console.error('质押失败:', error);
       throw error;
     }
   },
@@ -240,7 +232,6 @@ export const evmUtils = {
       await tx.wait();
       return tx;
     } catch (error) {
-      console.error('解质押失败:', error);
       throw error;
     }
   },
@@ -254,7 +245,6 @@ export const evmUtils = {
       await tx.wait();
       return tx;
     } catch (error) {
-      console.error('紧急解质押失败:', error);
       throw error;
     }
   }

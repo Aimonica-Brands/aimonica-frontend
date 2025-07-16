@@ -54,7 +54,7 @@ export default function Dashboard() {
     },
     {
       title: 'Redemption Time',
-      dataIndex: 'created_at',
+      dataIndex: 'createdAt',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
@@ -66,7 +66,7 @@ export default function Dashboard() {
     },
     {
       title: 'Hash',
-      dataIndex: 'transaction_hash',
+      dataIndex: 'transactionHash',
       render: (value: any, record: any) => {
         return (
           <a className="hash" href={`${caipNetwork.blockExplorers.default.url}/tx/${value}`} target="_blank">
@@ -100,12 +100,12 @@ export default function Dashboard() {
     },
     {
       title: 'Staked Time',
-      dataIndex: 'staked_at',
+      dataIndex: 'stakedAt',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Unlocked Time',
-      dataIndex: 'unlocked_at',
+      dataIndex: 'unlockedAt',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
@@ -168,7 +168,6 @@ export default function Dashboard() {
         setNetworkId(chainId.toString());
         getStakeRecords();
         getPointsDashboard();
-        getFeeConfig();
       } else {
         setNetworkId('');
         setStakeRecords([]);
@@ -184,10 +183,10 @@ export default function Dashboard() {
       setTotalStaked(stakeRecords.reduce((acc, record) => acc + record.amount, 0));
       setTotalProject(
         stakeRecords.reduce((acc, record) => {
-          if (acc.includes(record.project_id)) {
+          if (acc.includes(record.projectId)) {
             return acc;
           }
-          return [...acc, record.project_id];
+          return [...acc, record.projectId];
         }, []).length
       );
     } else {
@@ -198,26 +197,22 @@ export default function Dashboard() {
   }, [stakeRecords]);
 
   const getFeeConfig = async () => {
-    if (caipNetwork.chainNamespace === 'eip155') {
-      if (evmStakingContract) {
-        evmUtils
-          .getFeeConfig(evmStakingContract)
-          .then((config) => {
-            console.log('✅ 获取手续费配置:', config);
-            setUnstakeFeeRate(config.unstakeFeeRate);
-            setEmergencyUnstakeFeeRate(config.emergencyUnstakeFeeRate);
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-      }
-    }
+    evmUtils
+      .getFeeConfig(evmStakingContract)
+      .then((config) => {
+        setUnstakeFeeRate(config.unstakeFeeRate);
+        setEmergencyUnstakeFeeRate(config.emergencyUnstakeFeeRate);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   const getStakeRecords = async () => {
     if (caipNetwork.chainNamespace === 'eip155') {
       if (evmStakingContract) {
         getEvmStakeRecords();
+        getFeeConfig();
       }
     } else if (caipNetwork.chainNamespace === 'solana') {
       if (solanaProgram) {
@@ -232,9 +227,6 @@ export default function Dashboard() {
       const maxRetries = 10;
       let retryCount = 0;
 
-      const unstakeFeeRate = await evmStakingContract.unstakeFeeRate();
-      const emergencyUnstakeFeeRate = await evmStakingContract.emergencyUnstakeFeeRate();
-
       const fetchStakes = async () => {
         try {
           console.log(`🔍 查询EVM质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
@@ -242,8 +234,6 @@ export default function Dashboard() {
 
           const newRecords = records.map((record) => {
             record.points = record.amount * getRewardPoints(record.duration);
-            record.unstakeFeeRate = Number(unstakeFeeRate) / 100;
-            record.emergencyUnstakeFeeRate = Number(emergencyUnstakeFeeRate) / 100;
             return record;
           });
           return newRecords;
@@ -382,7 +372,7 @@ export default function Dashboard() {
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
-        .unstake(solanaProgram, record, Number(record.project_id))
+        .unstake(solanaProgram, record, Number(record.projectId))
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
             getContractConfig(chainId).cluster
@@ -428,7 +418,7 @@ export default function Dashboard() {
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
-        .emergencyUnstake(solanaProgram, record, Number(record.project_id))
+        .emergencyUnstake(solanaProgram, record, Number(record.projectId))
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
             getContractConfig(chainId).cluster
@@ -516,19 +506,22 @@ export default function Dashboard() {
         for (const stake of stakes) {
           if (!stake.processed) continue;
 
+          const projectName =
+            caipNetwork.chainNamespace === 'solana' ? stake.project_id : ethers.decodeBytes32String(stake.project_id);
+          const duration = caipNetwork.chainNamespace === 'solana' ? stake.duration : Number(stake.duration) / 86400;
+
           records.push({
             id: stake.id,
-            user_id: stake.user_id,
-            project_id: stake.project_id,
-            projectName:
-              caipNetwork.chainNamespace === 'solana' ? stake.project_id : ethers.decodeBytes32String(stake.project_id),
+            userId: stake.user_id,
+            projectId: stake.project_id,
+            projectName,
             amount: Number(ethers.formatEther(stake.amount)),
-            duration: caipNetwork.chainNamespace === 'solana' ? stake.duration : Number(stake.duration) / 86400,
-            created_at: stake.created_at,
-            transaction_hash: stake.transaction_hash
+            duration,
+            createdAt: stake.created_at,
+            transactionHash: stake.transaction_hash
           });
         }
-        const sortedRecords = records.sort((a: any, b: any) => b.created_at - a.created_at);
+        const sortedRecords = records.sort((a: any, b: any) => b.createdAt - a.createdAt);
 
         setHistoryDataSource(sortedRecords);
       })
@@ -603,7 +596,7 @@ export default function Dashboard() {
             dataSource={stakeRecords}
             pagination={false}
             loading={stakeRecordsLoading}
-            rowKey={(record) => `${record.project_id}-${record.id}`}
+            rowKey={(record) => `${record.projectId}-${record.id}`}
           />
         </div>
 
@@ -619,7 +612,7 @@ export default function Dashboard() {
             dataSource={historyDataSource}
             pagination={false}
             loading={historyLoading}
-            rowKey={(record) => `${record.project_id}-${record.id}`}
+            rowKey={(record) => `${record.projectId}-${record.id}`}
           />
         </div>
       </div>
