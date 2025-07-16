@@ -2,9 +2,8 @@ import { useEffect } from 'react';
 import { useAppKitAccount, useAppKitNetwork, useAppKitProvider } from '@reown/appkit/react';
 import { useAppKitConnection } from '@reown/appkit-adapter-solana/react';
 import type { Provider } from '@reown/appkit-adapter-solana/react';
-import { initEVMStakingContract, initSolanaContracts } from '@/wallet/contracts';
+import { modal, initEVMStakingContract, initSolanaContracts } from '@/wallet';
 import { usePageContext } from '@/context';
-import { modal } from '@/wallet';
 
 export const WalletComponent = () => {
   const { address, isConnected } = useAppKitAccount();

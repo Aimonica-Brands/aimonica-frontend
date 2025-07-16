@@ -7,9 +7,6 @@ import { coingeckoAPI } from '@/pages/api/coingecko';
 
 export const timeOutNumber = 8000;
 
-/**质押时长 */
-export const durationDays = [1, 7, 14, 30];
-
 export const getRewardPoints = (duration: number) => {
   switch (duration) {
     case 1:
@@ -23,14 +20,6 @@ export const getRewardPoints = (duration: number) => {
   }
 };
 
-/**获取积分 */
-const getPoints = async (pointsLeaderboardProjects: any, id: any) => {
-  if (pointsLeaderboardProjects.length == 0) return 0;
-  const pointsLeaderboardItem = pointsLeaderboardProjects.find((item: any) => item.id == id);
-  console.log('getPoints', pointsLeaderboardItem);
-  return Number(pointsLeaderboardItem?.total_score);
-};
-
 export const evmUtils = {
   /**获取项目信息 */
   getProjects: async () => {
@@ -41,11 +30,10 @@ export const evmUtils = {
       console.log('EVM 项目:', projects);
 
       // 获取积分排行榜，如果失败则使用空数据继续执行
-      let pointsLeaderboardProjects = [];
+      let pointsLeaderboard = { projects: [] };
       try {
-        const leaderboardRes = await aimAPI.GetPointsLeaderboard();
-        pointsLeaderboardProjects = leaderboardRes.projects;
-        console.log('积分排行榜', pointsLeaderboardProjects);
+        pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
+        console.log('积分排行榜', pointsLeaderboard);
       } catch (error) {
         console.error('获取积分排行榜失败，使用默认值继续执行:', error);
       }
@@ -55,7 +43,8 @@ export const evmUtils = {
       for (let index = 0; index < projects.length; index++) {
         const project = projects[index];
 
-        const points = await getPoints(pointsLeaderboardProjects, project.id);
+        const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id == project.id);
+        const points = pointsLeaderboardItem?.total_score || 0;
 
         const newProject = {
           index: index,
@@ -357,11 +346,10 @@ export const solanaUtils = {
       if (projectCount <= 0) return [];
 
       // 获取积分排行榜，如果失败则使用空数据继续执行
-      let pointsLeaderboardProjects = [];
+      let pointsLeaderboard = { projects: [] };
       try {
-        const leaderboardRes = await aimAPI.GetPointsLeaderboard();
-        pointsLeaderboardProjects = leaderboardRes.projects;
-        console.log('积分排行榜', pointsLeaderboardProjects);
+        pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
+        console.log('Solana 积分排行榜', pointsLeaderboard);
       } catch (error) {
         console.error('获取积分排行榜失败，使用默认值继续执行:', error);
       }
@@ -373,9 +361,11 @@ export const solanaUtils = {
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
           console.log(`项目 ${i} 配置:`, projectConfig);
+
           const totalStaked = await getProjectTotalStaked(solanaProgram, i);
           const userCount = await getProjectUserCount(solanaProgram, projectConfigPda);
-          const points = await getPoints(pointsLeaderboardProjects, i);
+          const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id == i);
+          const points = pointsLeaderboardItem?.total_score || 0;
 
           const newProject = {
             index: i,

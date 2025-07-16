@@ -3,9 +3,8 @@ import { Button, Table, Popover, Collapse, Spin } from 'antd';
 import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
-import { getContractConfig } from '@/wallet';
+import { getContractConfig, modal } from '@/wallet';
 import { usePageContext } from '@/context';
-import { modal } from '@/wallet';
 import { evmUtils, solanaUtils } from '@/wallet/utils';
 import utils from '@/utils';
 

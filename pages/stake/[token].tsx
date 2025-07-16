@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, App, Input, Tabs, Tooltip, Popover } from 'antd';
 import { LeftOutlined, ExportOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
-import { getContractConfig } from '@/wallet';
+import { getContractConfig, handleContractError, initEVMTokenContract } from '@/wallet';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
-import { durationDays, evmUtils, solanaUtils, getRewardPoints } from '@/wallet/utils';
-import { handleContractError, initEVMTokenContract } from '@/wallet/contracts';
+import { evmUtils, solanaUtils, getRewardPoints } from '@/wallet/utils';
 import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
-import StakeTokenABI from '@/wallet/abi/EVMTOKEN.json';
+import StakeTokenABI from '@/wallet/abi/EVMToken.json';
 import { shareOnTwitter } from '@/pages/api/auth';
 
 export default function Stake() {
