@@ -8,16 +8,11 @@ import { coingeckoAPI } from '@/pages/api/coingecko';
 export const timeOutNumber = 8000;
 
 export const getRewardPoints = (duration: number) => {
-  switch (duration) {
-    case 1:
-      return 1;
-    case 7:
-      return 1;
-    case 14:
-      return 3;
-    case 30:
-      return 8;
-  }
+  if (duration == 1) return 1;
+  if (duration == 7) return 1;
+  if (duration == 14) return 3;
+  if (duration == 30) return 8;
+  return 0;
 };
 
 export const evmUtils = {

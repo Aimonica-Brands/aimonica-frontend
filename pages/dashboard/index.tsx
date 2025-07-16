@@ -130,21 +130,6 @@ export default function Dashboard() {
         );
       }
     },
-    // {
-    //   title: 'TVL($)',
-    //   dataIndex: 'tvl',
-    //   align,
-    //   render: (value: any, record: any) => {
-    //     return (
-    //       <div className="s-box">
-    //         <div className="s-img">
-    //           <img src="/assets/images/img-4.png" alt="" />
-    //         </div>
-    //         <div className="s-text">$ {utils.formatNumber(value,2)}</div>
-    //       </div>
-    //     );
-    //   }
-    // },
     {
       title: 'Rewards',
       dataIndex: 'rewards',
@@ -199,10 +184,10 @@ export default function Dashboard() {
       setTotalStaked(stakeRecords.reduce((acc, record) => acc + record.amount, 0));
       setTotalProject(
         stakeRecords.reduce((acc, record) => {
-          if (acc.includes(record.projectId)) {
+          if (acc.includes(record.project_id)) {
             return acc;
           }
-          return [...acc, record.projectId];
+          return [...acc, record.project_id];
         }, []).length
       );
     } else {

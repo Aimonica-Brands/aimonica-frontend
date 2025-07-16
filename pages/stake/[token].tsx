@@ -38,6 +38,7 @@ export default function Stake() {
   const [engagements, setEngagements] = useState(0);
   const [smartFollowers, setSmartFollowers] = useState(0);
   const [topTweets, setTopTweets] = useState([]);
+  const [allowedDurations, setAllowedDurations] = useState<any>([]);
 
   const infoItems = [
     {
@@ -93,6 +94,7 @@ export default function Stake() {
 
   useEffect(() => {
     if (evmTokenContract && evmStakingContract) {
+      getDurations();
       getEvmTokenBalance();
     }
     if (solanaProgram) {
@@ -125,7 +127,20 @@ export default function Stake() {
       setPoolAddress(contractConfig.programId);
       const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
       setPoolLink(link);
+      setAllowedDurations(project.allowedDurations);
     }
+  };
+
+  const getDurations = async () => {
+    evmUtils
+      .getDurations(evmStakingContract)
+      .then((durations) => {
+        console.log('✅ 获取质押时长:', durations);
+        setAllowedDurations(durations);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   const getEvmTokenBalance = async () => {
@@ -428,7 +443,7 @@ export default function Stake() {
               <div className="text">
                 <span>Locking Time</span>
                 <div className="days">
-                  {projectInfo?.allowedDurations?.map((day: any) => (
+                  {allowedDurations.map((day: any) => (
                     <button
                       key={day}
                       className={durationDay === day ? 'active' : ''}
