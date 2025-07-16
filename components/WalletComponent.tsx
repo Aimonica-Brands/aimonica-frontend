@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useAppKitAccount, useAppKitNetwork, useAppKitProvider } from '@reown/appkit/react';
 import { useAppKitConnection } from '@reown/appkit-adapter-solana/react';
 import type { Provider } from '@reown/appkit-adapter-solana/react';
-import { modal, initEVMStakingContract, initSolanaContracts } from '@/wallet';
+import { modal } from '@/wallet';
+import { getEVMStakeContract, getSolanaContracts } from '@/wallet/utils';
 import { usePageContext } from '@/context';
 
 export const WalletComponent = () => {
@@ -22,7 +23,7 @@ export const WalletComponent = () => {
         // 初始化合约
         if (caipNetwork.chainNamespace === 'eip155') {
           try {
-            const contract = await initEVMStakingContract(chainId);
+            const contract = await getEVMStakeContract(chainId);
             console.log(`✅ ${caipNetwork.name} 合约初始化成功`, contract);
             setEvmStakingContract(contract);
           } catch (error) {
@@ -31,14 +32,14 @@ export const WalletComponent = () => {
         } else if (caipNetwork.chainNamespace === 'solana') {
           if (connection && walletProvider) {
             try {
-              const program = initSolanaContracts(chainId, walletProvider);
-              console.log(`✅ ${caipNetwork.name} 合约初始化成功`, program);
+              const program = getSolanaContracts(chainId, walletProvider);
+              console.log(`✅ solana 合约初始化成功`, program);
               setSolanaProgram(program);
             } catch (error) {
-              console.error(`❌ ${caipNetwork.name} 合约初始化失败`, error);
+              console.error(`❌ solana 合约初始化失败`, error);
             }
           } else {
-            console.log(`⏳ 等待 ${caipNetwork.name} 连接...`);
+            console.log(`⏳ 等待 solana 连接...`);
           }
         }
       } else {

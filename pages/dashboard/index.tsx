@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Table, App, Tag, Space, Modal } from 'antd';
 import { ExportOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
-import { getContractConfig, handleContractError, modal } from '@/wallet';
-import { evmUtils, solanaUtils, getRewardPoints, timeOutNumber } from '@/wallet/utils';
+import { getContractConfig, modal, handleContractError } from '@/wallet';
+import { getRewardPoints, evmUtils, solanaUtils } from '@/wallet/utils';
 import { usePageContext } from '@/context';
 import utils from '@/utils';
 import { aimAPI } from '@/pages/api/aim';
@@ -371,7 +371,7 @@ export default function Dashboard() {
             setUnstakeLoading(false);
             closeUnstakeModal();
             getEvmStakeRecords(record.id, record.amount);
-          }, timeOutNumber);
+          }, 8000);
         })
         .catch((error) => {
           handleContractError(error);
@@ -394,7 +394,7 @@ export default function Dashboard() {
             setUnstakeLoading(false);
             closeUnstakeModal();
             getSolanaStakeRecords(record.id, record.amount);
-          }, timeOutNumber);
+          }, 8000);
         })
         .catch((error) => {
           handleContractError(error);
@@ -420,7 +420,7 @@ export default function Dashboard() {
             setUnstakeLoading(false);
             closeEmergencyUnstakeModal();
             getEvmStakeRecords(record.id, record.amount);
-          }, timeOutNumber);
+          }, 8000);
         })
         .catch((error) => {
           handleContractError(error);
@@ -440,7 +440,7 @@ export default function Dashboard() {
             setUnstakeLoading(false);
             closeEmergencyUnstakeModal();
             getSolanaStakeRecords(record.id, record.amount);
-          }, timeOutNumber);
+          }, 8000);
         })
         .catch((error) => {
           handleContractError(error);

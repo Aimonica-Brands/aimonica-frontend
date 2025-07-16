@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, App, Input, Tabs, Tooltip, Popover } from 'antd';
 import { LeftOutlined, ExportOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
-import { getContractConfig, handleContractError, initEVMTokenContract } from '@/wallet';
+import { getContractConfig, handleContractError } from '@/wallet';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { usePageContext } from '@/context';
-import { evmUtils, solanaUtils, getRewardPoints } from '@/wallet/utils';
+import { evmUtils, solanaUtils, getRewardPoints, getEVMTokenContract } from '@/wallet/utils';
 import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
-import StakeTokenABI from '@/wallet/abi/EVMToken.json';
 import { shareOnTwitter } from '@/pages/api/auth';
 
 export default function Stake() {
@@ -120,7 +119,7 @@ export default function Stake() {
       const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
       setPoolLink(link);
 
-      const contract = await initEVMTokenContract(chainId, project.stakingToken, StakeTokenABI);
+      const contract = await getEVMTokenContract(chainId, project.stakingToken);
       console.log(`✅ 质押代币合约初始化成功`, contract);
       setEvmTokenContract(contract);
     } else if (caipNetwork.chainNamespace === 'solana') {
@@ -148,7 +147,6 @@ export default function Stake() {
       .getTokenBalance(evmTokenContract, address)
       .then((balance) => {
         setTokenBalance(balance);
-
         if (balance > 0) {
           const stakeAddress = getContractConfig(chainId).AimStaking;
           evmUtils
@@ -443,7 +441,7 @@ export default function Stake() {
               <div className="text">
                 <span>Locking Time</span>
                 <div className="days">
-                  {allowedDurations.map((day: any) => (
+                  {allowedDurations?.map((day: any) => (
                     <button
                       key={day}
                       className={durationDay === day ? 'active' : ''}

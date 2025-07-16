@@ -4,8 +4,8 @@ import { useRouter } from 'next/router';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig, modal } from '@/wallet';
-import { usePageContext } from '@/context';
 import { evmUtils, solanaUtils } from '@/wallet/utils';
+import { usePageContext } from '@/context';
 import utils from '@/utils';
 
 export default function Home() {
