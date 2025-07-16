@@ -12,7 +12,7 @@ export default function FooterComponent() {
         <div className="footer-content">
           <div className="footer-left">
             <div className="footer-logo">
-              <img src="/assets/images/logo2.svg" alt="" />
+              <img src="/assets/images/star-2.svg" alt="" />
               <span>AIMONICA</span>
             </div>
             <div className="footer-text">© 2025 aimonica. All rights reserved.</div>

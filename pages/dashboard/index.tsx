@@ -538,7 +538,7 @@ export default function Dashboard() {
           </div>
           <div className="css-box">
             <div className="border1"></div>
-            <img src="/assets/images/logo2.svg" alt="" className="logo2" />
+            <img src="/assets/images/star-2.svg" alt="" className="logo2" />
             <div className="border2"></div>
           </div>
         </div>

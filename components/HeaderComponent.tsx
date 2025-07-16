@@ -62,7 +62,7 @@ export default function HeaderComponent() {
       <div className="header-left">
         <div className="logo-box">
           <a href="/">
-            <img src="/assets/images/avatar.png" alt="" />
+            <img src="/assets/images/logo.png" alt="" />
             AIMONICA
           </a>
         </div>

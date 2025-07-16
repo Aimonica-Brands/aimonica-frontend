@@ -23,7 +23,7 @@ const metadata = {
   name: 'AIMonica',
   description: 'AIMonica DApp',
   url: 'https://aimonica.dev/', // origin must match your domain & subdomain
-  icons: [`/assets/images/logo2.svg`]
+  icons: [`/assets/images/logo.png`]
 };
 
 /**4. Create the AppKit instance */
