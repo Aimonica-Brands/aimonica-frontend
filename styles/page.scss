@@ -7,7 +7,6 @@ header {
   right: 0;
   margin: auto;
   z-index: 9;
-  background-color: #fff;
   background: #f8fbffcc;
   border: 1px solid #fff;
   border-radius: 0.24rem;
@@ -1692,7 +1691,9 @@ footer {
       color: #50b4ff;
       margin-bottom: 0.2rem;
     }
-    .team-details {
-    }
   }
+}
+
+.header-mobile {
+  display: none;
 }

@@ -38,9 +38,7 @@ body {
   position: fixed;
   bottom: 0;
   right: 0;
-  font-family: Poppins;
-  font-weight: 400;
-  font-size: 12px;
+  font-size: 10px;
   color: #555;
 }
 
@@ -185,5 +183,6 @@ button {
 @media screen and (max-width: 750px) {
   html {
     font-size: calc(100vw / 7.5);
+    padding-bottom: 1.2rem;
   }
 }

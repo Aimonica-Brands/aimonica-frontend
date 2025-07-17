@@ -5,6 +5,8 @@ import enUS from 'antd/locale/en_US';
 import packageJson from '@/package.json';
 import HeaderComponent from '@/components/HeaderComponent';
 import FooterComponent from '@/components/FooterComponent';
+import HeaderComponentMobile from '@/components/HeaderComponentMobile';
+
 import { PageProvider } from '@/context';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -60,6 +62,7 @@ export default function App({ Component, pageProps }: AppProps & { pageProps: { 
                   <Component {...pageProps} />
                 </main>
                 <FooterComponent />
+                <HeaderComponentMobile />
                 <div className="package_version">{packageJson.version}</div>
               </PageProvider>
             </AntdApp>
