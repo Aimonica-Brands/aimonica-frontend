@@ -196,18 +196,6 @@ export default function Dashboard() {
     }
   }, [stakeRecords]);
 
-  const getFeeConfig = async () => {
-    evmUtils
-      .getFeeConfig(evmStakingContract)
-      .then((config) => {
-        setUnstakeFeeRate(config.unstakeFeeRate);
-        setEmergencyUnstakeFeeRate(config.emergencyUnstakeFeeRate);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
   const getStakeRecords = async () => {
     if (caipNetwork.chainNamespace === 'eip155') {
       if (evmStakingContract) {
@@ -221,126 +209,56 @@ export default function Dashboard() {
     }
   };
 
+  const getFeeConfig = async () => {
+    evmUtils
+      .getFeeConfig(evmStakingContract)
+      .then((config) => {
+        setUnstakeFeeRate(config.unstakeFeeRate);
+        setEmergencyUnstakeFeeRate(config.emergencyUnstakeFeeRate);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
   const getEvmStakeRecords = async (id: number = null, stakeAmount: number = null) => {
     setStakeRecordsLoading(true);
-    try {
-      const maxRetries = 10;
-      let retryCount = 0;
-
-      const fetchStakes = async () => {
-        try {
-          console.log(`🔍 查询EVM质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
-          const records = await evmUtils.getStakeRecords(address);
-
-          const newRecords = records.map((record) => {
-            record.points = record.amount * getRewardPoints(record.duration);
-            return record;
-          });
-          return newRecords;
-        } catch (error) {
-          console.error(`❌ 第 ${retryCount + 1} 次查询失败:`, error);
-          return null;
-        }
-      };
-
-      if (id && stakeAmount) {
-        const pollInterval = 5000;
-        let found = false;
-        while (retryCount < maxRetries && !found) {
-          const currentRecords = await fetchStakes();
-          if (!currentRecords) {
-            retryCount++;
-            await new Promise((resolve) => setTimeout(resolve, pollInterval));
-            continue;
-          }
-
-          const existingStake = currentRecords.find((stake) => stake.id === id);
-          if (!existingStake) {
-            console.log('✅ 新EVM质押记录已确认: 原质押记录已移除');
-            setStakeRecords(currentRecords);
-            found = true;
-            break;
-          }
-          retryCount++;
-          await new Promise((resolve) => setTimeout(resolve, pollInterval));
-        }
-        if (!found) {
-          console.log('⚠️ 达到最大重试次数，未获取到新EVM数据');
-        }
-      } else {
-        // 没有 id 或 stakeAmount，直接查一次
-        const currentRecords = await fetchStakes();
-        if (currentRecords) {
-          setStakeRecords(currentRecords);
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      setStakeRecords([]);
-    } finally {
-      setStakeRecordsLoading(false);
-    }
+    evmUtils
+      .getStakeRecords(address)
+      .then((records) => {
+        const newRecords = records.map((record) => {
+          record.points = record.amount * getRewardPoints(record.duration);
+          return record;
+        });
+        setStakeRecords(newRecords);
+      })
+      .catch((error) => {
+        console.error(error);
+        setStakeRecords([]);
+      })
+      .finally(() => {
+        setStakeRecordsLoading(false);
+      });
   };
 
   const getSolanaStakeRecords = async (id: number = null, stakeAmount: number = null) => {
     setStakeRecordsLoading(true);
-    try {
-      const maxRetries = 10;
-      let retryCount = 0;
-
-      const fetchStakes = async () => {
-        try {
-          console.log(`🔍 查询质押记录 (第 ${retryCount + 1}/${maxRetries} 次)...`);
-          const records = await solanaUtils.getStakeRecords(solanaProgram);
-
-          const newRecords = records.map((record) => {
-            record.points = record.amount * getRewardPoints(record.duration);
-            return record;
-          });
-          return newRecords;
-        } catch (error) {
-          console.error(`❌ 第 ${retryCount + 1} 次查询失败:`, error);
-          return null;
-        }
-      };
-
-      if (id && stakeAmount) {
-        const pollInterval = 5000;
-        let found = false;
-        while (retryCount < maxRetries && !found) {
-          const currentRecords = await fetchStakes();
-          if (!currentRecords) {
-            retryCount++;
-            await new Promise((resolve) => setTimeout(resolve, pollInterval));
-            continue;
-          }
-
-          const existingStake = currentRecords.find((stake) => stake.id === id);
-          if (!existingStake) {
-            console.log('✅ 新质押记录已确认: 原质押记录已移除');
-            setStakeRecords(currentRecords);
-            found = true;
-            break;
-          }
-          retryCount++;
-          await new Promise((resolve) => setTimeout(resolve, pollInterval));
-        }
-        if (!found) {
-          console.log('⚠️ 达到最大重试次数，未获取到新数据');
-        }
-      } else {
-        // 没有 id 或 stakeAmount，直接查一次
-        const currentRecords = await fetchStakes();
-        if (currentRecords) {
-          setStakeRecords(currentRecords);
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      setStakeRecords([]);
-    } finally {
-      setStakeRecordsLoading(false);
-    }
+    solanaUtils
+      .getStakeRecords(solanaProgram)
+      .then((records) => {
+        const newRecords = records.map((record) => {
+          record.points = record.amount * getRewardPoints(record.duration);
+          return record;
+        });
+        setStakeRecords(newRecords);
+      })
+      .catch((error) => {
+        console.error(error);
+        setStakeRecords([]);
+      })
+      .finally(() => {
+        setStakeRecordsLoading(false);
+      });
   };
 
   const handleUnstake = async () => {
@@ -356,12 +274,11 @@ export default function Dashboard() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗解质押交易链接:', txLink);
 
-          setTimeout(() => {
-            message.success('Transaction submitted, please wait...');
-            setUnstakeLoading(false);
-            closeUnstakeModal();
-            getEvmStakeRecords(record.id, record.amount);
-          }, 8000);
+          message.success('Transaction submitted, please wait...');
+          setUnstakeLoading(false);
+          closeUnstakeModal();
+
+          setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
         })
         .catch((error) => {
           handleContractError(error);
@@ -379,12 +296,10 @@ export default function Dashboard() {
           }`;
           console.log('🔗解质押交易链接:', txLink);
 
-          setTimeout(() => {
-            message.success('Transaction submitted, please wait...');
-            setUnstakeLoading(false);
-            closeUnstakeModal();
-            getSolanaStakeRecords(record.id, record.amount);
-          }, 8000);
+          message.success('Transaction submitted, please wait...');
+          setUnstakeLoading(false);
+          closeUnstakeModal();
+          setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
         })
         .catch((error) => {
           handleContractError(error);
@@ -405,12 +320,10 @@ export default function Dashboard() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗紧急解质押交易链接:', txLink);
 
-          setTimeout(() => {
-            message.success('Transaction submitted, please wait...');
-            setUnstakeLoading(false);
-            closeEmergencyUnstakeModal();
-            getEvmStakeRecords(record.id, record.amount);
-          }, 8000);
+          message.success('Transaction submitted, please wait...');
+          setUnstakeLoading(false);
+          closeEmergencyUnstakeModal();
+          setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
         })
         .catch((error) => {
           handleContractError(error);
@@ -425,12 +338,10 @@ export default function Dashboard() {
           }`;
           console.log('🔗紧急解质押交易链接:', txLink);
 
-          setTimeout(() => {
-            message.success('Transaction submitted, please wait...');
-            setUnstakeLoading(false);
-            closeEmergencyUnstakeModal();
-            getSolanaStakeRecords(record.id, record.amount);
-          }, 8000);
+          message.success('Transaction submitted, please wait...');
+          setUnstakeLoading(false);
+          closeEmergencyUnstakeModal();
+          setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
         })
         .catch((error) => {
           handleContractError(error);
@@ -442,29 +353,27 @@ export default function Dashboard() {
   const openUnstakeModal = (record: any) => {
     setIsUnstakeModalOpen(true);
     setUnstakeRecord(record);
-    setUnstakeFeeRate(record.unstakeFeeRate);
-    setEmergencyUnstakeFeeRate(record.emergencyUnstakeFeeRate);
+    if (caipNetwork.chainNamespace === 'solana') {
+      setUnstakeFeeRate(record.unstakeFeeRate);
+      setEmergencyUnstakeFeeRate(record.emergencyUnstakeFeeRate);
+    }
   };
 
   const openEmergencyUnstakeModal = (record: any) => {
     setIsEmergencyUnstakeModalOpen(true);
     setUnstakeRecord(record);
-    setUnstakeFeeRate(record.unstakeFeeRate);
-    setEmergencyUnstakeFeeRate(record.emergencyUnstakeFeeRate);
+    if (caipNetwork.chainNamespace === 'solana') {
+      setUnstakeFeeRate(record.unstakeFeeRate);
+      setEmergencyUnstakeFeeRate(record.emergencyUnstakeFeeRate);
+    }
   };
 
   const closeUnstakeModal = () => {
     setIsUnstakeModalOpen(false);
-    setUnstakeRecord(null);
-    setUnstakeFeeRate(null);
-    setEmergencyUnstakeFeeRate(null);
   };
 
   const closeEmergencyUnstakeModal = () => {
     setIsEmergencyUnstakeModalOpen(false);
-    setUnstakeRecord(null);
-    setUnstakeFeeRate(null);
-    setEmergencyUnstakeFeeRate(null);
   };
 
   const handleTabClick = (network: any) => async () => {
