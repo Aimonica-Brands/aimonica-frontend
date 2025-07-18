@@ -23,7 +23,7 @@ export const solanaWeb3JsAdapter = new SolanaAdapter();
 const metadata = {
   name: 'AIMonica',
   description: 'AIMonica DApp',
-  url: 'https://aimonica.dev/', // origin must match your domain & subdomain
+  url: 'https://www.aimonica.dev', // origin must match your domain & subdomain
   icons: [`/assets/images/logo2.svg`]
 };
 

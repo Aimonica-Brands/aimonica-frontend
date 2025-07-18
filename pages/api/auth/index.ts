@@ -5,7 +5,7 @@ export const envConfig = {
   environment: process.env.NEXT_PUBLIC_APP_ENV,
 
   app: {
-    url: process.env.NEXT_PUBLIC_APP_ENV === 'development' ? 'https://test.aimonica.dev' : 'https://aimonica.dev',
+    url: process.env.NEXT_PUBLIC_APP_ENV === 'development' ? 'https://test.aimonica.dev' : 'https://www.aimonica.dev',
     defaultPage: '/'
   },
 
