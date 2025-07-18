@@ -213,74 +213,6 @@ export const evmUtils = {
     }
   },
 
-  /**获取管理员列表 */
-  getAdminList: async (evmStakingContract: any) => {
-    try {
-      const adminList = await evmStakingContract.getRoleMembers(
-        '0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08'
-      );
-      console.log('✅ 管理员列表:', adminList);
-      return adminList;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-
-  /**添加管理员 */
-  addAdmin: async (evmStakingContract: any, adminAddress: string) => {
-    try {
-      const tx = await evmStakingContract.grantRole(
-        '0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08',
-        adminAddress
-      );
-      await tx.wait();
-      return tx;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-
-  /**删除管理员 */
-  removeAdmin: async (evmStakingContract: any, adminAddress: string) => {
-    try {
-      const tx = await evmStakingContract.revokeRole(
-        '0x241ecf16d79d0f8dbfb92cbc07fe17840425976cf0667f022fe9877caa831b08',
-        adminAddress
-      );
-      await tx.wait();
-      return tx;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-
-  /**创建项目 */
-  registerProject: async (evmStakingContract: any, projectId: string, stakingTokenAddress: string) => {
-    try {
-      const tx = await evmStakingContract.registerProject(projectId, stakingTokenAddress);
-      await tx.wait();
-      return tx;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-
-  /**删除项目 */
-  unregisterProject: async (evmStakingContract: any, projectId: string) => {
-    try {
-      const tx = await evmStakingContract.unregisterProject(projectId);
-      await tx.wait();
-      return tx;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-
   /**获取手续费配置 */
   getFeeConfig: async (evmStakingContract: any) => {
     try {
@@ -300,42 +232,6 @@ export const evmUtils = {
     }
   },
 
-  /**设置手续费地址 */
-  setFeeWallet: async (evmStakingContract: any, feeWallet: string) => {
-    try {
-      const tx = await evmStakingContract.setFeeWallet(feeWallet);
-      await tx.wait();
-      return tx;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-
-  /**设置质押手续费 */
-  setUnstakeFeeRate: async (evmStakingContract: any, unstakeFeeBps: number) => {
-    try {
-      const tx = await evmStakingContract.setUnstakeFeeRate(unstakeFeeBps * 100);
-      await tx.wait();
-      return tx;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-
-  /**设置紧急赎回手续费 */
-  setEmergencyUnstakeFeeRate: async (evmStakingContract: any, emergencyUnstakeFeeBps: number) => {
-    try {
-      const tx = await evmStakingContract.setEmergencyUnstakeFeeRate(emergencyUnstakeFeeBps * 100);
-      await tx.wait();
-      return tx;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-
   /**获取质押时长 */
   getDurationConfig: async (evmStakingContract: any) => {
     try {
@@ -349,30 +245,6 @@ export const evmUtils = {
 
       return durations;
     } catch (error) {
-      throw error;
-    }
-  },
-
-  /**设置质押时长 */
-  addDuration: async (evmStakingContract: any, duration: any) => {
-    try {
-      const tx = await evmStakingContract.addDurationOption(duration);
-      await tx.wait();
-      return tx;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-
-  /**删除质押时长 */
-  removeDuration: async (evmStakingContract: any, duration: any) => {
-    try {
-      const tx = await evmStakingContract.removeDurationOption(duration);
-      await tx.wait();
-      return tx;
-    } catch (error) {
-      console.error(error);
       throw error;
     }
   }
