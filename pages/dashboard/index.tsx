@@ -59,9 +59,9 @@ export default function Dashboard() {
     },
     {
       title: 'Status',
-      dataIndex: '',
+      dataIndex: 'status',
       render: (value: any, record: any) => {
-        return <Tag color="#bdbdbd">Redeemed</Tag>;
+        return <Tag color={value === 'Active' ? 'green' : '#bdbdbd'}>{value}</Tag>;
       }
     },
     {
@@ -427,7 +427,8 @@ export default function Dashboard() {
             amount: Number(ethers.formatEther(stake.amount)),
             duration,
             createdAt: stake.created_at,
-            transactionHash: stake.transaction_hash
+            transactionHash: stake.transaction_hash,
+            status: stake.status
           });
         }
         const sortedRecords = records.sort((a: any, b: any) => b.createdAt - a.createdAt);
