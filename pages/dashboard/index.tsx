@@ -36,36 +36,30 @@ export default function Dashboard() {
   const historyColumns: ColumnsType<any> = [
     {
       title: 'Project',
-      dataIndex: 'projectName',
-      width: '1.5rem'
+      dataIndex: 'projectName'
     },
     {
       title: 'Stake ID',
-      dataIndex: 'id',
-      width: '1.5rem'
+      dataIndex: 'id'
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
-      width: '1.5rem',
       render: (value: number) => `${utils.formatNumber(value)}`
     },
     {
       title: 'Duration',
       dataIndex: 'duration',
-      width: '1.5rem',
       render: (value: number) => `${value} Day`
     },
     {
       title: 'Redemption Time',
       dataIndex: 'createdAt',
-      width: '2.5rem',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Status',
       dataIndex: '',
-      width: '2rem',
       render: (value: any, record: any) => {
         return <Tag color="#bdbdbd">Redeemed</Tag>;
       }
@@ -73,7 +67,6 @@ export default function Dashboard() {
     {
       title: 'Hash',
       dataIndex: 'transactionHash',
-      width: '2.5rem',
       render: (value: any, record: any) => {
         return (
           <a className="hash" href={`${caipNetwork.blockExplorers.default.url}/tx/${value}`} target="_blank">
@@ -89,42 +82,35 @@ export default function Dashboard() {
   const stakeColumns: any[] = [
     {
       title: 'Project',
-      dataIndex: 'projectName',
-      width: '1.5rem'
+      dataIndex: 'projectName'
     },
     {
       title: 'Stake ID',
-      dataIndex: 'id',
-      width: '1.5rem'
+      dataIndex: 'id'
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
-      width: '1.5rem',
       render: (value: number) => `${utils.formatNumber(value)}`
     },
     {
       title: 'Duration',
       dataIndex: 'duration',
-      width: '1.5rem',
       render: (value: number) => `${value} Day`
     },
     {
       title: 'Staked Time',
       dataIndex: 'stakedAt',
-      width: '2.5rem',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Unlocked Time',
       dataIndex: 'unlockedAt',
-      width: '2.5rem',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Status',
       dataIndex: 'status',
-      width: '2rem',
       render: (value: any, record: any) => {
         return <Tag color="green">Active</Tag>;
       }
@@ -514,7 +500,7 @@ export default function Dashboard() {
 
         <div className="tablebox">
           <Table
-            scroll={{ x: 'max-content', y: '6rem' }}
+            scroll={{ x: 'max-content' }}
             columns={stakeColumns}
             dataSource={stakeRecords}
             pagination={false}
@@ -530,7 +516,7 @@ export default function Dashboard() {
 
         <div className="tablebox">
           <Table
-            scroll={{ x: 'max-content', y: '6rem' }}
+            scroll={{ x: 'max-content' }}
             columns={historyColumns}
             dataSource={historyDataSource}
             pagination={false}

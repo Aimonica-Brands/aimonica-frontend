@@ -25,7 +25,6 @@ export default function Home() {
       title: 'Rank',
       key: 'rank',
       align,
-      width: '1rem',
       render: (value: any, record: any) => {
         return <div className="rank">{record.rank}</div>;
       }
@@ -34,7 +33,6 @@ export default function Home() {
       title: 'Project',
       key: 'project',
       align,
-      width: '2.5rem',
       render: (value: any, record: any) => {
         return (
           <Popover
@@ -95,7 +93,6 @@ export default function Home() {
       title: 'Staked',
       key: 'totalStaked',
       align,
-      width: '1.5rem',
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatNumber(record.totalStaked)}</div>;
       }
@@ -104,7 +101,6 @@ export default function Home() {
       title: 'Users',
       key: 'userCount',
       align,
-      width: '1.5rem',
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatNumber(record.userCount)}</div>;
       }
@@ -417,7 +413,7 @@ export default function Home() {
 
           <div className="tablebox">
             <Table
-              scroll={{ x: 'max-content', y: '6rem' }}
+              scroll={{ x: 'max-content' }}
               columns={projectColumns}
               dataSource={projectsData}
               pagination={false}
