@@ -2,19 +2,19 @@ import axios from 'axios';
 import { request, gql } from 'graphql-request';
 
 // AIM API 统一管理
-export const aimAPI = {
+export const aimonicaAPI = {
   GetPointsLeaderboard: async () => {
-    const res = await axios.get('/api/aim/points/leaderboard');
+    const res = await axios.get('https://api.aimonica.dev/points/leaderboard');
     return res.data;
   },
 
   GetPointsDashboard: async (walletAddress: string) => {
-    const res = await axios.get(`/api/aim/points/dashboard/${walletAddress}`);
+    const res = await axios.get(`https://api.aimonica.dev/points/dashboard/${walletAddress}`);
     return res.data;
   },
 
   GetProjects: async () => {
-    const res = await axios.get(`/api/aim/points/projects`);
+    const res = await axios.get(`https://api.aimonica.dev/points/projects`);
     return res.data;
   }
 };

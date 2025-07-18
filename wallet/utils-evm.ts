@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { aimAPI, subgraphsAPI } from '@/pages/api/aim';
+import { aimonicaAPI, subgraphsAPI } from '@/pages/api/aimonica';
 import { coingeckoAPI } from '@/pages/api/coingecko';
 
 export const evmUtils = {
@@ -14,7 +14,7 @@ export const evmUtils = {
       // 获取积分排行榜，如果失败则使用空数据继续执行
       let pointsLeaderboard = { projects: [] };
       try {
-        pointsLeaderboard = await aimAPI.GetPointsLeaderboard();
+        pointsLeaderboard = await aimonicaAPI.GetPointsLeaderboard();
         console.log('积分排行榜', pointsLeaderboard);
       } catch (error) {
         console.error(error);

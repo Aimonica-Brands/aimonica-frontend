@@ -7,7 +7,7 @@ import { getContractConfig, modal, handleContractError } from '@/wallet';
 import { getRewardPoints, evmUtils, solanaUtils } from '@/wallet/utils';
 import { usePageContext } from '@/context';
 import utils from '@/utils';
-import { aimAPI } from '@/pages/api/aim';
+import { aimonicaAPI } from '@/pages/api/aimonica';
 import { ethers } from 'ethers';
 
 export default function Dashboard() {
@@ -36,30 +36,36 @@ export default function Dashboard() {
   const historyColumns: ColumnsType<any> = [
     {
       title: 'Project',
-      dataIndex: 'projectName'
+      dataIndex: 'projectName',
+      width: '1.5rem'
     },
     {
       title: 'Stake ID',
-      dataIndex: 'id'
+      dataIndex: 'id',
+      width: '1.5rem'
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
+      width: '1.5rem',
       render: (value: number) => `${utils.formatNumber(value)}`
     },
     {
       title: 'Duration',
       dataIndex: 'duration',
+      width: '1.5rem',
       render: (value: number) => `${value} Day`
     },
     {
       title: 'Redemption Time',
       dataIndex: 'createdAt',
+      width: '2.5rem',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Status',
       dataIndex: '',
+      width: '2rem',
       render: (value: any, record: any) => {
         return <Tag color="#bdbdbd">Redeemed</Tag>;
       }
@@ -67,6 +73,7 @@ export default function Dashboard() {
     {
       title: 'Hash',
       dataIndex: 'transactionHash',
+      width: '2.5rem',
       render: (value: any, record: any) => {
         return (
           <a className="hash" href={`${caipNetwork.blockExplorers.default.url}/tx/${value}`} target="_blank">
@@ -82,35 +89,42 @@ export default function Dashboard() {
   const stakeColumns: any[] = [
     {
       title: 'Project',
-      dataIndex: 'projectName'
+      dataIndex: 'projectName',
+      width: '1.5rem'
     },
     {
       title: 'Stake ID',
-      dataIndex: 'id'
+      dataIndex: 'id',
+      width: '1.5rem'
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
+      width: '1.5rem',
       render: (value: number) => `${utils.formatNumber(value)}`
     },
     {
       title: 'Duration',
       dataIndex: 'duration',
+      width: '1.5rem',
       render: (value: number) => `${value} Day`
     },
     {
       title: 'Staked Time',
       dataIndex: 'stakedAt',
+      width: '2.5rem',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Unlocked Time',
       dataIndex: 'unlockedAt',
+      width: '2.5rem',
       render: (value: number) => new Date(value).toLocaleString()
     },
     {
       title: 'Status',
       dataIndex: 'status',
+      width: '2rem',
       render: (value: any, record: any) => {
         return <Tag color="green">Active</Tag>;
       }
@@ -399,7 +413,7 @@ export default function Dashboard() {
   const getPointsDashboard = async () => {
     if (historyLoading) return;
     setHistoryLoading(true);
-    aimAPI
+    aimonicaAPI
       .GetPointsDashboard(address)
       .then((res) => {
         console.log('质押历史数据', res);
@@ -500,7 +514,7 @@ export default function Dashboard() {
 
         <div className="tablebox">
           <Table
-            scroll={{ x: 'max-content' }}
+            scroll={{ x: 'max-content', y: '6rem' }}
             columns={stakeColumns}
             dataSource={stakeRecords}
             pagination={false}
@@ -516,7 +530,7 @@ export default function Dashboard() {
 
         <div className="tablebox">
           <Table
-            scroll={{ x: 'max-content' }}
+            scroll={{ x: 'max-content', y: '6rem' }}
             columns={historyColumns}
             dataSource={historyDataSource}
             pagination={false}
