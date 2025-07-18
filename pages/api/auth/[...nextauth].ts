@@ -24,7 +24,7 @@ export default NextAuth({
       authorization: {
         params: {
           redirect_uri: `${
-            process.env.NEXT_PUBLIC_APP_ENV === 'development' ? 'https://test.aimonica.dev' : 'https://www.aimonica.dev'
+            process.env.NEXT_PUBLIC_APP_ENV === 'development' ? 'https://test.aimonica.dev' : 'https://aimonica.dev'
           }/api/auth/callback/twitter`
         }
       }
