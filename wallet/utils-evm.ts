@@ -11,11 +11,10 @@ export const evmUtils = {
       const projects = projectsRes.projects.filter((item: any) => item.registered);
       console.log('EVM 原始项目记录:', projects);
 
-      // 获取积分排行榜，如果失败则使用空数据继续执行
-      let pointsLeaderboard = { projects: [] };
+      let leaderboard = [];
       try {
-        pointsLeaderboard = await aimonicaAPI.GetPointsLeaderboard();
-        console.log('积分排行榜', pointsLeaderboard);
+        const pointsLeaderboard = await aimonicaAPI.GetPointsLeaderboard();
+        leaderboard = pointsLeaderboard.projects;
       } catch (error) {
         console.error(error);
       }
@@ -24,14 +23,15 @@ export const evmUtils = {
 
       for (let index = 0; index < projects.length; index++) {
         const project = projects[index];
-
-        const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id == project.id);
-        const points = pointsLeaderboardItem?.total_score || 0;
+        const projectName = ethers.decodeBytes32String(project.id);
+        const leaderboardItem = leaderboard.find((item: any) => item.id == project.id);
+        console.log(`${projectName} 积分`, leaderboardItem);
+        const points = Number(leaderboardItem?.total_score) || 0;
 
         const newProject = {
           index: index,
           id: project.id,
-          projectName: ethers.decodeBytes32String(project.id),
+          projectName,
           stakingToken: project.stakingToken,
           totalStaked: Number(ethers.formatEther(project.totalStaked)),
           createdAt: project.createdAt,

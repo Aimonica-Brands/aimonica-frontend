@@ -5,7 +5,7 @@ import { aimonicaAPI } from '@/pages/api/aimonica';
 import { coingeckoAPI } from '@/pages/api/coingecko';
 
 /**获取项目配置 PDA */
-const getProjectConfigPda = async (solanaProgram: any, projectId: number) => {
+export const getProjectConfigPda = async (solanaProgram: any, projectId: number) => {
   const [projectConfigPda] = await PublicKey.findProgramAddress(
     [Buffer.from('project'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
     solanaProgram.programId
@@ -104,11 +104,10 @@ export const solanaUtils = {
       console.log('Solana 项目数量:', projectCount);
       if (projectCount <= 0) return [];
 
-      // 获取积分排行榜，如果失败则使用空数据继续执行
-      let pointsLeaderboard = { projects: [] };
+      let leaderboard = [];
       try {
-        pointsLeaderboard = await aimonicaAPI.GetPointsLeaderboard();
-        console.log('积分排行榜', pointsLeaderboard);
+        const pointsLeaderboard = await aimonicaAPI.GetPointsLeaderboard();
+        leaderboard = pointsLeaderboard.projects;
       } catch (error) {
         console.error(error);
       }
@@ -119,12 +118,16 @@ export const solanaUtils = {
         try {
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
-          console.log(`项目 ${i} 配置:`, projectConfig);
+          console.log(
+            `${projectConfig.name} 配置:`,
+            JSON.stringify(projectConfig, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+          );
 
           const totalStaked = await getProjectTotalStaked(solanaProgram, i);
           const userCount = await getProjectUserCount(solanaProgram, projectConfigPda);
-          const pointsLeaderboardItem = pointsLeaderboard.projects.find((item: any) => item.id == i);
-          const points = pointsLeaderboardItem?.total_score || 0;
+          const leaderboardItem = leaderboard.find((item: any) => item.id == i);
+          console.log(`${projectConfig.name} 积分`, leaderboardItem);
+          const points = Number(leaderboardItem?.total_score) || 0;
 
           const newProject = {
             index: i,

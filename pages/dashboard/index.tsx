@@ -4,7 +4,7 @@ import { ExportOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppKitNetwork, useAppKitAccount } from '@reown/appkit/react';
 import { getContractConfig, modal, handleContractError } from '@/wallet';
-import { getRewardPoints, evmUtils, solanaUtils } from '@/wallet/utils';
+import { getRewardPoints, evmUtils, solanaUtils, getProjectConfigPda } from '@/wallet/utils';
 import { usePageContext } from '@/context';
 import utils from '@/utils';
 import { aimonicaAPI } from '@/pages/api/aimonica';
@@ -64,21 +64,26 @@ export default function Dashboard() {
         return <Tag color={value === 'Active' ? 'green' : '#bdbdbd'}>{value}</Tag>;
       }
     },
-    {
-      title: 'Hash',
-      dataIndex: 'transactionHash',
-      render: (value: any, record: any) => {
-        return (
-          <a className="hash" href={`${caipNetwork.blockExplorers.default.url}/tx/${value}`} target="_blank">
-            <span>
-              {value.slice(0, 6)}...{value.slice(-6)}
-            </span>
-            <ExportOutlined />
-          </a>
-        );
-      }
-    }
+    ...(caipNetwork?.chainNamespace === 'eip155'
+      ? [
+          {
+            title: 'Hash',
+            dataIndex: 'transactionHash',
+            render: (value: any, record: any) => {
+              return (
+                <a className="hash" href={`${caipNetwork.blockExplorers.default.url}/tx/${value}`} target="_blank">
+                  <span>
+                    {value.slice(0, 6)}...{value.slice(-6)}
+                  </span>
+                  <ExportOutlined />
+                </a>
+              );
+            }
+          }
+        ]
+      : [])
   ];
+
   const stakeColumns: any[] = [
     {
       title: 'Project',
@@ -167,7 +172,6 @@ export default function Dashboard() {
       if (isConnected && address && caipNetwork && chainId) {
         setNetworkId(chainId.toString());
         getStakeRecords();
-        getPointsDashboard();
       } else {
         setNetworkId('');
         setStakeRecords([]);
@@ -201,10 +205,12 @@ export default function Dashboard() {
       if (evmStakingContract) {
         getEvmStakeRecords();
         getFeeConfig();
+        getPointsDashboard();
       }
     } else if (caipNetwork.chainNamespace === 'solana') {
       if (solanaProgram) {
         getSolanaStakeRecords();
+        getPointsDashboard();
       }
     }
   };
@@ -399,11 +405,11 @@ export default function Dashboard() {
   const getPointsDashboard = async () => {
     if (historyLoading) return;
     setHistoryLoading(true);
+
     aimonicaAPI
       .GetPointsDashboard(address)
-      .then((res) => {
-        console.log('质押历史数据', res);
-
+      .then(async (res) => {
+        console.log('质押历史数据', res.stakes);
         let stakes = [];
         if (caipNetwork.chainNamespace === 'eip155') {
           stakes = res.stakes.filter((item: any) => item.chain == 'Base');
@@ -415,9 +421,18 @@ export default function Dashboard() {
         for (const stake of stakes) {
           if (!stake.processed) continue;
 
-          const projectName =
-            caipNetwork.chainNamespace === 'solana' ? stake.project_id : ethers.decodeBytes32String(stake.project_id);
-          const duration = caipNetwork.chainNamespace === 'solana' ? stake.duration : Number(stake.duration) / 86400;
+          let projectName = '';
+          if (caipNetwork.chainNamespace === 'solana') {
+            const projectConfigPda = await getProjectConfigPda(solanaProgram, stake.project_id);
+            const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
+            console.log(
+              `${projectConfig.name} 配置:`,
+              JSON.stringify(projectConfig, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+            );
+            projectName = projectConfig.name;
+          } else {
+            projectName = ethers.decodeBytes32String(stake.project_id);
+          }
 
           records.push({
             id: stake.id,
@@ -425,7 +440,7 @@ export default function Dashboard() {
             projectId: stake.project_id,
             projectName,
             amount: Number(ethers.formatEther(stake.amount)),
-            duration,
+            duration: Number(stake.duration) / 86400,
             createdAt: stake.created_at,
             transactionHash: stake.transaction_hash,
             status: stake.status
