@@ -214,7 +214,11 @@ export const solanaUtils = {
       };
 
       const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
-      console.log('Solana 原始质押记录:', userStakes);
+
+      console.log(
+        'Solana 原始质押记录:',
+        JSON.stringify(userStakes, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+      );
 
       if (!userStakes) return [];
 
@@ -241,7 +245,7 @@ export const solanaUtils = {
           const canUnstake = now >= unlockedAt;
 
           records.push({
-            id: account.stakeId.toNumber(),
+            id: stake.publicKey.toBase58(),
             userId: account.user.toBase58(),
             projectId,
             projectName,
