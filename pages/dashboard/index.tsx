@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [stakeRecordsLoading, setStakeRecordsLoading] = useState(false);
   const [unstakeRecord, setUnstakeRecord] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyDataSource, setHistoryDataSource] = useState([]);
+  const [historyRecords, setHistoryRecords] = useState([]);
 
   const [unstakeFeeRate, setUnstakeFeeRate] = useState(0);
   const [emergencyUnstakeFeeRate, setEmergencyUnstakeFeeRate] = useState(0);
@@ -175,6 +175,9 @@ export default function Dashboard() {
       } else {
         setNetworkId('');
         setStakeRecords([]);
+        setTotalPoints(0);
+        setTotalStaked(0);
+        setTotalProject(0);
       }
     };
 
@@ -182,23 +185,18 @@ export default function Dashboard() {
   }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram]);
 
   useEffect(() => {
-    if (stakeRecords.length > 0) {
-      setTotalPoints(stakeRecords.reduce((acc, record) => acc + record.points, 0));
-      setTotalStaked(stakeRecords.reduce((acc, record) => acc + record.amount, 0));
+    if (historyRecords.length > 0) {
+      setTotalStaked(historyRecords.reduce((acc, record) => acc + record.amount, 0));
       setTotalProject(
-        stakeRecords.reduce((acc, record) => {
+        historyRecords.reduce((acc, record) => {
           if (acc.includes(record.projectId)) {
             return acc;
           }
           return [...acc, record.projectId];
         }, []).length
       );
-    } else {
-      setTotalPoints(0);
-      setTotalStaked(0);
-      setTotalProject(0);
     }
-  }, [stakeRecords]);
+  }, [historyRecords]);
 
   const getStakeRecords = async () => {
     if (caipNetwork.chainNamespace === 'eip155') {
@@ -409,7 +407,10 @@ export default function Dashboard() {
     aimonicaAPI
       .GetPointsDashboard(address)
       .then(async (res) => {
-        console.log('质押历史数据', res.stakes);
+        console.log('质押历史数据', res);
+
+        setTotalPoints(Number(res.totalScore));
+
         let stakes = [];
         if (caipNetwork.chainNamespace === 'eip155') {
           stakes = res.stakes.filter((item: any) => item.chain == 'Base');
@@ -419,16 +420,16 @@ export default function Dashboard() {
 
         const records = [];
         for (const stake of stakes) {
-          if (!stake.processed) continue;
+          // if (!stake.processed) continue;
 
           let projectName = '';
           if (caipNetwork.chainNamespace === 'solana') {
             const projectConfigPda = await getProjectConfigPda(solanaProgram, stake.project_id);
             const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
-            console.log(
-              `${projectConfig.name} 配置:`,
-              JSON.stringify(projectConfig, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-            );
+            // console.log(
+            //   `${projectConfig.name} 配置:`,
+            //   JSON.stringify(projectConfig, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+            // );
             projectName = projectConfig.name;
           } else {
             projectName = ethers.decodeBytes32String(stake.project_id);
@@ -448,7 +449,7 @@ export default function Dashboard() {
         }
         const sortedRecords = records.sort((a: any, b: any) => b.createdAt - a.createdAt);
 
-        setHistoryDataSource(sortedRecords);
+        setHistoryRecords(sortedRecords);
       })
       .catch((error) => {
         console.error(error);
@@ -534,7 +535,7 @@ export default function Dashboard() {
           <Table
             scroll={{ x: 'max-content' }}
             columns={historyColumns}
-            dataSource={historyDataSource}
+            dataSource={historyRecords}
             pagination={false}
             loading={historyLoading}
             rowKey={(record) => `${record.projectId}-${record.id}`}

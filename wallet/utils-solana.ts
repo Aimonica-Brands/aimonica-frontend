@@ -118,10 +118,10 @@ export const solanaUtils = {
         try {
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
-          console.log(
-            `${projectConfig.name} 配置:`,
-            JSON.stringify(projectConfig, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-          );
+          // console.log(
+          //   `${projectConfig.name} 配置:`,
+          //   JSON.stringify(projectConfig, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
+          // );
 
           const totalStaked = await getProjectTotalStaked(solanaProgram, i);
           const userCount = await getProjectUserCount(solanaProgram, projectConfigPda);
