@@ -245,7 +245,8 @@ export const solanaUtils = {
           const canUnstake = now >= unlockedAt;
 
           records.push({
-            id: stake.publicKey.toBase58(),
+            publicKey: stake.publicKey.toBase58(),
+            id: account.stakeId.toNumber(),
             userId: account.user.toBase58(),
             projectId,
             projectName,

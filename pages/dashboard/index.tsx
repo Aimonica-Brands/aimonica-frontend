@@ -40,7 +40,13 @@ export default function Dashboard() {
     },
     {
       title: 'Stake ID',
-      dataIndex: 'id'
+      dataIndex: 'id',
+      render: (value: any, record: any) => {
+        if (caipNetwork.chainNamespace === 'solana') {
+          return record.id.slice(0, 4) + '...' + record.id.slice(-4);
+        }
+        return value;
+      }
     },
     {
       title: 'Amount',
@@ -91,7 +97,13 @@ export default function Dashboard() {
     },
     {
       title: 'Stake ID',
-      dataIndex: 'id'
+      dataIndex: 'id',
+      render: (value: any, record: any) => {
+        if (caipNetwork.chainNamespace === 'solana') {
+          return record.publicKey.slice(0, 4) + '...' + record.publicKey.slice(-4);
+        }
+        return value;
+      }
     },
     {
       title: 'Amount',
@@ -175,6 +187,7 @@ export default function Dashboard() {
       } else {
         setNetworkId('');
         setStakeRecords([]);
+        setHistoryRecords([]);
         setTotalPoints(0);
         setTotalStaked(0);
         setTotalProject(0);
@@ -281,15 +294,12 @@ export default function Dashboard() {
           message.success('Transaction submitted, please wait...');
           setUnstakeLoading(false);
           closeUnstakeModal();
-
           setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
+          getPointsDashboard();
         })
         .catch((error) => {
           handleContractError(error);
-        })
-        .finally(() => {
           setUnstakeLoading(false);
-          setIsUnstakeModalOpen(false);
         });
     } else if (caipNetwork.chainNamespace === 'solana') {
       solanaUtils
@@ -304,9 +314,11 @@ export default function Dashboard() {
           setUnstakeLoading(false);
           closeUnstakeModal();
           setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
+          getPointsDashboard();
         })
         .catch((error) => {
           handleContractError(error);
+          setUnstakeLoading(false);
         });
     }
   };
@@ -328,6 +340,7 @@ export default function Dashboard() {
           setUnstakeLoading(false);
           closeEmergencyUnstakeModal();
           setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
+          getPointsDashboard();
         })
         .catch((error) => {
           handleContractError(error);
@@ -346,6 +359,7 @@ export default function Dashboard() {
           setUnstakeLoading(false);
           closeEmergencyUnstakeModal();
           setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
+          getPointsDashboard();
         })
         .catch((error) => {
           handleContractError(error);
