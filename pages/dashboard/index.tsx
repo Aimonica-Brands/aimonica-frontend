@@ -23,12 +23,10 @@ export default function Dashboard() {
   const [isUnstakeModalOpen, setIsUnstakeModalOpen] = useState(false);
   const [isEmergencyUnstakeModalOpen, setIsEmergencyUnstakeModalOpen] = useState(false);
   const [stakeRecords, setStakeRecords] = useState([]);
-  const [unstakeLoading, setUnstakeLoading] = useState(false);
-  const [stakeRecordsLoading, setStakeRecordsLoading] = useState(false);
-  const [unstakeRecord, setUnstakeRecord] = useState(null);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  const [tableLoading, setTableLoading] = useState(false);
   const [historyRecords, setHistoryRecords] = useState([]);
-
+  const [unstakeRecord, setUnstakeRecord] = useState(null);
+  const [unstakeLoading, setUnstakeLoading] = useState(false);
   const [unstakeFeeRate, setUnstakeFeeRate] = useState(0);
   const [emergencyUnstakeFeeRate, setEmergencyUnstakeFeeRate] = useState(0);
 
@@ -40,13 +38,9 @@ export default function Dashboard() {
     },
     {
       title: 'Stake ID',
-      dataIndex: 'id',
-      render: (value: any, record: any) => {
-        if (caipNetwork.chainNamespace === 'solana') {
-          return record.id.slice(0, 4) + '...' + record.id.slice(-4);
-        }
-        return value;
-      }
+      dataIndex: 'stakeId',
+      render: (value: any, record: any) =>
+        value && (caipNetwork.chainNamespace === 'solana' ? record.id.slice(0, 4) + '...' + record.id.slice(-4) : value)
     },
     {
       title: 'Amount',
@@ -59,15 +53,40 @@ export default function Dashboard() {
       render: (value: number) => `${value} Day`
     },
     {
-      title: 'Redemption Time',
-      dataIndex: 'createdAt',
-      render: (value: number) => new Date(value).toLocaleString()
-    },
-    {
       title: 'Status',
       dataIndex: 'status',
       render: (value: any, record: any) => {
-        return <Tag color={value === 'Active' ? 'green' : '#bdbdbd'}>{value}</Tag>;
+        return <Tag color={value === 'Unstaked' ? 'blue' : 'red'}>{value}</Tag>;
+      }
+    },
+    {
+      title: 'Points',
+      dataIndex: 'points',
+      align,
+      render: (value: any, record: any) => {
+        return (
+          <div className="s-box">
+            <div className="s-img">
+              <img src="/assets/images/img-3.png" alt="" />
+            </div>
+            <div className="s-text">{utils.formatNumber(value)}</div>
+          </div>
+        );
+      }
+    },
+    {
+      title: 'Rewards',
+      dataIndex: 'rewards',
+      align,
+      render: (value: any, record: any) => {
+        return (
+          <div className="s-box">
+            <div className="s-img">
+              <img src="/assets/images/img-5.png" alt="" />
+            </div>
+            <div className="s-text">Points {getRewardPoints(record.duration)}x AIM</div>
+          </div>
+        );
       }
     },
     ...(caipNetwork?.chainNamespace === 'eip155'
@@ -77,12 +96,14 @@ export default function Dashboard() {
             dataIndex: 'transactionHash',
             render: (value: any, record: any) => {
               return (
-                <a className="hash" href={`${caipNetwork.blockExplorers.default.url}/tx/${value}`} target="_blank">
-                  <span>
-                    {value.slice(0, 6)}...{value.slice(-6)}
-                  </span>
-                  <ExportOutlined />
-                </a>
+                value && (
+                  <a className="hash" href={`${caipNetwork.blockExplorers.default.url}/tx/${value}`} target="_blank">
+                    <span>
+                      {value.slice(0, 6)}...{value.slice(-6)}
+                    </span>
+                    <ExportOutlined />
+                  </a>
+                )
               );
             }
           }
@@ -97,13 +118,12 @@ export default function Dashboard() {
     },
     {
       title: 'Stake ID',
-      dataIndex: 'id',
-      render: (value: any, record: any) => {
-        if (caipNetwork.chainNamespace === 'solana') {
-          return record.publicKey.slice(0, 4) + '...' + record.publicKey.slice(-4);
-        }
-        return value;
-      }
+      dataIndex: 'stakeId',
+      render: (value: any, record: any) =>
+        value &&
+        (caipNetwork.chainNamespace === 'solana'
+          ? record.publicKey.slice(0, 4) + '...' + record.publicKey.slice(-4)
+          : value)
     },
     {
       title: 'Amount',
@@ -129,7 +149,7 @@ export default function Dashboard() {
       title: 'Status',
       dataIndex: 'status',
       render: (value: any, record: any) => {
-        return <Tag color="green">Active</Tag>;
+        return <Tag color="green">{value}</Tag>;
       }
     },
     {
@@ -183,7 +203,16 @@ export default function Dashboard() {
     const initData = async () => {
       if (isConnected && address && caipNetwork && chainId) {
         setNetworkId(chainId.toString());
-        getStakeRecords();
+        if (caipNetwork.chainNamespace === 'eip155') {
+          if (evmStakingContract) {
+            getEvmStakeRecords();
+            getFeeConfig();
+          }
+        } else if (caipNetwork.chainNamespace === 'solana') {
+          if (solanaProgram) {
+            getSolanaStakeRecords();
+          }
+        }
       } else {
         setNetworkId('');
         setStakeRecords([]);
@@ -197,35 +226,6 @@ export default function Dashboard() {
     initData();
   }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram]);
 
-  useEffect(() => {
-    if (historyRecords.length > 0) {
-      setTotalStaked(historyRecords.reduce((acc, record) => acc + record.amount, 0));
-      setTotalProject(
-        historyRecords.reduce((acc, record) => {
-          if (acc.includes(record.projectId)) {
-            return acc;
-          }
-          return [...acc, record.projectId];
-        }, []).length
-      );
-    }
-  }, [historyRecords]);
-
-  const getStakeRecords = async () => {
-    if (caipNetwork.chainNamespace === 'eip155') {
-      if (evmStakingContract) {
-        getEvmStakeRecords();
-        getFeeConfig();
-        getPointsDashboard();
-      }
-    } else if (caipNetwork.chainNamespace === 'solana') {
-      if (solanaProgram) {
-        getSolanaStakeRecords();
-        getPointsDashboard();
-      }
-    }
-  };
-
   const getFeeConfig = async () => {
     evmUtils
       .getFeeConfig(evmStakingContract)
@@ -238,28 +238,40 @@ export default function Dashboard() {
       });
   };
 
-  const getEvmStakeRecords = async (id: number = null, stakeAmount: number = null) => {
-    setStakeRecordsLoading(true);
+  const getEvmStakeRecords = async () => {
+    setTableLoading(true);
     evmUtils
       .getStakeRecords(address)
       .then((records) => {
-        const newRecords = records.map((record) => {
-          record.points = record.amount * getRewardPoints(record.duration);
-          return record;
-        });
-        setStakeRecords(newRecords);
+        setTotalPoints(records.reduce((acc, record) => acc + (record.points === '-' ? 0 : record.points), 0));
+        setTotalStaked(records.reduce((acc, record) => acc + record.amount, 0));
+        setTotalProject(
+          records.reduce((acc, record) => {
+            if (acc.includes(record.projectId)) {
+              return acc;
+            }
+            return [...acc, record.projectId];
+          }, []).length
+        );
+
+        const stake = records.filter((record) => record.status === 'Active');
+        setStakeRecords(stake);
+
+        const history = records.filter((record) => record.status !== 'Active');
+        setHistoryRecords(history);
       })
       .catch((error) => {
         console.error(error);
         setStakeRecords([]);
+        setHistoryRecords([]);
       })
       .finally(() => {
-        setStakeRecordsLoading(false);
+        setTableLoading(false);
       });
   };
 
-  const getSolanaStakeRecords = async (id: number = null, stakeAmount: number = null) => {
-    setStakeRecordsLoading(true);
+  const getSolanaStakeRecords = async () => {
+    setTableLoading(true);
     solanaUtils
       .getStakeRecords(solanaProgram)
       .then((records) => {
@@ -274,7 +286,7 @@ export default function Dashboard() {
         setStakeRecords([]);
       })
       .finally(() => {
-        setStakeRecordsLoading(false);
+        setTableLoading(false);
       });
   };
 
@@ -294,8 +306,7 @@ export default function Dashboard() {
           message.success('Transaction submitted, please wait...');
           setUnstakeLoading(false);
           closeUnstakeModal();
-          setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
-          getPointsDashboard();
+          getEvmStakeRecords();
         })
         .catch((error) => {
           handleContractError(error);
@@ -314,7 +325,6 @@ export default function Dashboard() {
           setUnstakeLoading(false);
           closeUnstakeModal();
           setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
-          getPointsDashboard();
         })
         .catch((error) => {
           handleContractError(error);
@@ -339,8 +349,7 @@ export default function Dashboard() {
           message.success('Transaction submitted, please wait...');
           setUnstakeLoading(false);
           closeEmergencyUnstakeModal();
-          setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
-          getPointsDashboard();
+          getEvmStakeRecords();
         })
         .catch((error) => {
           handleContractError(error);
@@ -359,7 +368,6 @@ export default function Dashboard() {
           setUnstakeLoading(false);
           closeEmergencyUnstakeModal();
           setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
-          getPointsDashboard();
         })
         .catch((error) => {
           handleContractError(error);
@@ -412,65 +420,6 @@ export default function Dashboard() {
       setNetworkId('');
       setStakeRecords([]);
     }
-  };
-
-  const getPointsDashboard = async () => {
-    if (historyLoading) return;
-    setHistoryLoading(true);
-
-    aimonicaAPI
-      .GetPointsDashboard(address)
-      .then(async (res) => {
-        console.log('质押历史数据', res);
-
-        setTotalPoints(Number(res.totalScore));
-
-        let stakes = [];
-        if (caipNetwork.chainNamespace === 'eip155') {
-          stakes = res.stakes.filter((item: any) => item.chain == 'Base');
-        } else if (caipNetwork.chainNamespace === 'solana') {
-          stakes = res.stakes.filter((item: any) => item.chain == 'Solana');
-        }
-
-        const records = [];
-        for (const stake of stakes) {
-          // if (!stake.processed) continue;
-
-          let projectName = '';
-          if (caipNetwork.chainNamespace === 'solana') {
-            const projectConfigPda = await getProjectConfigPda(solanaProgram, stake.project_id);
-            const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
-            // console.log(
-            //   `${projectConfig.name} 配置:`,
-            //   JSON.stringify(projectConfig, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-            // );
-            projectName = projectConfig.name;
-          } else {
-            projectName = ethers.decodeBytes32String(stake.project_id);
-          }
-
-          records.push({
-            id: stake.id,
-            userId: stake.user_id,
-            projectId: stake.project_id,
-            projectName,
-            amount: Number(ethers.formatEther(stake.amount)),
-            duration: Number(stake.duration) / 86400,
-            createdAt: stake.created_at,
-            transactionHash: stake.transaction_hash,
-            status: stake.status
-          });
-        }
-        const sortedRecords = records.sort((a: any, b: any) => b.createdAt - a.createdAt);
-
-        setHistoryRecords(sortedRecords);
-      })
-      .catch((error) => {
-        console.error(error);
-      })
-      .finally(() => {
-        setHistoryLoading(false);
-      });
   };
 
   return (
@@ -535,7 +484,7 @@ export default function Dashboard() {
             columns={stakeColumns}
             dataSource={stakeRecords}
             pagination={false}
-            loading={stakeRecordsLoading}
+            loading={tableLoading}
             rowKey={(record) => `${record.projectId}-${record.id}`}
           />
         </div>
@@ -551,7 +500,7 @@ export default function Dashboard() {
             columns={historyColumns}
             dataSource={historyRecords}
             pagination={false}
-            loading={historyLoading}
+            loading={tableLoading}
             rowKey={(record) => `${record.projectId}-${record.id}`}
           />
         </div>

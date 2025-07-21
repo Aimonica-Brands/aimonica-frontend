@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { aimonicaAPI, subgraphsAPI } from '@/pages/api/aimonica';
 import { coingeckoAPI } from '@/pages/api/coingecko';
+import { getRewardPoints } from './utils';
 
 export const evmUtils = {
   /**获取项目信息 */
@@ -95,7 +96,7 @@ export const evmUtils = {
     }
   },
 
-  /**获取质押记录 */
+  /**获取质押记录 获取积分记录 */
   getStakeRecords: async (address: string) => {
     try {
       const data: any = await subgraphsAPI.getStakeRecords(address);
@@ -105,10 +106,6 @@ export const evmUtils = {
 
       const records = [];
       for (const stake of data.stakes) {
-        // status: 0=Active, 1=Unstaked, 2=EmergencyUnstaked
-        // status: "Active"
-        if (stake.status != 'Active') continue;
-
         const projectId = stake.project.id;
         const projectName = ethers.decodeBytes32String(projectId);
         const stakedAt = Number(stake.stakedAt) * 1000;
@@ -116,16 +113,25 @@ export const evmUtils = {
         const now = new Date().getTime();
         const canUnstake = now >= unlockedAt;
 
+        const amount = Number(ethers.formatEther(stake.amount));
+        const duration = Number(stake.duration) / 86400;
+
+        const points = stake.status !== 'EmergencyUnstaked' ? amount * getRewardPoints(duration) : '-';
+
         records.push({
-          id: Number(stake.stakeId),
-          userId: stake.user.id,
           projectId,
           projectName,
-          amount: Number(ethers.formatEther(stake.amount)),
-          duration: Number(stake.duration) / 86400,
+          stakeId: stake.stakeId,
+          userId: stake.user.id,
+          stakingToken: stake.stakingToken,
+          amount,
+          duration,
+          status: stake.status,
+          transactionHash: stake.transactionHash,
           stakedAt,
           unlockedAt,
-          canUnstake
+          canUnstake,
+          points
         });
       }
       const sortedRecords = records.sort((a: any, b: any) => b.stakedAt - a.stakedAt);
