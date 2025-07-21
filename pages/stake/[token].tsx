@@ -539,7 +539,7 @@ export default function Stake() {
             </div>
           </div>
         </div>
-        <div className="cookie-box2">
+        {/* <div className="cookie-box2">
           <div className="title">Why This Agent Is Bullish</div>
           <div className="des">{projectInfo?.description?.slice(0, 100)}...</div>
           <div className="textbox">
@@ -564,7 +564,7 @@ export default function Stake() {
         </div>
         <div className="cookie-box4">
           <Tabs defaultActiveKey="1" items={infoItems} onChange={onChange} />
-        </div>
+        </div> */}
       </div>
 
       <Modal

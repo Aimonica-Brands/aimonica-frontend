@@ -17,7 +17,6 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [networkId, setNetworkId] = useState('');
-  const [tabIndex2, setTabIndex2] = useState(0);
 
   const align = 'center' as const;
   const projectColumns: ColumnsType<any> = [
@@ -343,14 +342,6 @@ export default function Home() {
                   </button>
                 );
               })}
-            </div>
-            <div className="tab-box tab-box2">
-              <button className={tabIndex2 === 0 ? 'active' : ''} onClick={() => setTabIndex2(0)}>
-                24H
-              </button>
-              <button className={tabIndex2 === 1 ? 'active' : ''} onClick={() => setTabIndex2(1)}>
-                7D
-              </button>
             </div>
           </div>
 
