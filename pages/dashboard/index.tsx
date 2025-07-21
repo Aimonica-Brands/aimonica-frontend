@@ -38,9 +38,7 @@ export default function Dashboard() {
     },
     {
       title: 'Stake ID',
-      dataIndex: 'stakeId',
-      render: (value: any, record: any) =>
-        value && (caipNetwork.chainNamespace === 'solana' ? record.id.slice(0, 4) + '...' + record.id.slice(-4) : value)
+      dataIndex: 'stakeId'
     },
     {
       title: 'Amount',
@@ -52,6 +50,7 @@ export default function Dashboard() {
       dataIndex: 'duration',
       render: (value: number) => `${value} Day`
     },
+
     {
       title: 'Status',
       dataIndex: 'status',
@@ -89,12 +88,13 @@ export default function Dashboard() {
         );
       }
     },
+
     ...(caipNetwork?.chainNamespace === 'eip155'
       ? [
           {
             title: 'Hash',
             dataIndex: 'transactionHash',
-            render: (value: any, record: any) => {
+            render: (value: any) => {
               return (
                 value && (
                   <a className="hash" href={`${caipNetwork.blockExplorers.default.url}/tx/${value}`} target="_blank">
@@ -108,7 +108,13 @@ export default function Dashboard() {
             }
           }
         ]
-      : [])
+      : [
+          {
+            title: 'Unstake Time',
+            dataIndex: 'unstakeAt',
+            render: (value: number) => new Date(value).toLocaleString()
+          }
+        ])
   ];
 
   const stakeColumns: any[] = [
@@ -118,12 +124,7 @@ export default function Dashboard() {
     },
     {
       title: 'Stake ID',
-      dataIndex: 'stakeId',
-      render: (value: any, record: any) =>
-        value &&
-        (caipNetwork.chainNamespace === 'solana'
-          ? record.publicKey.slice(0, 4) + '...' + record.publicKey.slice(-4)
-          : value)
+      dataIndex: 'stakeId'
     },
     {
       title: 'Amount',
@@ -148,9 +149,7 @@ export default function Dashboard() {
     {
       title: 'Status',
       dataIndex: 'status',
-      render: (value: any, record: any) => {
-        return <Tag color="green">{value}</Tag>;
-      }
+      render: (value: any, record: any) => <Tag color="green">Active</Tag>
     },
     {
       title: 'Points',
@@ -226,6 +225,21 @@ export default function Dashboard() {
     initData();
   }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram]);
 
+  useEffect(() => {
+    const records = [...stakeRecords, ...historyRecords];
+    if (records.length === 0) return;
+    setTotalPoints(records.reduce((acc, record) => acc + (record.points === '-' ? 0 : record.points), 0));
+    setTotalStaked(records.reduce((acc, record) => acc + record.amount, 0));
+    setTotalProject(
+      records.reduce((acc, record) => {
+        if (acc.includes(record.projectId)) {
+          return acc;
+        }
+        return [...acc, record.projectId];
+      }, []).length
+    );
+  }, [stakeRecords, historyRecords]);
+
   const getFeeConfig = async () => {
     evmUtils
       .getFeeConfig(evmStakingContract)
@@ -240,54 +254,39 @@ export default function Dashboard() {
 
   const getEvmStakeRecords = async () => {
     setTableLoading(true);
-    evmUtils
-      .getStakeRecords(address)
-      .then((records) => {
-        setTotalPoints(records.reduce((acc, record) => acc + (record.points === '-' ? 0 : record.points), 0));
-        setTotalStaked(records.reduce((acc, record) => acc + record.amount, 0));
-        setTotalProject(
-          records.reduce((acc, record) => {
-            if (acc.includes(record.projectId)) {
-              return acc;
-            }
-            return [...acc, record.projectId];
-          }, []).length
-        );
 
-        const stake = records.filter((record) => record.status === 'Active');
-        setStakeRecords(stake);
+    try {
+      const records = await evmUtils.getStakeRecords(address);
 
-        const history = records.filter((record) => record.status !== 'Active');
-        setHistoryRecords(history);
-      })
-      .catch((error) => {
-        console.error(error);
-        setStakeRecords([]);
-        setHistoryRecords([]);
-      })
-      .finally(() => {
-        setTableLoading(false);
-      });
+      const stake = records.filter((record) => record.status === 'Active');
+      setStakeRecords(stake);
+
+      const history = records.filter((record) => record.status !== 'Active');
+      setHistoryRecords(history);
+    } catch (error) {
+      console.error(error);
+      setStakeRecords([]);
+      setHistoryRecords([]);
+    } finally {
+      setTableLoading(false);
+    }
   };
 
   const getSolanaStakeRecords = async () => {
     setTableLoading(true);
-    solanaUtils
-      .getStakeRecords(solanaProgram)
-      .then((records) => {
-        const newRecords = records.map((record) => {
-          record.points = record.amount * getRewardPoints(record.duration);
-          return record;
-        });
-        setStakeRecords(newRecords);
-      })
-      .catch((error) => {
-        console.error(error);
-        setStakeRecords([]);
-      })
-      .finally(() => {
-        setTableLoading(false);
-      });
+    try {
+      const stakeRecords = await solanaUtils.getStakeRecords(solanaProgram);
+      setStakeRecords(stakeRecords);
+
+      const unstakeRecords = await solanaUtils.getUnstakeRecords(solanaProgram);
+      setHistoryRecords(unstakeRecords);
+    } catch (error) {
+      console.error(error);
+      setStakeRecords([]);
+      setHistoryRecords([]);
+    } finally {
+      setTableLoading(false);
+    }
   };
 
   const handleUnstake = async () => {
@@ -324,7 +323,7 @@ export default function Dashboard() {
           message.success('Transaction submitted, please wait...');
           setUnstakeLoading(false);
           closeUnstakeModal();
-          setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
+          getSolanaStakeRecords();
         })
         .catch((error) => {
           handleContractError(error);
@@ -367,7 +366,7 @@ export default function Dashboard() {
           message.success('Transaction submitted, please wait...');
           setUnstakeLoading(false);
           closeEmergencyUnstakeModal();
-          setStakeRecords((prev) => prev.filter((item) => item.id !== record.id));
+          getSolanaStakeRecords();
         })
         .catch((error) => {
           handleContractError(error);
@@ -485,7 +484,7 @@ export default function Dashboard() {
             dataSource={stakeRecords}
             pagination={false}
             loading={tableLoading}
-            rowKey={(record) => `${record.projectId}-${record.id}`}
+            rowKey={(record) => `${record.projectId}-${record.stakeId}`}
           />
         </div>
 
@@ -501,7 +500,7 @@ export default function Dashboard() {
             dataSource={historyRecords}
             pagination={false}
             loading={tableLoading}
-            rowKey={(record) => `${record.projectId}-${record.id}`}
+            rowKey={(record) => `${record.projectId}-${record.stakeId}`}
           />
         </div>
       </div>

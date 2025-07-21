@@ -81,8 +81,7 @@ export const getSolanaContracts = (chainId: any, walletProvider: any) => {
 
 /**获取奖励点数*/
 export const getRewardPoints = (duration: number) => {
-  if (duration == 1) return 1;
-  if (duration == 7) return 1;
+  if (duration <= 7) return 1;
   if (duration == 14) return 3;
   if (duration == 30) return 8;
   return 0;

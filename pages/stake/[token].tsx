@@ -470,9 +470,7 @@ export default function Stake() {
                   className="stake-btn"
                   onClick={handleStake}
                   loading={loading}
-                  disabled={
-                    !isConnected || !address || !caipNetwork || !chainId || !amount || !tokenBalance || !durationDay
-                  }>
+                  disabled={!isConnected || !address || !caipNetwork || !chainId || !amount || !tokenBalance}>
                   STAKE
                 </Button>
               )}

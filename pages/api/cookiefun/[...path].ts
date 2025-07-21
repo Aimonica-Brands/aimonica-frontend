@@ -28,16 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         headers,
         timeout
       });
-    } else if (req.method === 'PUT') {
-      response = await axios.put(externalUrl, req.body, {
-        headers,
-        timeout
-      });
-    } else if (req.method === 'DELETE') {
-      response = await axios.delete(externalUrl, {
-        headers,
-        timeout
-      });
     } else {
       return res.status(405).json({ message: 'Method not allowed' });
     }

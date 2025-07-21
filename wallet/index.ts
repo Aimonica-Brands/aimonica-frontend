@@ -58,7 +58,7 @@ export const getContractConfig = (chainId: any = ''): any => {
     {
       network: solana,
       endpoint: 'https://solana.publicnode.com/',
-      programId: 'B44fUqmZNMyaUVGqs7pb9ZLPBsjJ3ho6F8cTj1MpjJmJ',
+      programId: 'BGWDziWKGkAFPjArzYYQfU7dug5VxACKxEMDZFEMPYuN',
       aim_staking_program
     }
   ];
