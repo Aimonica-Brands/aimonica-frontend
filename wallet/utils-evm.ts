@@ -196,9 +196,9 @@ export const evmUtils = {
   /**解质押 */
   unstake: async (evmStakingContract: any, record: any) => {
     try {
-      console.log('解质押ID:', record.id, '数量:', record.amount);
+      console.log('解质押ID:', record.stakeId, '数量:', record.amount);
 
-      const tx = await evmStakingContract.unstake(record.id);
+      const tx = await evmStakingContract.unstake(record.stakeId);
       await tx.wait();
       return tx;
     } catch (error) {
@@ -209,9 +209,9 @@ export const evmUtils = {
   /**紧急解质押 */
   emergencyUnstake: async (evmStakingContract: any, record: any) => {
     try {
-      console.log('紧急解质押ID:', record.id, '数量:', record.amount);
+      console.log('紧急解质押ID:', record.stakeId, '数量:', record.amount);
 
-      const tx = await evmStakingContract.emergencyUnstake(record.id);
+      const tx = await evmStakingContract.emergencyUnstake(record.stakeId);
       await tx.wait();
       return tx;
     } catch (error) {
