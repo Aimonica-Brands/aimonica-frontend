@@ -125,6 +125,9 @@ export const solanaUtils = {
       const newProjects = [];
 
       for (let i = 0; i < projectCount; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 10000 * i));
+        console.log(`Processing project ${i + 1}/${projectCount}...`);
+
         try {
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
@@ -168,14 +171,13 @@ export const solanaUtils = {
 
           try {
             const coinDetailsRes = await coingeckoAPI.getCoinByContract(newProject.platformId, newProject.stakingToken);
-            // console.log(newProject.projectName, coinDetailsRes);
+            console.log(newProject.projectName, coinDetailsRes);
 
             const coinPrice = await coingeckoAPI.getCoinPrice(newProject.platformId, coinDetailsRes.contract_address);
-            // console.log(newProject.projectName, coinPrice);
-
             newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
-            newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
+            console.log(newProject.projectName, newProject.coinPriceUsd);
 
+            newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
             // newProject.platformId = coinDetailsRes.asset_platform_id;
             // newProject.contractAddress = coinDetailsRes.contract_address;
             newProject.description = coinDetailsRes.description.en;

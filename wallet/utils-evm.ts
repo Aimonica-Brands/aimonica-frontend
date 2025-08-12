@@ -22,15 +22,19 @@ export const evmUtils = {
 
       const newProjects = [];
 
-      for (let index = 0; index < projects.length; index++) {
-        const project = projects[index];
+      for (let i = 0; i < projects.length; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 10000 * i));
+        console.log(`Processing project ${i + 1}/${projects.length}...`);
+
+        const project = projects[i];
+
         const projectName = ethers.decodeBytes32String(project.id);
         const leaderboardItem = leaderboard.find((item: any) => item.id == project.id);
         console.log(`${projectName} 积分`, leaderboardItem);
         const points = Number(leaderboardItem?.total_score) || 0;
 
         const newProject = {
-          index: index,
+          index: i,
           id: project.id,
           projectName,
           stakingToken: project.stakingToken,
@@ -54,14 +58,13 @@ export const evmUtils = {
 
         try {
           const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
-          // console.log(newProject.projectName, coinDetailsRes);
+          console.log(newProject.projectName, coinDetailsRes);
 
           const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
-          // console.log(newProject.projectName, coinPrice);
-
           newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
-          newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
+          console.log(newProject.projectName, newProject.coinPriceUsd);
 
+          newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
           // newProject.platformId = coinDetailsRes.asset_platform_id;
           // newProject.contractAddress = coinDetailsRes.contract_address;
           newProject.description = coinDetailsRes.description.en;

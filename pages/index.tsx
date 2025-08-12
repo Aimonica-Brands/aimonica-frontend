@@ -198,7 +198,6 @@ export default function Home() {
   useEffect(() => {
     if (isConnected && address && caipNetwork && chainId) {
       setNetworkId(chainId.toString());
-
       getProjectData();
     } else {
       setNetworkId('');
@@ -206,8 +205,8 @@ export default function Home() {
   }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram]);
 
   const getProjectData = async () => {
-    setLoading(true);
     setProjectsData([]);
+
     if (caipNetwork.chainNamespace === 'eip155') {
       if (evmStakingContract) {
         getEVMProjects();
@@ -220,6 +219,8 @@ export default function Home() {
   };
 
   const getSolanaProjects = async () => {
+    if (loading) return;
+    setLoading(true);
     solanaUtils
       .getProjects(solanaProgram)
       .then((sortedProjects) => {
@@ -234,6 +235,8 @@ export default function Home() {
   };
 
   const getEVMProjects = async () => {
+    if (loading) return;
+    setLoading(true);
     evmUtils
       .getProjects()
       .then((sortedProjects) => {
