@@ -10,7 +10,7 @@ export const evmUtils = {
       const projectsRes: any = await subgraphsAPI.getProjects();
 
       const projects = projectsRes.projects.filter((item: any) => item.registered);
-      console.log('EVM 原始项目记录:', projects);
+      console.log('EVM original project records:', projects);
 
       let leaderboard = [];
       try {
@@ -30,7 +30,7 @@ export const evmUtils = {
 
         const projectName = ethers.decodeBytes32String(project.id);
         const leaderboardItem = leaderboard.find((item: any) => item.id == project.id);
-        console.log(`${projectName} 积分`, leaderboardItem);
+        console.log(`${projectName} points`, leaderboardItem);
         const points = Number(leaderboardItem?.total_score) || 0;
 
         const newProject = {
@@ -76,7 +76,7 @@ export const evmUtils = {
             dex: `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`
           };
         } catch (error) {
-          console.error(`获取项目 ${newProject.projectName} 的信息失败:`, error);
+          console.error(`Failed to get project ${newProject.projectName} information:`, error);
           // 使用默认值，继续处理项目
         }
 
@@ -89,7 +89,7 @@ export const evmUtils = {
             return { ...item, rank: index + 1 };
           });
 
-        console.log('EVM 项目记录:', sortedProjects);
+        console.log('EVM project records:', sortedProjects);
         return sortedProjects;
       }
 
@@ -103,7 +103,7 @@ export const evmUtils = {
   getStakeRecords: async (address: string) => {
     try {
       const data: any = await subgraphsAPI.getStakeRecords(address);
-      console.log('EVM 原始质押记录:', data);
+      console.log('EVM original staking records:', data);
 
       if (!data.stakes) return [];
 
@@ -138,7 +138,7 @@ export const evmUtils = {
         });
       }
       const sortedRecords = records.sort((a: any, b: any) => b.stakedAt - a.stakedAt);
-      console.log('EVM 质押记录:', sortedRecords);
+      console.log('EVM staking records:', sortedRecords);
 
       return sortedRecords;
     } catch (error) {
@@ -153,7 +153,7 @@ export const evmUtils = {
       const balance = Number(ethers.formatEther(_balance));
       return balance;
     } catch (error) {
-      console.error('获取代币余额失败:', error);
+      console.error('Failed to get token balance:', error);
       throw error;
     }
   },
@@ -165,7 +165,7 @@ export const evmUtils = {
       const allowance = Number(ethers.formatEther(_allowance));
       return allowance;
     } catch (error) {
-      console.error('获取代币授权失败:', error);
+      console.error('Failed to get token allowance:', error);
       throw error;
     }
   },
@@ -177,7 +177,7 @@ export const evmUtils = {
       await tx.wait();
       return tx;
     } catch (error) {
-      console.error('授权失败:', error);
+      console.error('Approval failed:', error);
       throw error;
     }
   },
@@ -185,7 +185,7 @@ export const evmUtils = {
   /**质押 */
   stake: async (evmStakingContract: any, stakeAmount: string, stakeDuration: number, projectId: string) => {
     try {
-      console.log('项目ID:', ethers.decodeBytes32String(projectId), '数量:', stakeAmount, '时长:', stakeDuration);
+      console.log('Project ID:', ethers.decodeBytes32String(projectId), 'Amount:', stakeAmount, 'Duration:', stakeDuration);
 
       const amount = ethers.parseEther(stakeAmount);
       const tx = await evmStakingContract.stake(amount, stakeDuration, projectId);
@@ -199,7 +199,7 @@ export const evmUtils = {
   /**解质押 */
   unstake: async (evmStakingContract: any, record: any) => {
     try {
-      console.log('解质押ID:', record.stakeId, '数量:', record.amount);
+      console.log('Unstake ID:', record.stakeId, 'Amount:', record.amount);
 
       const tx = await evmStakingContract.unstake(record.stakeId);
       await tx.wait();
@@ -212,7 +212,7 @@ export const evmUtils = {
   /**紧急解质押 */
   emergencyUnstake: async (evmStakingContract: any, record: any) => {
     try {
-      console.log('紧急解质押ID:', record.stakeId, '数量:', record.amount);
+      console.log('Emergency unstake ID:', record.stakeId, 'Amount:', record.amount);
 
       const tx = await evmStakingContract.emergencyUnstake(record.stakeId);
       await tx.wait();
@@ -233,7 +233,7 @@ export const evmUtils = {
         unstakeFeeRate: Number(unstakeFeeRate) / 100,
         emergencyUnstakeFeeRate: Number(emergencyUnstakeFeeRate) / 100
       };
-      console.log('✅ 获取手续费配置:', config);
+      console.log('✅ Fee configuration retrieved:', config);
 
       return config;
     } catch (error) {
@@ -250,7 +250,7 @@ export const evmUtils = {
         const durationOptions = await evmStakingContract.durationOptions(duration);
         if (durationOptions) durations.push(duration);
       }
-      console.log('✅ 获取质押时长:', durations);
+      console.log('✅ Staking duration retrieved:', durations);
 
       return durations;
     } catch (error) {

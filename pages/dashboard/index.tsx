@@ -300,7 +300,7 @@ export default function Dashboard() {
         .unstake(evmStakingContract, record)
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
-          console.log('🔗解质押交易链接:', txLink);
+          console.log('🔗Unstake transaction link:', txLink);
 
           message.success('Transaction submitted, please wait...');
           setUnstakeLoading(false);
@@ -318,7 +318,7 @@ export default function Dashboard() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
             getContractConfig(chainId).cluster
           }`;
-          console.log('🔗解质押交易链接:', txLink);
+          console.log('🔗Unstake transaction link:', txLink);
 
           message.success('Transaction submitted, please wait...');
           setUnstakeLoading(false);
@@ -343,7 +343,7 @@ export default function Dashboard() {
         .emergencyUnstake(evmStakingContract, record)
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
-          console.log('🔗紧急解质押交易链接:', txLink);
+          console.log('🔗Emergency unstake transaction link:', txLink);
 
           message.success('Transaction submitted, please wait...');
           setUnstakeLoading(false);
@@ -361,9 +361,8 @@ export default function Dashboard() {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
             getContractConfig(chainId).cluster
           }`;
-          console.log('🔗紧急解质押交易链接:', txLink);
+          console.log('🔗Emergency unstake transaction link:', txLink);
 
-          message.success('Transaction submitted, please wait...');
           setUnstakeLoading(false);
           closeEmergencyUnstakeModal();
           getSolanaStakeRecords();
@@ -413,7 +412,7 @@ export default function Dashboard() {
           setNetworkId(network.id.toString());
         })
         .catch((error) => {
-          console.error('切换网络失败:', error);
+          console.error('Failed to switch network:', error);
         });
     } else {
       setNetworkId('');

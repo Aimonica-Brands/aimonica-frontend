@@ -106,12 +106,12 @@ export const solanaUtils = {
       const platformConfig = await solanaProgram.account.platformConfig.fetch(platformConfigPda);
 
       if (!platformConfig) {
-        console.log('平台未初始化');
+        console.log('Platform not initialized');
         return [];
       }
 
       const projectCount = platformConfig.projectCount.toNumber();
-      console.log('Solana 项目数量:', projectCount);
+      console.log('Solana project count:', projectCount);
       if (projectCount <= 0) return [];
 
       let leaderboard = [];
@@ -139,7 +139,7 @@ export const solanaUtils = {
           const totalStaked = await getProjectTotalStaked(solanaProgram, i);
           const userCount = await getProjectUserCount(solanaProgram, projectConfigPda);
           const leaderboardItem = leaderboard.find((item: any) => item.id == i);
-          console.log(`${projectConfig.name} 积分`, leaderboardItem);
+          console.log(`${projectConfig.name} points`, leaderboardItem);
           const points = Number(leaderboardItem?.total_score) || 0;
 
           const newProject = {
@@ -189,13 +189,13 @@ export const solanaUtils = {
               dex: `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`
             };
           } catch (error) {
-            console.error(`获取项目 ${newProject.projectName} 的信息失败:`, error);
+            console.error(`Failed to get project ${newProject.projectName} information:`, error);
             // 使用默认值，继续处理项目
           }
 
           newProjects.push(newProject);
         } catch (error) {
-          console.error(`获取项目 ${i} 信息失败:`, error);
+          console.error(`Failed to get project ${i} information:`, error);
         }
       }
 
@@ -206,7 +206,7 @@ export const solanaUtils = {
             return { ...item, rank: index + 1 };
           });
 
-        console.log('Solana 项目记录:', sortedProjects);
+        console.log('Solana project records:', sortedProjects);
         return sortedProjects;
       }
 
@@ -276,7 +276,7 @@ export const solanaUtils = {
       }
 
       const sortedRecords = records.sort((a, b) => b.stakedAt - a.stakedAt);
-      console.log('Solana 质押记录:', sortedRecords);
+      console.log('Solana staking records:', sortedRecords);
 
       return sortedRecords;
     } catch (error) {
@@ -355,7 +355,7 @@ export const solanaUtils = {
       }
 
       const sortedRecords = records.sort((a, b) => b.unstakeAt - a.unstakeAt);
-      console.log('Solana 解除质押记录:', sortedRecords);
+      console.log('Solana unstaking records:', sortedRecords);
 
       return sortedRecords;
     } catch (error) {
@@ -383,7 +383,7 @@ export const solanaUtils = {
 
       const sortedRecords = records.sort((a, b) => b.stakeId - a.stakeId);
       const nextStakeId = sortedRecords[0].stakeId + 1;
-      console.log('下一个质押ID:', nextStakeId);
+      console.log('Next stake ID:', nextStakeId);
 
       return nextStakeId;
     } catch (error) {
@@ -402,12 +402,12 @@ export const solanaUtils = {
       try {
         const tokenAccount = await solanaProgram.provider.connection.getTokenAccountBalance(userTokenAccount);
         const balance = tokenAccount.value.uiAmount || 0;
-        console.log('获取到余额:', balance);
+        console.log('Balance retrieved:', balance);
         return balance;
       } catch (error) {
         // 如果代币账户不存在，返回 0 余额
         if (error.message && error.message.includes('could not find account')) {
-          console.log('代币账户不存在，返回 0 余额');
+          console.log('Token account does not exist, returning 0 balance');
           return 0;
         }
         throw error;
@@ -420,7 +420,7 @@ export const solanaUtils = {
   /**质押 */
   stake: async (solanaProgram: any, stakeId: number, stakeAmount: number, stakeDuration: number, projectId: number) => {
     try {
-      console.log('项目ID:', projectId, '质押ID:', stakeId, '数量:', stakeAmount);
+      console.log('Project ID:', projectId, 'Stake ID:', stakeId, 'Amount:', stakeAmount);
 
       const projectConfigPda = await getProjectConfigPda(solanaProgram, projectId);
       const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
@@ -456,7 +456,7 @@ export const solanaUtils = {
   /**解质押 */
   unstake: async (solanaProgram: any, record: any, projectId: number) => {
     try {
-      console.log('项目ID:', projectId, '解质押ID:', record.stakeId, '数量:', record.amount);
+      console.log('Project ID:', projectId, 'Unstake ID:', record.stakeId, 'Amount:', record.amount);
 
       const vaultAuthorityPda = await getVaultAuthorityPda(solanaProgram, projectId);
       const projectConfigPda = await getProjectConfigPda(solanaProgram, projectId);
@@ -490,7 +490,7 @@ export const solanaUtils = {
   /**紧急解质押 */
   emergencyUnstake: async (solanaProgram: any, record: any, projectId: number) => {
     try {
-      console.log('项目ID:', projectId, '紧急解质押ID:', record.stakeId, '数量:', record.amount);
+      console.log('Project ID:', projectId, 'Emergency unstake ID:', record.stakeId, 'Amount:', record.amount);
 
       const vaultAuthorityPda = await getVaultAuthorityPda(solanaProgram, projectId);
       const projectConfigPda = await getProjectConfigPda(solanaProgram, projectId);

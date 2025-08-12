@@ -105,7 +105,7 @@ export default function Stake() {
 
   const getProject = async () => {
     const project = projectsData.find((item: any) => item.id == projectId);
-    console.log('当前项目：', project);
+    console.log('Current project:', project);
     setProjectInfo(project);
 
     if (!project) return router.push('/');
@@ -118,7 +118,7 @@ export default function Stake() {
       setPoolLink(link);
 
       const contract = await getEVMTokenContract(chainId, project.stakingToken);
-      console.log(`✅ 质押代币合约初始化成功`);
+      console.log(`✅ Staking token contract initialized successfully`);
       setEvmTokenContract(contract);
     } else if (caipNetwork.chainNamespace === 'solana') {
       setPoolAddress(contractConfig.programId);
@@ -169,7 +169,7 @@ export default function Stake() {
       .approve(evmTokenContract, stakeAddress)
       .then((tx) => {
         const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
-        console.log('🔗授权交易链接:', txLink);
+        console.log('🔗Approval transaction link:', txLink);
         message.success('Approved!');
         getEvmTokenBalance();
       })
@@ -211,7 +211,7 @@ export default function Stake() {
         .stake(evmStakingContract, amount.toString(), durationDay, projectInfo.id)
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
-          console.log('🔗质押交易链接:', txLink);
+          console.log('🔗Staking transaction link:', txLink);
           message.success('Transaction submitted, please wait...');
 
           setLoading(false);
@@ -233,7 +233,7 @@ export default function Stake() {
             const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
               getContractConfig(chainId).cluster
             }`;
-            console.log('🔗质押交易链接:', txLink);
+            console.log('🔗Staking transaction link:', txLink);
             message.success('Transaction submitted, please wait...');
 
             setLoading(false);

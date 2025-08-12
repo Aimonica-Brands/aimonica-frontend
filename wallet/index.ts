@@ -71,7 +71,7 @@ export const getContractConfig = (chainId: any = ''): any => {
 
 /**处理合约错误*/
 export const handleContractError = (error: any) => {
-  console.error('合约错误:', error);
+  console.error('Contract error:', error);
 
   // 用户取消了操作
   if (

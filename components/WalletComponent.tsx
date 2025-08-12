@@ -16,7 +16,7 @@ export const WalletComponent = () => {
   useEffect(() => {
     const initContracts = async () => {
       if (isConnected && address && caipNetwork && chainId) {
-        console.log('🌐 网络连接:', caipNetwork);
+        console.log('🌐 Network connection:', caipNetwork);
         modal.close();
         setCurrentNetworkType(caipNetwork.chainNamespace);
 
@@ -24,26 +24,26 @@ export const WalletComponent = () => {
         if (caipNetwork.chainNamespace === 'eip155') {
           try {
             const contract = await getEVMStakeContract(chainId);
-            console.log(`✅ ${caipNetwork.name} 合约初始化成功`);
+            console.log(`✅ ${caipNetwork.name} contract initialized successfully`);
             setEvmStakingContract(contract);
           } catch (error) {
-            console.error(`❌ ${caipNetwork.name} 合约初始化失败`, error);
+            console.error(`❌ ${caipNetwork.name} contract initialization failed`, error);
           }
         } else if (caipNetwork.chainNamespace === 'solana') {
           if (connection && walletProvider) {
             try {
               const program = getSolanaContracts(chainId, walletProvider);
-              console.log(`✅ solana 合约初始化成功`);
+              console.log(`✅ Solana contract initialized successfully`);
               setSolanaProgram(program);
             } catch (error) {
-              console.error(`❌ solana 合约初始化失败`, error);
+              console.error(`❌ Solana contract initialization failed`, error);
             }
           }
         }
       } else {
         // 用户断开连接，清理状态
         if (!isConnected) {
-          console.log('👋 用户断开连接, 清理状态...');
+          console.log('👋 User disconnected, cleaning up state...');
           clearContractStates();
         }
       }
