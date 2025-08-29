@@ -17,7 +17,7 @@ npm install
 
 ## Environment Variables Configuration
 
-Create `.env.local` file:
+Create `.env` file:
 
 ```bash
 # Fill in Callback URI / Redirect URL in Twitter Developer Platform
