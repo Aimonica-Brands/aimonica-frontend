@@ -26,7 +26,7 @@ export default function Home() {
       align,
       render: (value: any, record: any) => {
         return <div className="rank">{record.rank}</div>;
-      }
+      },
     },
     {
       title: 'Project',
@@ -86,7 +86,7 @@ export default function Home() {
             </div>
           </Popover>
         );
-      }
+      },
     },
     {
       title: 'Staked',
@@ -94,7 +94,7 @@ export default function Home() {
       align,
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatNumber(record.totalStaked)}</div>;
-      }
+      },
     },
     {
       title: 'Users',
@@ -102,7 +102,7 @@ export default function Home() {
       align,
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatNumber(record.userCount)}</div>;
-      }
+      },
     },
     {
       title: 'Points',
@@ -117,7 +117,7 @@ export default function Home() {
             <div className="s-text">{utils.formatNumber(record.points)}</div>
           </div>
         );
-      }
+      },
     },
     {
       title: 'TVL($)',
@@ -132,7 +132,7 @@ export default function Home() {
             <div className="s-text">$ {utils.formatNumber(record.tvl)}</div>
           </div>
         );
-      }
+      },
     },
     {
       title: 'Rewards',
@@ -147,7 +147,7 @@ export default function Home() {
             <div className="s-text">AIM Points</div>
           </div>
         );
-      }
+      },
     },
     {
       title: 'Action',
@@ -162,31 +162,51 @@ export default function Home() {
             </Button>
           </div>
         );
-      }
-    }
+      },
+    },
   ];
 
-  const text = `
-  A dog is a type of domesticated animal.
-  Known for its loyalty and faithfulness,
-  it can be found as a welcome guest in many households across the world.
-`;
   const faqsList = [
     {
       key: '1',
-      label: 'This is panel header 1',
-      children: <p>{text}</p>
+      label: `What is Aimonica and why are smart money Monicadets staking before everyone else catches on?`,
+      children: (
+        <p>
+          Aimonica is the next-gen Social Proof of Stake platform backed by Animoca Brands and ai16zdao - the premier
+          AI-driven allocation system that rewards BOTH capital commitment AND social proof over pure wallet size. While
+          other platforms just reward whales, we're building the reputation scores that will determine allocation access
+          for the hottest token launches in 2026. Early stakers are positioning for VIP access to projects before they
+          launch. The allocation engine is coming soon, but points accumulation is happening NOW. This is your early
+          access window. 🚀
+        </p>
+      ),
     },
     {
       key: '2',
-      label: 'This is panel header 2',
-      children: <p>{text}</p>
+      label: `How does staking work and what's the alpha on maximizing points?`,
+      children: (
+        <p>
+          Choose your token projects, stake your tokens for 7/14/30 days, and watch your reputation score climb. The
+          multipliers are aggressive: the longer you stake, the higher your multiplier. Diamond handers get rewarded
+          properly. Your tokens lock during staking (emergency unstake available but you forfeit ALL points + higher
+          fees). Normal unstaking after expiry = minimal fees. Pro tip: Longer stakes = exponentially better allocation
+          positioning. DYOR.
+        </p>
+      ),
     },
     {
       key: '3',
-      label: 'This is panel header 3',
-      children: <p>{text}</p>
-    }
+      label: `What's the endgame - when do these points actually print for me?`,
+      children: (
+        <p>
+          Your points = permanent reputation score that NEVER resets. When allocation engine goes live, your accumulated
+          points directly determine your share of new token launches. Think exclusive access to projects before they go
+          live on public markets. Early stakers get first dibs, late arrivals get scraps. We're talking about
+          positioning yourself for the next generation of alpha while 99% of people are still figuring out what we're
+          building. The best allocations go to those who believed early. 🔥
+        </p>
+      ),
+    },
   ];
 
   useEffect(() => {
