@@ -125,7 +125,7 @@ export const solanaUtils = {
       const newProjects = [];
 
       for (let i = 0; i < projectCount; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 10000 * i));
+        // await new Promise((resolve) => setTimeout(resolve, 10000 * i));
         console.log(`Processing project ${i + 1}/${projectCount}...`);
 
         try {
@@ -190,7 +190,6 @@ export const solanaUtils = {
             };
           } catch (error) {
             console.error(`Failed to get project ${newProject.projectName} information:`, error);
-            // 使用默认值，继续处理项目
           }
 
           newProjects.push(newProject);

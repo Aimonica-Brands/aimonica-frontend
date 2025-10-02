@@ -23,7 +23,7 @@ export const evmUtils = {
       const newProjects = [];
 
       for (let i = 0; i < projects.length; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 10000 * i));
+        // await new Promise((resolve) => setTimeout(resolve, 10000 * i));
         console.log(`Processing project ${i + 1}/${projects.length}...`);
 
         const project = projects[i];
@@ -50,10 +50,10 @@ export const evmUtils = {
             website: '',
             x: '',
             twitter: '',
-            dex: ''
+            dex: '',
           },
           coinPriceUsd: 0,
-          tvl: 0
+          tvl: 0,
         };
 
         try {
@@ -73,11 +73,10 @@ export const evmUtils = {
             website: coinDetailsRes.links.homepage[0],
             x: `https://x.com/${coinDetailsRes.links.twitter_screen_name}`,
             twitter: `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`,
-            dex: `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`
+            dex: `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`,
           };
         } catch (error) {
           console.error(`Failed to get project ${newProject.projectName} information:`, error);
-          // 使用默认值，继续处理项目
         }
 
         newProjects.push(newProject);
@@ -134,7 +133,7 @@ export const evmUtils = {
           stakedAt,
           unlockedAt,
           canUnstake,
-          points
+          points,
         });
       }
       const sortedRecords = records.sort((a: any, b: any) => b.stakedAt - a.stakedAt);
@@ -185,7 +184,14 @@ export const evmUtils = {
   /**质押 */
   stake: async (evmStakingContract: any, stakeAmount: string, stakeDuration: number, projectId: string) => {
     try {
-      console.log('Project ID:', ethers.decodeBytes32String(projectId), 'Amount:', stakeAmount, 'Duration:', stakeDuration);
+      console.log(
+        'Project ID:',
+        ethers.decodeBytes32String(projectId),
+        'Amount:',
+        stakeAmount,
+        'Duration:',
+        stakeDuration,
+      );
 
       const amount = ethers.parseEther(stakeAmount);
       const tx = await evmStakingContract.stake(amount, stakeDuration, projectId);
@@ -231,7 +237,7 @@ export const evmUtils = {
       const config = {
         feeWallet,
         unstakeFeeRate: Number(unstakeFeeRate) / 100,
-        emergencyUnstakeFeeRate: Number(emergencyUnstakeFeeRate) / 100
+        emergencyUnstakeFeeRate: Number(emergencyUnstakeFeeRate) / 100,
       };
       console.log('✅ Fee configuration retrieved:', config);
 
@@ -256,5 +262,5 @@ export const evmUtils = {
     } catch (error) {
       throw error;
     }
-  }
+  },
 };

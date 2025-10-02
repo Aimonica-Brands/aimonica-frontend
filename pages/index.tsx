@@ -24,6 +24,7 @@ export default function Home() {
       title: 'Rank',
       key: 'rank',
       align,
+      width: 60,
       render: (value: any, record: any) => {
         return <div className="rank">{record.rank}</div>;
       },
@@ -92,6 +93,7 @@ export default function Home() {
       title: 'Staked',
       key: 'totalStaked',
       align,
+      width: 80,
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatNumber(record.totalStaked)}</div>;
       },
@@ -100,6 +102,7 @@ export default function Home() {
       title: 'Users',
       key: 'userCount',
       align,
+      width: 80,
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatNumber(record.userCount)}</div>;
       },
@@ -152,7 +155,7 @@ export default function Home() {
     {
       title: 'Action',
       key: 'action',
-      align,
+      align: 'right',
       fixed: 'right',
       render: (value: any, record: any) => {
         return (
@@ -427,7 +430,7 @@ export default function Home() {
 
           <div className="tablebox">
             <Table
-              scroll={{ x: 'max-content' }}
+              scroll={{ x: 'max-content', y: 55 * 10 }}
               columns={projectColumns}
               dataSource={projectsData}
               pagination={false}
