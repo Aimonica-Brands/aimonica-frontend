@@ -93,15 +93,9 @@ export default function Home() {
       title: 'TVL($)',
       key: 'tvl',
       align,
+      width: 80,
       render: (value: any, record: any) => {
-        return (
-          <div className="s-box">
-            <div className="s-img">
-              <img src="/assets/images/img-4.png" alt="" />
-            </div>
-            <div className="s-text">$ {utils.formatNumber(record.tvl)}</div>
-          </div>
-        );
+        return <div className="rank">{utils.formatNumber(record.tvl)}</div>;
       },
     },
     {
@@ -387,40 +381,34 @@ export default function Home() {
                     <div className="name">{item.projectName}</div>
                   </div>
                   <div className="info-box">
-                    <div className="info-box-item">
-                      <div className="s-box">
-                        <div className="s-img">
-                          <img src="/assets/images/img-3.png" alt="" />
-                        </div>
-                        <div className="s-text">{utils.formatNumber(item.points)}</div>
+                    <div className="s-box">
+                      <div className="s-img">
+                        <img src="/assets/images/img-3.png" alt="" />
                       </div>
-                      <div className="s-box">
-                        <div className="s-img">
-                          <img src="/assets/images/img-4.png" alt="" />
-                        </div>
-                        <div className="s-text">$ {utils.formatNumber(item.tvl)}</div>
-                      </div>
-                      <div className="s-box">
-                        <div className="s-img">
-                          <img src="/assets/images/img-5.png" alt="" />
-                        </div>
-                        <div className="s-text">AIM Points</div>
-                      </div>
+                      <div className="s-text">{utils.formatNumber(item.points)}</div>
                     </div>
-                    <div className="info-box-item">
-                      <div className="info-item">
-                        <div>TVL</div>
-                        <div>$ {utils.formatNumber(item.tvl)}</div>
+                    <div className="s-box">
+                      <div className="s-img">
+                        <img src="/assets/images/img-5.png" alt="" />
                       </div>
-                      <div className="info-item">
-                        <div>Users</div>
-                        <div>{utils.formatNumber(item.userCount)}</div>
-                      </div>
-                      <div className="info-item2">
-                        <button className="stake-btn" onClick={() => toStake(item)}>
-                          Stake
-                        </button>
-                      </div>
+                      <div className="s-text">AIM Points</div>
+                    </div>
+                    <div className="info-item">
+                      <div>TVL</div>
+                      <div>$ {utils.formatNumber(item.tvl)}</div>
+                    </div>
+                    <div className="info-item">
+                      <div>Staked</div>
+                      <div>{utils.formatNumber(item.totalStaked)}</div>
+                    </div>
+                    <div className="info-item">
+                      <div>Users</div>
+                      <div>{utils.formatNumber(item.userCount)}</div>
+                    </div>
+                    <div className="info-item2">
+                      <button className="stake-btn" onClick={() => toStake(item)}>
+                        Stake
+                      </button>
                     </div>
                   </div>
                 </div>
