@@ -90,6 +90,21 @@ export default function Home() {
       },
     },
     {
+      title: 'TVL($)',
+      key: 'tvl',
+      align,
+      render: (value: any, record: any) => {
+        return (
+          <div className="s-box">
+            <div className="s-img">
+              <img src="/assets/images/img-4.png" alt="" />
+            </div>
+            <div className="s-text">$ {utils.formatNumber(record.tvl)}</div>
+          </div>
+        );
+      },
+    },
+    {
       title: 'Staked',
       key: 'totalStaked',
       align,
@@ -118,21 +133,6 @@ export default function Home() {
               <img src="/assets/images/img-3.png" alt="" />
             </div>
             <div className="s-text">{utils.formatNumber(record.points)}</div>
-          </div>
-        );
-      },
-    },
-    {
-      title: 'TVL($)',
-      key: 'tvl',
-      align,
-      render: (value: any, record: any) => {
-        return (
-          <div className="s-box">
-            <div className="s-img">
-              <img src="/assets/images/img-4.png" alt="" />
-            </div>
-            <div className="s-text">$ {utils.formatNumber(record.tvl)}</div>
           </div>
         );
       },
@@ -398,7 +398,7 @@ export default function Home() {
                         <div className="s-img">
                           <img src="/assets/images/img-4.png" alt="" />
                         </div>
-                        <div className="s-text">{utils.formatNumber(item.tvl)}</div>
+                        <div className="s-text">$ {utils.formatNumber(item.tvl)}</div>
                       </div>
                       <div className="s-box">
                         <div className="s-img">
@@ -409,8 +409,8 @@ export default function Home() {
                     </div>
                     <div className="info-box-item">
                       <div className="info-item">
-                        <div>Staked</div>
-                        <div>{utils.formatNumber(item.totalStaked)}</div>
+                        <div>TVL</div>
+                        <div>$ {utils.formatNumber(item.tvl)}</div>
                       </div>
                       <div className="info-item">
                         <div>Users</div>
