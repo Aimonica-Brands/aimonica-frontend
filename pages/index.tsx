@@ -298,6 +298,10 @@ export default function Home() {
   };
 
   const toStake = (project: any) => {
+    if (!isConnected) {
+      modal.open();
+      return;
+    }
     router.push(`/stake/${project.id}`);
   };
 
