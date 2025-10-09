@@ -131,12 +131,12 @@ export const solanaUtils = {
         try {
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
-
-          const creator = projectConfig.authority.toBase58();
-          // 检查 creator 是否在 admin 列表中，如果不在则跳过
-          if (!admin.find((item) => item.toLowerCase() === creator.toLowerCase())) {
-            return null;
-          }
+          // 7Gq1ffkZjR7UiChhQRJtRjienP8C3psWjTdAAkVnkiZZ
+          // const creator = projectConfig.authority.toBase58();
+          // // 检查 creator 是否在 admin 列表中，如果不在则跳过
+          // if (!admin.find((item) => item.toLowerCase() === creator.toLowerCase())) {
+          //   return null;
+          // }
 
           const [totalStaked, userCount] = await Promise.all([
             getProjectTotalStaked(solanaProgram, i),
