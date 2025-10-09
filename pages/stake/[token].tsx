@@ -339,13 +339,19 @@ export default function Stake() {
       });
   };
 
+  const getShareText = (amount: string, projectName: string) => {
+    return `Staked on @AimonicaBrands ✅
+${amount} ${projectName} → Reputation Points → Allocation Rights
+Merit > Money 🎯`;
+  };
+
   const handleShare = () => {
     console.log('share');
     if (!isTwitterConnected) {
       message.error('Please connect your Twitter account first');
       return;
     }
-    const shareText = `Staked ${amount} ${projectInfo.projectName} on @AimonicaBrands! 💎 #AIMonica #Staking`;
+    const shareText = getShareText(amount, projectInfo.projectName);
     shareOnTwitter(shareText);
   };
 
@@ -598,9 +604,9 @@ export default function Stake() {
             Stake <br /> Success
           </div>
           <div className="text2">
-            <div>
-              Staked {amount} {projectInfo.projectName} on @AimonicaBrands! 💎 #AIMonica #Staking
-            </div>
+            {projectInfo.projectName && (
+              <div style={{ whiteSpace: 'pre-line' }}>{getShareText(amount, projectInfo.projectName)}</div>
+            )}
           </div>
           <div className="text3">
             <a href="https://aimonicabrands.ai" target="_blank" rel="noopener noreferrer">
