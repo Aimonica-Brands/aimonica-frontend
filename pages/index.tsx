@@ -238,15 +238,21 @@ export default function Home() {
   const getSolanaProjects = async () => {
     if (loading) return;
     setLoading(true);
+    
     solanaUtils
-      .getProjects(solanaProgram)
+      .getProjects(solanaProgram, (projects) => {
+        // 实时更新项目数据
+        setProjectsData(projects);
+      })
       .then((sortedProjects) => {
+        // 最终更新完整数据
         setProjectsData(sortedProjects);
       })
       .catch((error) => {
         console.log(error);
       })
       .finally(() => {
+        // 所有数据获取完成后关闭 loading
         setLoading(false);
       });
   };
@@ -254,15 +260,21 @@ export default function Home() {
   const getEVMProjects = async () => {
     if (loading) return;
     setLoading(true);
+
     evmUtils
-      .getProjects()
+      .getProjects((projects) => {
+        // 实时更新项目数据
+        setProjectsData(projects);
+      })
       .then((sortedProjects) => {
+        // 最终更新完整数据
         setProjectsData(sortedProjects);
       })
       .catch((error) => {
         console.log(error);
       })
       .finally(() => {
+        // 所有数据获取完成后关闭 loading
         setLoading(false);
       });
   };

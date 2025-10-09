@@ -598,12 +598,14 @@ export default function Stake() {
             Stake <br /> Success
           </div>
           <div className="text2">
-            <div>@AimonicaBrands Copywriter</div>
-            <div>Copywriter</div>
-            <div>Link</div>
+            <div>
+              Staked {amount} {projectInfo.projectName} on @AimonicaBrands! 💎 #AIMonica #Staking
+            </div>
           </div>
           <div className="text3">
-            <a>https://aimonicabrands.ai</a>
+            <a href="https://aimonicabrands.ai" target="_blank" rel="noopener noreferrer">
+              https://aimonicabrands.ai
+            </a>
             <div className="btn-box">
               <button className="btn-close" onClick={closeStakeModal}>
                 close

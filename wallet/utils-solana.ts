@@ -9,7 +9,7 @@ import { getRewardPoints } from './utils';
 export const getProjectConfigPda = async (solanaProgram: any, projectId: number) => {
   const [projectConfigPda] = await PublicKey.findProgramAddress(
     [Buffer.from('project'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
-    solanaProgram.programId
+    solanaProgram.programId,
   );
   return projectConfigPda;
 };
@@ -21,9 +21,9 @@ const getstakeInfoPda = async (solanaProgram: any, projectConfigPda: any, userPu
       Buffer.from('stake'),
       projectConfigPda.toBuffer(),
       userPublicKey.toBuffer(),
-      new anchor.BN(stakeId).toArrayLike(Buffer, 'le', 8)
+      new anchor.BN(stakeId).toArrayLike(Buffer, 'le', 8),
     ],
-    solanaProgram.programId
+    solanaProgram.programId,
   );
   return stakeInfoPda;
 };
@@ -32,7 +32,7 @@ const getstakeInfoPda = async (solanaProgram: any, projectConfigPda: any, userPu
 const getUnstakeInfoPda = async (solanaProgram: any, stakeInfoPda: any) => {
   const [unstakeInfoPda] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from('unstake'), stakeInfoPda.toBuffer()],
-    solanaProgram.programId
+    solanaProgram.programId,
   );
   return unstakeInfoPda;
 };
@@ -41,7 +41,7 @@ const getUnstakeInfoPda = async (solanaProgram: any, stakeInfoPda: any) => {
 const getVaultAuthorityPda = async (solanaProgram: any, projectId: number) => {
   const [vaultAuthorityPda] = await PublicKey.findProgramAddress(
     [Buffer.from('vault-authority'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
-    solanaProgram.programId
+    solanaProgram.programId,
   );
   return vaultAuthorityPda;
 };
@@ -49,7 +49,7 @@ const getVaultAuthorityPda = async (solanaProgram: any, projectId: number) => {
 /**获取用户代币账户 */
 const getUserTokenAccount = async (solanaProgram: any, projectConfig: any, userPublicKey: any) => {
   const tokenAccounts = await solanaProgram.provider.connection.getParsedTokenAccountsByOwner(userPublicKey, {
-    mint: projectConfig.tokenMint
+    mint: projectConfig.tokenMint,
   });
   const userTokenAccount =
     tokenAccounts.value.length > 0
@@ -63,7 +63,7 @@ const getUserTokenAccount = async (solanaProgram: any, projectConfig: any, userP
 const getProjectUserCount = async (solanaProgram: any, projectConfigPda: any) => {
   try {
     const projectFilter = {
-      memcmp: { offset: 40, bytes: projectConfigPda.toBase58() }
+      memcmp: { offset: 40, bytes: projectConfigPda.toBase58() },
     };
     const allStakes = await solanaProgram.account.userStakeInfo.all([projectFilter]);
     const activeUsers = new Set();
@@ -84,7 +84,7 @@ const getProjectTotalStaked = async (solanaProgram: any, projectId: any) => {
   try {
     const [vaultPda] = await PublicKey.findProgramAddress(
       [Buffer.from('vault'), new anchor.BN(projectId).toArrayLike(Buffer, 'le', 8)],
-      solanaProgram.programId
+      solanaProgram.programId,
     );
     const vaultAccount = await solanaProgram.provider.connection.getTokenAccountBalance(vaultPda);
     const totalStaked = vaultAccount.value.uiAmount || 0;
@@ -96,12 +96,12 @@ const getProjectTotalStaked = async (solanaProgram: any, projectId: any) => {
 
 export const solanaUtils = {
   /**获取当前平台所有项目信息 */
-  getProjects: async (solanaProgram: any) => {
+  getProjects: async (solanaProgram: any, onProjectUpdate?: (projects: any[]) => void) => {
     try {
       // 检查平台
       const [platformConfigPda] = await PublicKey.findProgramAddress(
         [Buffer.from('platform')],
-        solanaProgram.programId
+        solanaProgram.programId,
       );
       const platformConfig = await solanaProgram.account.platformConfig.fetch(platformConfigPda);
 
@@ -122,28 +122,23 @@ export const solanaUtils = {
         console.error(error);
       }
 
-      const newProjects = [];
-
-      for (let i = 0; i < projectCount; i++) {
-        // await new Promise((resolve) => setTimeout(resolve, 10000 * i));
-        console.log(`Processing project ${i + 1}/${projectCount}...`);
+      // 并行异步获取所有项目的基本信息
+      const basicProjectPromises = Array.from({ length: projectCount }, async (_, i) => {
+        console.log(`Fetching basic info for project ${i + 1}/${projectCount}...`);
 
         try {
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
-          // console.log(
-          //   `${projectConfig.name} 配置:`,
-          //   JSON.stringify(projectConfig, (key, value) => (value?.toBase58 ? value.toBase58() : value), 2)
-          // );
 
-          const totalStaked = await getProjectTotalStaked(solanaProgram, i);
-          const userCount = await getProjectUserCount(solanaProgram, projectConfigPda);
+          const [totalStaked, userCount] = await Promise.all([
+            getProjectTotalStaked(solanaProgram, i),
+            getProjectUserCount(solanaProgram, projectConfigPda),
+          ]);
+
           const leaderboardItem = leaderboard.find((item: any) => item.id == i);
-          console.log(`${projectConfig.name} points`, leaderboardItem);
           const points = Number(leaderboardItem?.total_score) || 0;
 
-          const newProject = {
-            index: i,
+          return {
             id: i.toString(),
             projectName: projectConfig.name,
             stakingToken: projectConfig.tokenMint.toBase58(),
@@ -157,55 +152,100 @@ export const solanaUtils = {
             points,
             platformId: 'solana',
             contractAddress: '',
-            description: '',
+            description: 'Loading...',
             image: '',
             links: {
               website: '',
               x: '',
               twitter: '',
-              dex: ''
+              dex: '',
             },
             coinPriceUsd: 0,
-            tvl: 0
+            tvl: 0,
+            isLoading: true,
+            shouldRemove: false,
           };
-
-          try {
-            const coinDetailsRes = await coingeckoAPI.getCoinByContract(newProject.platformId, newProject.stakingToken);
-            console.log(newProject.projectName, coinDetailsRes);
-
-            const coinPrice = await coingeckoAPI.getCoinPrice(newProject.platformId, coinDetailsRes.contract_address);
-            newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
-            console.log(newProject.projectName, newProject.coinPriceUsd);
-
-            newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
-            // newProject.platformId = coinDetailsRes.asset_platform_id;
-            // newProject.contractAddress = coinDetailsRes.contract_address;
-            newProject.description = coinDetailsRes.description.en;
-            newProject.image = coinDetailsRes.image.small;
-            newProject.links = {
-              website: coinDetailsRes.links.homepage[0],
-              x: `https://x.com/${coinDetailsRes.links.twitter_screen_name}`,
-              twitter: `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`,
-              dex: `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`
-            };
-          } catch (error) {
-            console.error(`Failed to get project ${newProject.projectName} information:`, error);
-          }
-
-          newProjects.push(newProject);
         } catch (error) {
-          console.error(`Failed to get project ${i} information:`, error);
+          console.error(`Failed to get project ${i} basic information:`, error);
+          return null;
         }
+      });
+
+      const basicProjectsResults = await Promise.all(basicProjectPromises);
+      const basicProjects = basicProjectsResults.filter((project) => project !== null);
+
+      // 立即返回基本信息
+      console.log('Solana basic project records:', basicProjects);
+      if (onProjectUpdate && basicProjects.length > 0) {
+        const sortedBasicProjects = basicProjects
+          .sort((a: any, b: any) => b.totalStaked - a.totalStaked)
+          .map((item: any, index: number) => {
+            return { ...item, rank: index + 1 };
+          });
+        onProjectUpdate(sortedBasicProjects);
       }
 
-      if (newProjects.length > 0) {
-        const sortedProjects = newProjects
+      // 并行异步获取详细信息
+      const detailedProjects = [...basicProjects];
+
+      // 创建所有的异步请求，并标记失败的项目
+      const fetchPromises = detailedProjects.map(async (currentProject: any) => {
+        console.log(`Fetching details for project ${currentProject.projectName}...`);
+
+        try {
+          const coinDetailsRes = await coingeckoAPI.getCoinByContract(
+            currentProject.platformId,
+            currentProject.stakingToken,
+          );
+          console.log(currentProject.projectName, coinDetailsRes);
+
+          const coinPrice = await coingeckoAPI.getCoinPrice(currentProject.platformId, coinDetailsRes.contract_address);
+          currentProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
+          console.log(currentProject.projectName, currentProject.coinPriceUsd);
+
+          currentProject.tvl = Number(currentProject.totalStaked) * currentProject.coinPriceUsd;
+          currentProject.description = coinDetailsRes.description.en;
+          currentProject.image = coinDetailsRes.image.small;
+          currentProject.links = {
+            website: coinDetailsRes.links.homepage[0],
+            x: `https://x.com/${coinDetailsRes.links.twitter_screen_name}`,
+            twitter: `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`,
+            dex: `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`,
+          };
+          currentProject.isLoading = false;
+          currentProject.shouldRemove = false; // 标记为保留
+        } catch (error) {
+          console.error(`Failed to get project ${currentProject.projectName} information, will remove it:`, error);
+          currentProject.shouldRemove = true; // 标记为删除
+        }
+
+        // 每获取一个项目的详细信息就更新一次（过滤掉需要删除的项目）
+        if (onProjectUpdate) {
+          const validProjects = detailedProjects.filter((p) => !p.shouldRemove);
+          const sortedProjects = validProjects
+            .sort((a: any, b: any) => b.tvl - a.tvl)
+            .map((item: any, index: number) => {
+              return { ...item, rank: index + 1 };
+            });
+          onProjectUpdate(sortedProjects);
+        }
+      });
+
+      // 等待所有请求完成
+      await Promise.all(fetchPromises);
+
+      // 过滤掉获取失败的项目
+      const validProjects = detailedProjects.filter((project) => !project.shouldRemove);
+
+      // 最终返回完整的详细信息
+      if (validProjects.length > 0) {
+        const sortedProjects = validProjects
           .sort((a: any, b: any) => b.tvl - a.tvl)
           .map((item: any, index: number) => {
             return { ...item, rank: index + 1 };
           });
 
-        console.log('Solana project records:', sortedProjects);
+        console.log('Solana project records (complete):', sortedProjects);
         return sortedProjects;
       }
 
@@ -221,7 +261,7 @@ export const solanaUtils = {
       const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
       const userFilter = {
-        memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
+        memcmp: { offset: 8, bytes: userPublicKey.toBase58() },
       };
 
       const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
@@ -267,7 +307,7 @@ export const solanaUtils = {
             canUnstake,
             points,
             unstakeFeeRate,
-            emergencyUnstakeFeeRate
+            emergencyUnstakeFeeRate,
           });
         } catch (error) {
           console.error(error);
@@ -289,14 +329,14 @@ export const solanaUtils = {
       const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
       const userFilter = {
-        memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
+        memcmp: { offset: 8, bytes: userPublicKey.toBase58() },
       };
 
       const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
       const userUnstakes = await solanaProgram.account.unstakeInfo.all([userFilter]);
       const unstakes = userUnstakes.map((unstake) => {
         const stake = userStakes.find(
-          (stake) => stake.account.stakeId.toNumber() === unstake.account.stakeId.toNumber()
+          (stake) => stake.account.stakeId.toNumber() === unstake.account.stakeId.toNumber(),
         );
         unstake.account.durationDays = stake.account.durationDays;
         return unstake;
@@ -346,7 +386,7 @@ export const solanaUtils = {
             unstakeAt,
             points,
             unstakeFeeRate,
-            emergencyUnstakeFeeRate
+            emergencyUnstakeFeeRate,
           });
         } catch (error) {
           console.error(error);
@@ -368,7 +408,7 @@ export const solanaUtils = {
       const userPublicKey = solanaProgram.provider.wallet.publicKey;
 
       const userFilter = {
-        memcmp: { offset: 8, bytes: userPublicKey.toBase58() }
+        memcmp: { offset: 8, bytes: userPublicKey.toBase58() },
       };
 
       const userStakes = await solanaProgram.account.userStakeInfo.all([userFilter]);
@@ -438,7 +478,7 @@ export const solanaUtils = {
         userTokenAccount: userTokenAccount,
         vault: projectConfig.vault,
         systemProgram: SystemProgram.programId,
-        tokenProgram: projectConfig.tokenProgram
+        tokenProgram: projectConfig.tokenProgram,
       };
 
       const tx = await solanaProgram.methods
@@ -475,7 +515,7 @@ export const solanaUtils = {
         vault: projectConfig.vault,
         vaultAuthority: vaultAuthorityPda,
         feeWallet: feeWalletTokenAccount,
-        tokenProgram: projectConfig.tokenProgram
+        tokenProgram: projectConfig.tokenProgram,
       };
 
       const tx = await solanaProgram.methods.unstake(new anchor.BN(record.stakeId)).accounts(unstakeAccounts).rpc();
@@ -509,7 +549,7 @@ export const solanaUtils = {
         vault: projectConfig.vault,
         vaultAuthority: vaultAuthorityPda,
         feeWallet: feeWalletTokenAccount,
-        tokenProgram: projectConfig.tokenProgram
+        tokenProgram: projectConfig.tokenProgram,
       };
 
       const tx = await solanaProgram.methods
@@ -521,5 +561,5 @@ export const solanaUtils = {
     } catch (error) {
       throw error;
     }
-  }
+  },
 };

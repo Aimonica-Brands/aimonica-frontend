@@ -5,7 +5,7 @@ import { getRewardPoints } from './utils';
 
 export const evmUtils = {
   /**获取项目信息 */
-  getProjects: async () => {
+  getProjects: async (onProjectUpdate?: (projects: any[]) => void) => {
     try {
       const projectsRes: any = await subgraphsAPI.getProjects();
 
@@ -20,21 +20,13 @@ export const evmUtils = {
         console.error(error);
       }
 
-      const newProjects = [];
-
-      for (let i = 0; i < projects.length; i++) {
-        // await new Promise((resolve) => setTimeout(resolve, 10000 * i));
-        console.log(`Processing project ${i + 1}/${projects.length}...`);
-
-        const project = projects[i];
-
+      // 先创建基本项目信息
+      const basicProjects = projects.map((project: any, index: number) => {
         const projectName = ethers.decodeBytes32String(project.id);
         const leaderboardItem = leaderboard.find((item: any) => item.id == project.id);
-        console.log(`${projectName} points`, leaderboardItem);
         const points = Number(leaderboardItem?.total_score) || 0;
 
-        const newProject = {
-          index: i,
+        return {
           id: project.id,
           projectName,
           stakingToken: project.stakingToken,
@@ -44,7 +36,7 @@ export const evmUtils = {
           points,
           platformId: 'base',
           contractAddress: '',
-          description: '',
+          description: 'Loading...',
           image: '',
           links: {
             website: '',
@@ -54,41 +46,81 @@ export const evmUtils = {
           },
           coinPriceUsd: 0,
           tvl: 0,
+          isLoading: true, // 标记为加载中
+          shouldRemove: false,
         };
+      });
+
+      // 立即返回基本信息
+      console.log('EVM basic project records:', basicProjects);
+      if (onProjectUpdate && basicProjects.length > 0) {
+        const sortedBasicProjects = basicProjects
+          .sort((a: any, b: any) => b.totalStaked - a.totalStaked)
+          .map((item: any, index: number) => {
+            return { ...item, rank: index + 1 };
+          });
+        onProjectUpdate(sortedBasicProjects);
+      }
+
+      // 并行异步获取详细信息
+      const detailedProjects = [...basicProjects];
+
+      // 创建所有的异步请求，并标记失败的项目
+      const fetchPromises = projects.map(async (project: any, i: number) => {
+        const currentProject = detailedProjects[i];
+        console.log(`Fetching details for project ${i + 1}/${projects.length}...`);
 
         try {
           const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
-          console.log(newProject.projectName, coinDetailsRes);
+          console.log(currentProject.projectName, coinDetailsRes);
 
           const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
-          newProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
-          console.log(newProject.projectName, newProject.coinPriceUsd);
+          currentProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
+          console.log(currentProject.projectName, currentProject.coinPriceUsd);
 
-          newProject.tvl = Number(newProject.totalStaked) * newProject.coinPriceUsd;
-          // newProject.platformId = coinDetailsRes.asset_platform_id;
-          // newProject.contractAddress = coinDetailsRes.contract_address;
-          newProject.description = coinDetailsRes.description.en;
-          newProject.image = coinDetailsRes.image.small;
-          newProject.links = {
+          currentProject.tvl = Number(currentProject.totalStaked) * currentProject.coinPriceUsd;
+          currentProject.description = coinDetailsRes.description.en;
+          currentProject.image = coinDetailsRes.image.small;
+          currentProject.links = {
             website: coinDetailsRes.links.homepage[0],
             x: `https://x.com/${coinDetailsRes.links.twitter_screen_name}`,
             twitter: `https://t.me/${coinDetailsRes.links.telegram_channel_identifier}`,
             dex: `https://dexscreener.com/${coinDetailsRes.asset_platform_id}/${coinDetailsRes.contract_address}`,
           };
+          currentProject.isLoading = false;
+          currentProject.shouldRemove = false; // 标记为保留
         } catch (error) {
-          console.error(`Failed to get project ${newProject.projectName} information:`, error);
+          console.error(`Failed to get project ${currentProject.projectName} information, will remove it:`, error);
+          currentProject.shouldRemove = true; // 标记为删除
         }
 
-        newProjects.push(newProject);
-      }
-      if (newProjects.length > 0) {
-        const sortedProjects = newProjects
+        // 每获取一个项目的详细信息就更新一次（过滤掉需要删除的项目）
+        if (onProjectUpdate) {
+          const validProjects = detailedProjects.filter((p) => !p.shouldRemove);
+          const sortedProjects = validProjects
+            .sort((a: any, b: any) => b.tvl - a.tvl)
+            .map((item: any, index: number) => {
+              return { ...item, rank: index + 1 };
+            });
+          onProjectUpdate(sortedProjects);
+        }
+      });
+
+      // 等待所有请求完成
+      await Promise.all(fetchPromises);
+
+      // 过滤掉获取失败的项目
+      const validProjects = detailedProjects.filter((project) => !project.shouldRemove);
+
+      // 最终返回完整的详细信息
+      if (validProjects.length > 0) {
+        const sortedProjects = validProjects
           .sort((a: any, b: any) => b.tvl - a.tvl)
           .map((item: any, index: number) => {
             return { ...item, rank: index + 1 };
           });
 
-        console.log('EVM project records:', sortedProjects);
+        console.log('EVM project records (complete):', sortedProjects);
         return sortedProjects;
       }
 
