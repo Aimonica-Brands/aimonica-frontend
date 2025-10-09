@@ -39,34 +39,34 @@ export default function Stake() {
   const [smartFollowers, setSmartFollowers] = useState(0);
   const [topTweets, setTopTweets] = useState([]);
 
-  const infoItems = [
-    {
-      key: '1',
-      label: 'Team Details',
-      children: (
-        <div className="team-details">
-          <div className="s-title">Our Team</div>
-        </div>
-      )
-    },
-    {
-      key: '2',
-      label: 'Project Details',
-      children: 'Content of Tab Pane 2'
-    },
-    {
-      key: '3',
-      label: 'Trades',
-      children: 'Content of Tab Pane 3'
-    },
-    {
-      key: '4',
-      label: 'Holders',
-      children: 'Content of Tab Pane 4'
-    }
-  ];
+  // const infoItems = [
+  //   {
+  //     key: '1',
+  //     label: 'Team Details',
+  //     children: (
+  //       <div className="team-details">
+  //         <div className="s-title">Our Team</div>
+  //       </div>
+  //     ),
+  //   },
+  //   {
+  //     key: '2',
+  //     label: 'Project Details',
+  //     children: 'Content of Tab Pane 2',
+  //   },
+  //   {
+  //     key: '3',
+  //     label: 'Trades',
+  //     children: 'Content of Tab Pane 3',
+  //   },
+  //   {
+  //     key: '4',
+  //     label: 'Holders',
+  //     children: 'Content of Tab Pane 4',
+  //   },
+  // ];
 
-  const onChange = (key: string) => {};
+  // const onChange = (key: string) => {};
 
   useEffect(() => {
     if (projectInfo && projectInfo.name) {
@@ -100,8 +100,18 @@ export default function Stake() {
   }, [evmTokenContract, evmStakingContract, solanaProgram]);
 
   useEffect(() => {
-    setExpectedPoints(Number(amount) * getRewardPoints(durationDay));
+    if (Number(amount)) {
+      setExpectedPoints(Number(amount) * getRewardPoints(durationDay));
+    } else {
+      setExpectedPoints(0);
+    }
   }, [amount, durationDay]);
+
+  useEffect(() => {
+    if (durationConfig && durationConfig.length > 0 && durationDay === 0) {
+      setDurationDay(durationConfig[0]);
+    }
+  }, [durationConfig]);
 
   const getProject = async () => {
     const project = projectsData.find((item: any) => item.id == projectId);
@@ -204,8 +214,11 @@ export default function Stake() {
 
   const handleStake = async () => {
     if (loading) return;
-    setLoading(true);
+    console.log('amount', amount);
+    if (!Number(amount)) return message.error('Please enter the amount');
+    console.log('durationDay', durationDay);
 
+    setLoading(true);
     if (caipNetwork.chainNamespace === 'eip155') {
       evmUtils
         .stake(evmStakingContract, amount.toString(), durationDay, projectInfo.id)
@@ -216,7 +229,6 @@ export default function Stake() {
 
           setLoading(false);
           setIsStakeModalOpen(true);
-          // 质押成功后立即手动更新余额
           updateBalanceAfterStake(Number(amount));
         })
         .catch((error) => {
@@ -238,7 +250,6 @@ export default function Stake() {
 
             setLoading(false);
             setIsStakeModalOpen(true);
-            // 质押成功后立即手动更新余额
             updateBalanceAfterStake(Number(amount));
           })
           .catch((error) => {
