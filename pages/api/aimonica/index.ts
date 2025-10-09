@@ -1,22 +1,23 @@
 import axios from 'axios';
 import { request, gql } from 'graphql-request';
 
+const apiUrl = 'https://api.aimonicabrands.ai';
 // AIM API 统一管理
 export const aimonicaAPI = {
   GetPointsLeaderboard: async () => {
-    const res = await axios.get('https://api.aimonica.dev/points/leaderboard');
+    const res = await axios.get(`${apiUrl}/points/leaderboard`);
     return res.data;
   },
 
   GetPointsDashboard: async (walletAddress: string) => {
-    const res = await axios.get(`https://api.aimonica.dev/points/dashboard/${walletAddress}`);
+    const res = await axios.get(`${apiUrl}/points/dashboard/${walletAddress}`);
     return res.data;
   },
 
   GetProjects: async () => {
-    const res = await axios.get(`https://api.aimonica.dev/points/projects`);
+    const res = await axios.get(`${apiUrl}/points/projects`);
     return res.data;
-  }
+  },
 };
 
 export const subgraphsAPI = {
@@ -75,5 +76,5 @@ export const subgraphsAPI = {
 
     const res = await request(endpoint, query, {}, headers);
     return res;
-  }
+  },
 };

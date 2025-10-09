@@ -121,6 +121,10 @@ export const solanaUtils = {
       } catch (error) {
         console.error(error);
       }
+      // 优化：排行榜转 Map，O(1) 查找
+      const leaderboardMap: Map<string, any> = new Map(
+        (leaderboard || []).map((item: any) => [String(item.id), item])
+      );
 
       // 并行异步获取所有项目的基本信息
       const basicProjectPromises = Array.from({ length: projectCount }, async (_, i) => {
@@ -135,7 +139,7 @@ export const solanaUtils = {
             getProjectUserCount(solanaProgram, projectConfigPda),
           ]);
 
-          const leaderboardItem = leaderboard.find((item: any) => item.id == i);
+          const leaderboardItem = leaderboardMap.get(String(i));
           const points = Number(leaderboardItem?.total_score) || 0;
 
           return {
@@ -187,10 +191,17 @@ export const solanaUtils = {
 
       // 并行异步获取详细信息
       const detailedProjects = [...basicProjects];
+      // 使用稳定映射，避免由于外部排序导致的引用/索引错配
+      const projectById: Map<string, any> = new Map(detailedProjects.map((p: any) => [p.id, p]));
 
-      // 创建所有的异步请求，并标记失败的项目
-      const fetchPromises = detailedProjects.map(async (currentProject: any) => {
-        console.log(`Fetching details for project ${currentProject.projectName}...`);
+      // 创建所有的异步请求，并标记失败的项目（按 id 精确定位）
+      const fetchPromises = basicProjects.map(async (bp: any, idx: number) => {
+        const currentProject = projectById.get(bp.id);
+        if (!currentProject) {
+          console.warn(`Basic project not found for id=${bp.id}, skipping`);
+          return;
+        }
+        console.log(`Fetching details for project ${idx + 1}/${basicProjects.length}...`);
 
         try {
           const coinDetailsRes = await coingeckoAPI.getCoinByContract(
@@ -198,6 +209,27 @@ export const solanaUtils = {
             currentProject.stakingToken,
           );
           console.log(currentProject.projectName, coinDetailsRes);
+
+          // 一致性校验：合约地址与平台必须匹配
+          const fetchedContract = (coinDetailsRes.contract_address || '').toLowerCase();
+          const expectedContract = (currentProject.stakingToken || '').toLowerCase();
+          const fetchedPlatform = coinDetailsRes.asset_platform_id || currentProject.platformId;
+          if (fetchedContract !== expectedContract || fetchedPlatform !== currentProject.platformId) {
+            console.warn(
+              `Inconsistent CoinGecko data for ${currentProject.projectName}. expectedContract=${expectedContract}, fetchedContract=${fetchedContract}, platform=${fetchedPlatform}`
+            );
+            currentProject.shouldRemove = true;
+            if (onProjectUpdate) {
+              const validProjects = detailedProjects.filter((p) => !p.shouldRemove);
+              const sortedProjects = validProjects
+                .sort((a: any, b: any) => b.tvl - a.tvl)
+                .map((item: any, index: number) => {
+                  return { ...item, rank: index + 1 };
+                });
+              onProjectUpdate(sortedProjects);
+            }
+            return;
+          }
 
           const coinPrice = await coingeckoAPI.getCoinPrice(currentProject.platformId, coinDetailsRes.contract_address);
           currentProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;

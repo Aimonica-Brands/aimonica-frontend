@@ -7,8 +7,6 @@ import { getContractConfig, modal, handleContractError } from '@/wallet';
 import { getRewardPoints, evmUtils, solanaUtils, getProjectConfigPda } from '@/wallet/utils';
 import { usePageContext } from '@/context';
 import utils from '@/utils';
-import { aimonicaAPI } from '@/pages/api/aimonica';
-import { ethers } from 'ethers';
 
 export default function Dashboard() {
   const { message } = App.useApp();
@@ -34,21 +32,21 @@ export default function Dashboard() {
   const historyColumns: ColumnsType<any> = [
     {
       title: 'Project',
-      dataIndex: 'projectName'
+      dataIndex: 'projectName',
     },
     {
       title: 'Stake ID',
-      dataIndex: 'stakeId'
+      dataIndex: 'stakeId',
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
-      render: (value: number) => `${utils.formatNumber(value)}`
+      render: (value: number) => `${utils.formatNumber(value)}`,
     },
     {
       title: 'Duration',
       dataIndex: 'duration',
-      render: (value: number) => `${value} Day`
+      render: (value: number) => `${value} Day`,
     },
 
     {
@@ -56,7 +54,7 @@ export default function Dashboard() {
       dataIndex: 'status',
       render: (value: any, record: any) => {
         return <Tag color={value === 'Unstaked' ? 'blue' : 'red'}>{value}</Tag>;
-      }
+      },
     },
     {
       title: 'Points',
@@ -71,7 +69,7 @@ export default function Dashboard() {
             <div className="s-text">{utils.formatNumber(value)}</div>
           </div>
         );
-      }
+      },
     },
     {
       title: 'Rewards',
@@ -86,7 +84,7 @@ export default function Dashboard() {
             <div className="s-text">Points {getRewardPoints(record.duration)}x AIM</div>
           </div>
         );
-      }
+      },
     },
 
     ...(caipNetwork?.chainNamespace === 'eip155'
@@ -105,51 +103,51 @@ export default function Dashboard() {
                   </a>
                 )
               );
-            }
-          }
+            },
+          },
         ]
       : [
           {
             title: 'Unstake Time',
             dataIndex: 'unstakeAt',
-            render: (value: number) => new Date(value).toLocaleString()
-          }
-        ])
+            render: (value: number) => new Date(value).toLocaleString(),
+          },
+        ]),
   ];
 
   const stakeColumns: any[] = [
     {
       title: 'Project',
-      dataIndex: 'projectName'
+      dataIndex: 'projectName',
     },
     {
       title: 'Stake ID',
-      dataIndex: 'stakeId'
+      dataIndex: 'stakeId',
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
-      render: (value: number) => `${utils.formatNumber(value)}`
+      render: (value: number) => `${utils.formatNumber(value)}`,
     },
     {
       title: 'Duration',
       dataIndex: 'duration',
-      render: (value: number) => `${value} Day`
+      render: (value: number) => `${value} Day`,
     },
     {
       title: 'Staked Time',
       dataIndex: 'stakedAt',
-      render: (value: number) => new Date(value).toLocaleString()
+      render: (value: number) => new Date(value).toLocaleString(),
     },
     {
       title: 'Unlocked Time',
       dataIndex: 'unlockedAt',
-      render: (value: number) => new Date(value).toLocaleString()
+      render: (value: number) => new Date(value).toLocaleString(),
     },
     {
       title: 'Status',
       dataIndex: 'status',
-      render: (value: any, record: any) => <Tag color="green">Active</Tag>
+      render: (value: any, record: any) => <Tag color="green">Active</Tag>,
     },
     {
       title: 'Points',
@@ -164,7 +162,7 @@ export default function Dashboard() {
             <div className="s-text">{utils.formatNumber(value)}</div>
           </div>
         );
-      }
+      },
     },
     {
       title: 'Rewards',
@@ -179,7 +177,7 @@ export default function Dashboard() {
             <div className="s-text">Points {getRewardPoints(record.duration)}x AIM</div>
           </div>
         );
-      }
+      },
     },
     {
       title: 'Action',
@@ -190,12 +188,15 @@ export default function Dashboard() {
           <Button className="unstake-btn" disabled={!record.canUnstake} onClick={() => openUnstakeModal(record)}>
             Unstake
           </Button>
-          <Button className="emergency-btn" onClick={() => openEmergencyUnstakeModal(record)}>
-            Emergency
-          </Button>
+
+          {record.unlockedAt >= new Date().getTime() && (
+            <Button className="emergency-btn" onClick={() => openEmergencyUnstakeModal(record)}>
+              Emergency
+            </Button>
+          )}
         </Space>
-      )
-    }
+      ),
+    },
   ];
 
   useEffect(() => {
@@ -236,7 +237,7 @@ export default function Dashboard() {
           return acc;
         }
         return [...acc, record.projectId];
-      }, []).length
+      }, []).length,
     );
   }, [stakeRecords, historyRecords]);
 

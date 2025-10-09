@@ -19,11 +19,15 @@ export const evmUtils = {
       } catch (error) {
         console.error(error);
       }
+      // 优化：将排行榜转换为 Map，O(1) 查找
+      const leaderboardMap: Map<string, any> = new Map(
+        (leaderboard || []).map((item: any) => [String(item.id), item])
+      );
 
       // 先创建基本项目信息
       const basicProjects = projects.map((project: any, index: number) => {
         const projectName = ethers.decodeBytes32String(project.id);
-        const leaderboardItem = leaderboard.find((item: any) => item.id == project.id);
+        const leaderboardItem = leaderboardMap.get(String(project.id));
         const points = Number(leaderboardItem?.total_score) || 0;
 
         return {
@@ -64,11 +68,17 @@ export const evmUtils = {
 
       // 并行异步获取详细信息
       const detailedProjects = [...basicProjects];
+      // 使用稳定映射，避免由于外部排序导致的索引错配
+      const projectById: Map<string, any> = new Map(detailedProjects.map((p: any) => [p.id, p]));
 
       // 创建所有的异步请求，并标记失败的项目
-      const fetchPromises = projects.map(async (project: any, i: number) => {
-        const currentProject = detailedProjects[i];
-        console.log(`Fetching details for project ${i + 1}/${projects.length}...`);
+      const fetchPromises = projects.map(async (project: any, idx: number) => {
+        const currentProject = projectById.get(project.id);
+        if (!currentProject) {
+          console.warn(`Basic project not found for id=${project.id}, skipping`);
+          return;
+        }
+        console.log(`Fetching details for project ${idx + 1}/${projects.length}...`);
 
         try {
           const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
@@ -94,15 +104,20 @@ export const evmUtils = {
           currentProject.shouldRemove = true; // 标记为删除
         }
 
-        // 每获取一个项目的详细信息就更新一次（过滤掉需要删除的项目）
+        // 每获取一个项目的详细信息就更新一次（过滤掉需要删除的项目），节流降低渲染频率
         if (onProjectUpdate) {
-          const validProjects = detailedProjects.filter((p) => !p.shouldRemove);
-          const sortedProjects = validProjects
-            .sort((a: any, b: any) => b.tvl - a.tvl)
-            .map((item: any, index: number) => {
-              return { ...item, rank: index + 1 };
-            });
-          onProjectUpdate(sortedProjects);
+          const now = Date.now();
+          (evmUtils as any).__lastEmitAt = (evmUtils as any).__lastEmitAt || 0;
+          if (now - (evmUtils as any).__lastEmitAt > 200) { // 200ms 粗略节流
+            (evmUtils as any).__lastEmitAt = now;
+            const validProjects = detailedProjects.filter((p) => !p.shouldRemove);
+            const sortedProjects = validProjects
+              .sort((a: any, b: any) => b.tvl - a.tvl)
+              .map((item: any, index: number) => {
+                return { ...item, rank: index + 1 };
+              });
+            onProjectUpdate(sortedProjects);
+          }
         }
       });
 
@@ -112,7 +127,7 @@ export const evmUtils = {
       // 过滤掉获取失败的项目
       const validProjects = detailedProjects.filter((project) => !project.shouldRemove);
 
-      // 最终返回完整的详细信息
+      // 最终返回完整的详细信息（确保最后一次也触发更新）
       if (validProjects.length > 0) {
         const sortedProjects = validProjects
           .sort((a: any, b: any) => b.tvl - a.tvl)
@@ -120,6 +135,9 @@ export const evmUtils = {
             return { ...item, rank: index + 1 };
           });
 
+        if (onProjectUpdate) {
+          onProjectUpdate(sortedProjects);
+        }
         console.log('EVM project records (complete):', sortedProjects);
         return sortedProjects;
       }
