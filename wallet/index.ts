@@ -52,7 +52,7 @@ export const getContractConfig = (chainId: any = ''): any => {
   const config = [
     {
       network: base,
-      AimStaking: '0x9EdA594952EC0E0b99E2095756290BFf2a6f472D',
+      AimStaking: '0x71F80EfD1E78655722C503B115Bb80c20Ab8D401',
       AimStakingABI
     },
     {
