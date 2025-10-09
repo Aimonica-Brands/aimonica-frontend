@@ -94,6 +94,8 @@ const getProjectTotalStaked = async (solanaProgram: any, projectId: any) => {
   }
 };
 
+const admin = ['6mTdzTTGcBmVRN3Q1TRCb9LvHQbnRYwg6ZeYw51NyWav'];
+
 export const solanaUtils = {
   /**获取当前平台所有项目信息 */
   getProjects: async (solanaProgram: any, onProjectUpdate?: (projects: any[]) => void) => {
@@ -122,17 +124,19 @@ export const solanaUtils = {
         console.error(error);
       }
       // 优化：排行榜转 Map，O(1) 查找
-      const leaderboardMap: Map<string, any> = new Map(
-        (leaderboard || []).map((item: any) => [String(item.id), item])
-      );
+      const leaderboardMap: Map<string, any> = new Map((leaderboard || []).map((item: any) => [String(item.id), item]));
 
-      // 并行异步获取所有项目的基本信息
+      // 只对 admin 创建的项目获取详细信息
       const basicProjectPromises = Array.from({ length: projectCount }, async (_, i) => {
-        // console.log(`Fetching basic info for project ${i + 1}/${projectCount}...`);
-
         try {
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
+
+          const creator = projectConfig.authority.toBase58();
+          // 检查 creator 是否在 admin 列表中，如果不在则跳过
+          if (!admin.find((item) => item.toLowerCase() === creator.toLowerCase())) {
+            return null;
+          }
 
           const [totalStaked, userCount] = await Promise.all([
             getProjectTotalStaked(solanaProgram, i),
@@ -179,7 +183,7 @@ export const solanaUtils = {
       const basicProjects = basicProjectsResults.filter((project) => project !== null);
 
       // 立即返回基本信息
-      console.log('Solana basic project records:', basicProjects);
+      console.log('Solana basic project records (admin only):', basicProjects);
       if (onProjectUpdate && basicProjects.length > 0) {
         const sortedBasicProjects = basicProjects
           .sort((a: any, b: any) => b.totalStaked - a.totalStaked)
@@ -216,7 +220,7 @@ export const solanaUtils = {
           const fetchedPlatform = coinDetailsRes.asset_platform_id || currentProject.platformId;
           if (fetchedContract !== expectedContract || fetchedPlatform !== currentProject.platformId) {
             console.warn(
-              `Inconsistent CoinGecko data for ${currentProject.projectName}. expectedContract=${expectedContract}, fetchedContract=${fetchedContract}, platform=${fetchedPlatform}`
+              `Inconsistent CoinGecko data for ${currentProject.projectName}. expectedContract=${expectedContract}, fetchedContract=${fetchedContract}, platform=${fetchedPlatform}`,
             );
             currentProject.shouldRemove = true;
             if (onProjectUpdate) {
