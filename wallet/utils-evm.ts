@@ -78,15 +78,15 @@ export const evmUtils = {
           console.warn(`Basic project not found for id=${project.id}, skipping`);
           return;
         }
-        console.log(`Fetching details for project ${idx + 1}/${projects.length}...`);
+        // console.log(`Fetching details for project ${idx + 1}/${projects.length}...`);
 
         try {
           const coinDetailsRes = await coingeckoAPI.getCoinByContract('base', project.stakingToken);
-          console.log(currentProject.projectName, coinDetailsRes);
+          // console.log(currentProject.projectName, coinDetailsRes);
 
           const coinPrice = await coingeckoAPI.getCoinPrice('base', coinDetailsRes.contract_address);
           currentProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
-          console.log(currentProject.projectName, currentProject.coinPriceUsd);
+          // console.log(currentProject.projectName, currentProject.coinPriceUsd);
 
           currentProject.tvl = Number(currentProject.totalStaked) * currentProject.coinPriceUsd;
           currentProject.description = coinDetailsRes.description.en;

@@ -128,7 +128,7 @@ export const solanaUtils = {
 
       // 并行异步获取所有项目的基本信息
       const basicProjectPromises = Array.from({ length: projectCount }, async (_, i) => {
-        console.log(`Fetching basic info for project ${i + 1}/${projectCount}...`);
+        // console.log(`Fetching basic info for project ${i + 1}/${projectCount}...`);
 
         try {
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
@@ -201,14 +201,14 @@ export const solanaUtils = {
           console.warn(`Basic project not found for id=${bp.id}, skipping`);
           return;
         }
-        console.log(`Fetching details for project ${idx + 1}/${basicProjects.length}...`);
+        // console.log(`Fetching details for project ${idx + 1}/${basicProjects.length}...`);
 
         try {
           const coinDetailsRes = await coingeckoAPI.getCoinByContract(
             currentProject.platformId,
             currentProject.stakingToken,
           );
-          console.log(currentProject.projectName, coinDetailsRes);
+          // console.log(currentProject.projectName, coinDetailsRes);
 
           // 一致性校验：合约地址与平台必须匹配
           const fetchedContract = (coinDetailsRes.contract_address || '').toLowerCase();
@@ -233,7 +233,7 @@ export const solanaUtils = {
 
           const coinPrice = await coingeckoAPI.getCoinPrice(currentProject.platformId, coinDetailsRes.contract_address);
           currentProject.coinPriceUsd = coinPrice[coinDetailsRes.contract_address].usd;
-          console.log(currentProject.projectName, currentProject.coinPriceUsd);
+          // console.log(currentProject.projectName, currentProject.coinPriceUsd);
 
           currentProject.tvl = Number(currentProject.totalStaked) * currentProject.coinPriceUsd;
           currentProject.description = coinDetailsRes.description.en;

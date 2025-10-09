@@ -24,7 +24,7 @@ export default function Home() {
       title: 'Rank',
       key: 'rank',
       align,
-      width: 60,
+      width: 80,
       render: (value: any, record: any) => {
         return <div className="rank">{record.rank}</div>;
       },
@@ -213,32 +213,33 @@ export default function Home() {
   }, [projectsData]);
 
   useEffect(() => {
+    // 优先根据连接状态与网络决定加载内容
     if (isConnected && address && caipNetwork && chainId) {
       setNetworkId(chainId.toString());
-      getProjectData();
-    } else {
-      setNetworkId('');
-    }
-  }, [isConnected, address, caipNetwork, chainId, evmStakingContract, solanaProgram]);
-
-  const getProjectData = async () => {
-    setProjectsData([]);
-
-    if (caipNetwork.chainNamespace === 'eip155') {
-      if (evmStakingContract) {
+      // 防止重复触发导致 EVM 与 Solana 同时请求：严格分支
+      if (caipNetwork.chainNamespace === 'solana') {
+        if (solanaProgram) {
+          setProjectsData([]);
+          getSolanaProjects();
+        }
+      } else {
+        setProjectsData([]);
         getEVMProjects();
       }
-    } else if (caipNetwork.chainNamespace === 'solana') {
-      if (solanaProgram) {
-        getSolanaProjects();
-      }
+      return;
     }
-  };
+
+    // 未连接钱包，且当前网络不是 Solana 时，默认展示 Base（EVM）
+    if (!isConnected && !address && (!caipNetwork || caipNetwork.chainNamespace !== 'solana')) {
+      setNetworkId(getContractConfig()[0].network.id.toString());
+      setProjectsData([]);
+      getEVMProjects();
+    }
+  }, [isConnected, address, caipNetwork, chainId, solanaProgram]);
 
   const getSolanaProjects = async () => {
-    if (loading) return;
     setLoading(true);
-    
+
     solanaUtils
       .getProjects(solanaProgram, (projects) => {
         // 实时更新项目数据
@@ -258,7 +259,6 @@ export default function Home() {
   };
 
   const getEVMProjects = async () => {
-    if (loading) return;
     setLoading(true);
 
     evmUtils
@@ -280,17 +280,21 @@ export default function Home() {
   };
 
   const handleTabClick = (network: any) => async () => {
-    if (network) {
-      modal
-        .switchNetwork(network)
-        .then(() => {
-          setNetworkId(network.id.toString());
-        })
-        .catch((error) => {
-          console.error('Failed to switch network:', error);
-        });
-    } else {
-      setNetworkId('');
+    if (isConnected && address) {
+      if (network) {
+        if (modal) {
+          modal
+            .switchNetwork(network)
+            .then(() => {
+              setNetworkId(network.id.toString());
+            })
+            .catch((error) => {
+              console.error('Failed to switch network:', error);
+            });
+        }
+      } else {
+        setNetworkId(getContractConfig()[0].network.id.toString());
+      }
     }
   };
 
@@ -361,9 +365,6 @@ export default function Home() {
 
           <div className="tab-box-box">
             <div className="tab-box">
-              {/* <button className={networkId === '' ? 'active' : ''} onClick={handleTabClick(null)}>
-                All Chain
-              </button> */}
               {getContractConfig().map((item: any) => {
                 return (
                   <button
