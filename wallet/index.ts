@@ -77,8 +77,7 @@ export const handleContractError = (error: any) => {
   if (
     error.code === 4001 ||
     error.code === 'ACTION_REJECTED' ||
-    error.message?.includes('user rejected') ||
-    error === '交易已取消'
+    error.message?.includes('user rejected')
   ) {
     return;
   }

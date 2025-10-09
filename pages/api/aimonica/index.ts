@@ -8,16 +8,6 @@ export const aimonicaAPI = {
     const res = await axios.get(`${apiUrl}/points/leaderboard`);
     return res.data;
   },
-
-  GetPointsDashboard: async (walletAddress: string) => {
-    const res = await axios.get(`${apiUrl}/points/dashboard/${walletAddress}`);
-    return res.data;
-  },
-
-  GetProjects: async () => {
-    const res = await axios.get(`${apiUrl}/points/projects`);
-    return res.data;
-  },
 };
 
 export const subgraphsAPI = {
