@@ -516,7 +516,7 @@ export const solanaUtils = {
       const tx = await solanaProgram.methods
         .stake(amountToStake, stakeDuration, stakeIdBN)
         .accounts(stakeAccounts)
-        .rpc();
+        .rpc({ skipPreflight: false, commitment: 'confirmed' });
 
       return tx;
     } catch (error) {

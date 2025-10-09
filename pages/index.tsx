@@ -228,9 +228,8 @@ export default function Home() {
       }
       return;
     }
-
-    // 未连接钱包，且当前网络不是 Solana 时，默认展示 Base（EVM）
-    if (!isConnected && !address && (!caipNetwork || caipNetwork.chainNamespace !== 'solana')) {
+    // 未连接钱包
+    if (!isConnected && !address) {
       setNetworkId(getContractConfig()[0].network.id.toString());
       setProjectsData([]);
       getEVMProjects();
@@ -280,21 +279,21 @@ export default function Home() {
   };
 
   const handleTabClick = (network: any) => async () => {
-    if (isConnected && address) {
-      if (network) {
-        if (modal) {
-          modal
-            .switchNetwork(network)
-            .then(() => {
-              setNetworkId(network.id.toString());
-            })
-            .catch((error) => {
-              console.error('Failed to switch network:', error);
-            });
-        }
-      } else {
-        setNetworkId(getContractConfig()[0].network.id.toString());
-      }
+    if (!isConnected) {
+      modal.open();
+      return;
+    }
+    if (network) {
+      modal
+        .switchNetwork(network)
+        .then(() => {
+          setNetworkId(network.id.toString());
+        })
+        .catch((error) => {
+          console.error('Failed to switch network:', error);
+        });
+    } else {
+      setNetworkId('');
     }
   };
 
