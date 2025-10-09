@@ -153,7 +153,8 @@ export default function Stake() {
     evmUtils
       .getTokenBalance(evmTokenContract, address)
       .then((balance) => {
-        setTokenBalance(balance);
+        const balanceWithTwoDecimals = Math.floor(balance * 10000) / 10000;
+        setTokenBalance(balanceWithTwoDecimals);
         if (balance > 0) {
           const stakeAddress = getContractConfig(chainId).AimStaking;
           evmUtils
@@ -195,8 +196,8 @@ export default function Stake() {
     solanaUtils
       .getTokenBalance(solanaProgram, Number(projectId))
       .then((balance) => {
-        setTokenBalance(Math.floor(balance));
-        setTokenWorth(Math.floor(balance * projectInfo.coinPriceUsd));
+        const balanceWithTwoDecimals = Math.floor(balance * 10000) / 10000;
+        setTokenBalance(balanceWithTwoDecimals);
       })
       .catch((error) => {
         console.error(error);
@@ -205,18 +206,15 @@ export default function Stake() {
 
   // 手动更新余额 - 质押后直接减少余额
   const updateBalanceAfterStake = (stakeAmount: number) => {
-    const currentBalance = tokenBalance;
-    const newBalance = Math.max(0, currentBalance - stakeAmount);
-    const newWorth = newBalance * projectInfo.coinPriceUsd;
-    setTokenBalance(newBalance);
-    setTokenWorth(Math.floor(newWorth));
+    const newBalance = tokenBalance - stakeAmount;
+    const balanceWithTwoDecimals = Math.floor(newBalance * 10000) / 10000;
+    setTokenBalance(balanceWithTwoDecimals);
   };
 
   const handleStake = async () => {
     if (loading) return;
-    console.log('amount', amount);
     if (!Number(amount)) return message.error('Please enter the amount');
-    console.log('durationDay', durationDay);
+    if (Number(amount) > tokenBalance) return message.error('Insufficient balance');
 
     setLoading(true);
     if (caipNetwork.chainNamespace === 'eip155') {
@@ -436,8 +434,8 @@ Merit > Money 🎯`;
                   <span>{projectInfo?.projectName}</span>
                 </div>
                 <div className="number-box">
-                  <div className="number">{utils.formatNumber(tokenBalance)}</div>
-                  <div className="number2">$ {utils.formatNumber(tokenWorth)}</div>
+                  <div className="number">{utils.formatNumber(tokenBalance, 4)}</div>
+                  <div className="number2">$ {utils.formatNumber(tokenWorth, 4)}</div>
                 </div>
               </div>
               <div className="inputbox">
@@ -445,7 +443,17 @@ Merit > Money 🎯`;
                   type="number"
                   placeholder={`Enter Amount`}
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // 限制小数部分不超过8位
+                    if (value.includes('.')) {
+                      const parts = value.split('.');
+                      if (parts[1] && parts[1].length > 8) {
+                        return;
+                      }
+                    }
+                    setAmount(value);
+                  }}
                   disabled={loading}
                 />
                 <button className="max-btn" onClick={() => setAmount(tokenBalance.toString())}>
@@ -467,7 +475,7 @@ Merit > Money 🎯`;
               </div>
               <div className="text">
                 <span>Expected Points</span>
-                <div className="number">{utils.formatNumber(expectedPoints)}</div>
+                <div className="number">{utils.formatNumber(expectedPoints, 4)}</div>
               </div>
 
               {caipNetwork.chainNamespace === 'eip155' && !isApproved && tokenBalance > 0 ? (
