@@ -13,7 +13,7 @@ export const projectId = 'b5863416c73906526923f5c4d6db20c8';
 export const wagmiAdapter = new WagmiAdapter({
   ssr: true,
   projectId,
-  networks
+  networks,
 });
 
 /**2. Create Solana adapter */
@@ -24,7 +24,7 @@ const metadata = {
   name: 'AIMonica',
   description: 'AIMonica DApp',
   url: 'https://aimonica.dev', // origin must match your domain & subdomain
-  icons: [`/assets/images/logo2.svg`]
+  icons: [`/assets/images/logo2.svg`],
 };
 
 /**4. Create the AppKit instance */
@@ -34,14 +34,14 @@ export const modal = createAppKit({
   metadata,
   projectId,
   features: {
-    analytics: true
+    analytics: true,
   },
   themeMode: 'light',
   themeVariables: {
     '--w3m-accent': '#50B4FF',
     '--w3m-font-family': 'Poppins',
-    '--w3m-font-size-master': '0.12rem'
-  }
+    '--w3m-font-size-master': '0.12rem',
+  },
 });
 
 import AimStakingABI from '@/wallet/abi/AimStaking.json';
@@ -53,14 +53,15 @@ export const getContractConfig = (chainId: any = ''): any => {
     {
       network: base,
       AimStaking: '0x71F80EfD1E78655722C503B115Bb80c20Ab8D401',
-      AimStakingABI
+      AimStakingABI,
     },
     {
       network: solana,
-      endpoint: 'https://solana.publicnode.com/',
+      // endpoint: 'https://solana.publicnode.com/',
+      endpoint: 'https://mainnet.helius-rpc.com/?api-key=3bc27734-2a70-4b5a-82c9-3c36dad37e05',
       programId: 'BGWDziWKGkAFPjArzYYQfU7dug5VxACKxEMDZFEMPYuN',
-      aim_staking_program
-    }
+      aim_staking_program,
+    },
   ];
 
   if (chainId) {
@@ -74,11 +75,7 @@ export const handleContractError = (error: any) => {
   console.error('Contract error:', error);
 
   // 用户取消了操作
-  if (
-    error.code === 4001 ||
-    error.code === 'ACTION_REJECTED' ||
-    error.message?.includes('user rejected')
-  ) {
+  if (error.code === 4001 || error.code === 'ACTION_REJECTED' || error.message?.includes('user rejected')) {
     return;
   }
 

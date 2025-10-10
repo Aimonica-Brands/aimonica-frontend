@@ -1,5 +1,5 @@
 import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import { getAssociatedTokenAddressSync, createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import * as anchor from '@coral-xyz/anchor';
 import { aimonicaAPI } from '@/pages/api/aimonica';
 import { coingeckoAPI } from '@/pages/api/coingecko';
@@ -57,6 +57,33 @@ const getUserTokenAccount = async (solanaProgram: any, projectConfig: any, userP
       : getAssociatedTokenAddressSync(projectConfig.tokenMint, userPublicKey);
 
   return userTokenAccount;
+};
+
+/**检查并返回创建 ATA 的指令（如果需要）*/
+const getCreateATAInstructionIfNeeded = async (
+  connection: any,
+  mint: PublicKey,
+  owner: PublicKey,
+  payer: PublicKey,
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID,
+) => {
+  const ata = getAssociatedTokenAddressSync(mint, owner, true, tokenProgram);
+  
+  // 检查 ATA 是否存在
+  const accountInfo = await connection.getAccountInfo(ata);
+  
+  if (!accountInfo) {
+    console.log(`ATA for ${owner.toBase58()} does not exist, will create it in this transaction`);
+    return createAssociatedTokenAccountInstruction(
+      payer,
+      ata,
+      owner,
+      mint,
+      tokenProgram,
+    );
+  }
+  
+  return null;
 };
 
 /**获取项目用户数量 */
@@ -554,7 +581,28 @@ export const solanaUtils = {
         tokenProgram: projectConfig.tokenProgram,
       };
 
-      const tx = await solanaProgram.methods.unstake(new anchor.BN(record.stakeId)).accounts(unstakeAccounts).rpc();
+      // 检查 feeWallet 的 ATA 是否存在，如果不存在则添加创建指令
+      const createATAInstruction = await getCreateATAInstructionIfNeeded(
+        solanaProgram.provider.connection,
+        projectConfig.tokenMint,
+        projectConfig.feeWallet,
+        userPublicKey,
+        projectConfig.tokenProgram,
+      );
+
+      let tx;
+      if (createATAInstruction) {
+        // 如果需要创建 ATA，使用 transaction 方式
+        console.log('Creating fee wallet ATA before unstake');
+        tx = await solanaProgram.methods
+          .unstake(new anchor.BN(record.stakeId))
+          .accounts(unstakeAccounts)
+          .preInstructions([createATAInstruction])
+          .rpc();
+      } else {
+        // 如果 ATA 已存在，直接执行
+        tx = await solanaProgram.methods.unstake(new anchor.BN(record.stakeId)).accounts(unstakeAccounts).rpc();
+      }
 
       return tx;
     } catch (error) {
@@ -588,10 +636,31 @@ export const solanaUtils = {
         tokenProgram: projectConfig.tokenProgram,
       };
 
-      const tx = await solanaProgram.methods
-        .emergencyUnstake(new anchor.BN(record.stakeId))
-        .accounts(emergencyUnstakeAccounts)
-        .rpc();
+      // 检查 feeWallet 的 ATA 是否存在，如果不存在则添加创建指令
+      const createATAInstruction = await getCreateATAInstructionIfNeeded(
+        solanaProgram.provider.connection,
+        projectConfig.tokenMint,
+        projectConfig.feeWallet,
+        userPublicKey,
+        projectConfig.tokenProgram,
+      );
+
+      let tx;
+      if (createATAInstruction) {
+        // 如果需要创建 ATA，使用 transaction 方式
+        console.log('Creating fee wallet ATA before emergency unstake');
+        tx = await solanaProgram.methods
+          .emergencyUnstake(new anchor.BN(record.stakeId))
+          .accounts(emergencyUnstakeAccounts)
+          .preInstructions([createATAInstruction])
+          .rpc();
+      } else {
+        // 如果 ATA 已存在，直接执行
+        tx = await solanaProgram.methods
+          .emergencyUnstake(new anchor.BN(record.stakeId))
+          .accounts(emergencyUnstakeAccounts)
+          .rpc();
+      }
 
       return tx;
     } catch (error) {
