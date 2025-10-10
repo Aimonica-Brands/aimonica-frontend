@@ -213,46 +213,31 @@ export default function Home() {
   }, [projectsData]);
 
   useEffect(() => {
-    // 优先根据连接状态与网络决定加载内容
-    if (isConnected && address && caipNetwork && chainId) {
-      setNetworkId(chainId.toString());
-      // 防止重复触发导致 EVM 与 Solana 同时请求：严格分支
-      if (caipNetwork.chainNamespace === 'solana') {
-        if (solanaProgram) {
-          setProjectsData([]);
-          getSolanaProjects();
-        }
-      } else {
-        setProjectsData([]);
-        getEVMProjects();
-      }
-      return;
-    }
-    // 未连接钱包
-    if (!isConnected && !address) {
+    if (isConnected && address && caipNetwork && caipNetwork.chainNamespace === 'solana' && solanaProgram) {
+      setNetworkId(caipNetwork.id.toString());
+      setProjectsData([]);
+      getSolanaProjects();
+    } else if (!isConnected && !address) {
       setNetworkId(getContractConfig()[0].network.id.toString());
       setProjectsData([]);
       getEVMProjects();
     }
-  }, [isConnected, address, caipNetwork, chainId, solanaProgram]);
+  }, [isConnected, address, caipNetwork, solanaProgram]);
 
   const getSolanaProjects = async () => {
     setLoading(true);
 
     solanaUtils
       .getProjects(solanaProgram, (projects) => {
-        // 实时更新项目数据
         setProjectsData(projects);
       })
       .then((sortedProjects) => {
-        // 最终更新完整数据
         setProjectsData(sortedProjects);
       })
       .catch((error) => {
         console.log(error);
       })
       .finally(() => {
-        // 所有数据获取完成后关闭 loading
         setLoading(false);
       });
   };
@@ -262,18 +247,15 @@ export default function Home() {
 
     evmUtils
       .getProjects((projects) => {
-        // 实时更新项目数据
         setProjectsData(projects);
       })
       .then((sortedProjects) => {
-        // 最终更新完整数据
         setProjectsData(sortedProjects);
       })
       .catch((error) => {
         console.log(error);
       })
       .finally(() => {
-        // 所有数据获取完成后关闭 loading
         setLoading(false);
       });
   };

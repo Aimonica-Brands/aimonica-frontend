@@ -1,5 +1,9 @@
 import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { getAssociatedTokenAddressSync, createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+  getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountInstruction,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 import * as anchor from '@coral-xyz/anchor';
 import { aimonicaAPI } from '@/pages/api/aimonica';
 import { coingeckoAPI } from '@/pages/api/coingecko';
@@ -68,21 +72,15 @@ const getCreateATAInstructionIfNeeded = async (
   tokenProgram: PublicKey = TOKEN_PROGRAM_ID,
 ) => {
   const ata = getAssociatedTokenAddressSync(mint, owner, true, tokenProgram);
-  
+
   // 检查 ATA 是否存在
   const accountInfo = await connection.getAccountInfo(ata);
-  
+
   if (!accountInfo) {
     console.log(`ATA for ${owner.toBase58()} does not exist, will create it in this transaction`);
-    return createAssociatedTokenAccountInstruction(
-      payer,
-      ata,
-      owner,
-      mint,
-      tokenProgram,
-    );
+    return createAssociatedTokenAccountInstruction(payer, ata, owner, mint, tokenProgram);
   }
-  
+
   return null;
 };
 
@@ -153,17 +151,16 @@ export const solanaUtils = {
       // 优化：排行榜转 Map，O(1) 查找
       const leaderboardMap: Map<string, any> = new Map((leaderboard || []).map((item: any) => [String(item.id), item]));
 
-      // 只对 admin 创建的项目获取详细信息
       const basicProjectPromises = Array.from({ length: projectCount }, async (_, i) => {
         try {
           const projectConfigPda = await getProjectConfigPda(solanaProgram, i);
           const projectConfig = await solanaProgram.account.projectConfig.fetch(projectConfigPda);
-          // 7Gq1ffkZjR7UiChhQRJtRjienP8C3psWjTdAAkVnkiZZ
-          // const creator = projectConfig.authority.toBase58();
-          // // 检查 creator 是否在 admin 列表中，如果不在则跳过
-          // if (!admin.find((item) => item.toLowerCase() === creator.toLowerCase())) {
-          //   return null;
-          // }
+
+          // 检查 creator 是否在 admin 列表中，如果不在则跳过
+          const creator = projectConfig.authority.toBase58();
+          if (!admin.find((item) => item.toLowerCase() === creator.toLowerCase())) {
+            return null;
+          }
 
           const [totalStaked, userCount] = await Promise.all([
             getProjectTotalStaked(solanaProgram, i),
