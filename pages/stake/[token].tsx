@@ -123,16 +123,16 @@ export default function Stake() {
     const contractConfig = getContractConfig(chainId);
 
     if (caipNetwork.chainNamespace === 'eip155') {
-      setPoolAddress(contractConfig.AimStaking);
-      const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig.AimStaking}`;
+      setPoolAddress(contractConfig?.AimStaking);
+      const link = `${caipNetwork.blockExplorers.default.url}/address/${contractConfig?.AimStaking}`;
       setPoolLink(link);
 
       const contract = await getEVMTokenContract(chainId, project.stakingToken);
       console.log(`✅ Staking token contract initialized successfully`);
       setEvmTokenContract(contract);
     } else if (caipNetwork.chainNamespace === 'solana') {
-      setPoolAddress(contractConfig.programId);
-      const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig.programId}?cluster=${contractConfig.cluster}`;
+      setPoolAddress(contractConfig?.programId);
+      const link = `${caipNetwork.blockExplorers.default.url}/account/${contractConfig?.programId}?cluster=${contractConfig?.cluster}`;
       setPoolLink(link);
       setDurationConfig(project.allowedDurations);
     }
@@ -223,11 +223,11 @@ export default function Stake() {
         .then((tx) => {
           const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
           console.log('🔗Staking transaction link:', txLink);
-          message.success('Transaction submitted, please wait...');
 
           setLoading(false);
           setIsStakeModalOpen(true);
           updateBalanceAfterStake(Number(amount));
+          message.success('The pledge is successful and the data will be updated in a few minutes.');
         })
         .catch((error) => {
           handleContractError(error);
@@ -244,11 +244,11 @@ export default function Stake() {
               getContractConfig(chainId).cluster
             }`;
             console.log('🔗Staking transaction link:', txLink);
-            message.success('Transaction submitted, please wait...');
 
             setLoading(false);
             setIsStakeModalOpen(true);
             updateBalanceAfterStake(Number(amount));
+            message.success('The pledge is successful and the data will be updated in a few minutes.');
           })
           .catch((error) => {
             handleContractError(error);
