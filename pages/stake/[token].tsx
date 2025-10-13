@@ -227,7 +227,7 @@ export default function Stake() {
           setLoading(false);
           setIsStakeModalOpen(true);
           updateBalanceAfterStake(Number(amount));
-          message.success('The pledge is successful and the data will be updated in a few minutes.');
+          message.success('The stake is successful and the data will be updated in a few minutes.');
         })
         .catch((error) => {
           handleContractError(error);
