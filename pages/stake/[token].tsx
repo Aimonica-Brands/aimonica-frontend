@@ -326,7 +326,7 @@ export default function Stake() {
 
   const getProjectDetails = async () => {
     try {
-      const projectDetailsRes = await cookieAPI.GetProjectDetails(projectInfo.projectName);
+      const projectDetailsRes = await cookieAPI.GetProjectDetails(projectInfo.stakingToken);
       if (projectDetailsRes.success && projectDetailsRes.ok) {
         const username = projectDetailsRes.ok.twitterUsernames[0];
         if (username) {
