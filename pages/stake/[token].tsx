@@ -696,13 +696,13 @@ Merit > Money 🎯`;
 
               {isTwitterConnected ? (
                 <button className="btn-share" onClick={handleShare}>
-                  <img src="/assets/images/icon-twitter.svg" alt="" />
                   Share On
+                  <img src="/assets/images/icon-twitter.svg" alt="" />
                 </button>
               ) : (
                 <button className="btn-share" onClick={handleConnectTwitter}>
+                  Connect
                   <img src="/assets/images/icon-twitter.svg" alt="" />
-                  Connect Twitter
                 </button>
               )}
             </div>
