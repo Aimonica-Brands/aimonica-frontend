@@ -17,6 +17,7 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [networkId, setNetworkId] = useState('');
+  const [hasLoadedEvmOnce, setHasLoadedEvmOnce] = useState(false);
 
   const align = 'center' as const;
   const projectColumns: ColumnsType<any> = [
@@ -213,16 +214,31 @@ export default function Home() {
   }, [projectsData]);
 
   useEffect(() => {
-    if (isConnected && address && caipNetwork && caipNetwork.chainNamespace === 'solana' && solanaProgram) {
+    // Connected: load based on current chain
+    if (isConnected && address && caipNetwork) {
       setNetworkId(caipNetwork.id.toString());
       setProjectsData([]);
-      getSolanaProjects();
-    } else if (!isConnected && !address) {
+
+      if (caipNetwork.chainNamespace === 'solana') {
+        if (solanaProgram) {
+          getSolanaProjects();
+        }
+      } else if (caipNetwork.chainNamespace === 'eip155') {
+        if (evmStakingContract) {
+          getEVMProjects();
+        }
+      }
+      return;
+    }
+
+    // Disconnected: show EVM projects once to populate homepage, avoid repeated fetching during wallet-connecting
+    if (!isConnected && !address && !hasLoadedEvmOnce) {
       setNetworkId(getContractConfig()[0].network.id.toString());
       setProjectsData([]);
       getEVMProjects();
+      setHasLoadedEvmOnce(true);
     }
-  }, [isConnected, address, caipNetwork, solanaProgram]);
+  }, [isConnected, address, caipNetwork, solanaProgram, evmStakingContract, setProjectsData, hasLoadedEvmOnce]);
 
   const getSolanaProjects = async () => {
     setLoading(true);
