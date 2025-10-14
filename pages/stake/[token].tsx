@@ -70,7 +70,8 @@ export default function Stake() {
   // const onChange = (key: string) => {};
 
   useEffect(() => {
-    if (projectInfo && projectInfo.name) {
+    console.log('projectInfo', projectInfo);
+    if (projectInfo && projectInfo.projectName) {
       getSearchTweets();
       getProjectMindshareGraph();
       getMetricsGraph();
@@ -123,6 +124,7 @@ export default function Stake() {
   }, [durationConfig]);
 
   const getProject = async () => {
+    console.log('projectsData', projectsData);
     const project = projectsData.find((item: any) => item.id == projectId);
     console.log('Current project:', project);
     setProjectInfo(project);
@@ -285,7 +287,7 @@ export default function Stake() {
 
   const getMetricsGraph = () => {
     cookieAPI
-      .GetMetricsGraph('0', '1', projectInfo.name)
+      .GetMetricsGraph('0', '1', projectInfo.projectName)
       .then((res) => {
         if (res.success && res.ok) {
           const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
@@ -296,7 +298,7 @@ export default function Stake() {
         console.log(error);
       });
     cookieAPI
-      .GetMetricsGraph('1', '1', projectInfo.name)
+      .GetMetricsGraph('1', '1', projectInfo.projectName)
       .then((res) => {
         if (res.success && res.ok) {
           const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
@@ -310,7 +312,7 @@ export default function Stake() {
 
   const getProjectMindshareGraph = () => {
     cookieAPI
-      .GetProjectMindshareGraph(projectInfo.name)
+      .GetProjectMindshareGraph(projectInfo.projectName)
       .then((res) => {
         if (res.success && res.ok) {
           const total = res.ok.entries.reduce((sum: number, item: any) => sum + item.value, 0);
@@ -324,7 +326,7 @@ export default function Stake() {
 
   const getProjectDetails = async () => {
     try {
-      const projectDetailsRes = await cookieAPI.GetProjectDetails(projectInfo.name);
+      const projectDetailsRes = await cookieAPI.GetProjectDetails(projectInfo.projectName);
       if (projectDetailsRes.success && projectDetailsRes.ok) {
         const username = projectDetailsRes.ok.twitterUsernames[0];
         if (username) {
@@ -342,7 +344,7 @@ export default function Stake() {
 
   const getSearchTweets = async () => {
     cookieAPI
-      .SearchTweets(projectInfo.name, projectInfo.name)
+      .SearchTweets(projectInfo.projectName, projectInfo.projectName)
       .then((res) => {
         if (res.success && res.ok) {
           const tweets = res.ok.entries.slice(0, 5);
