@@ -213,24 +213,6 @@ export default function Home() {
     }
   }, [projectsData]);
 
-  // 监听屏幕尺寸打印一下font-size
-  useEffect(() => {
-    const logFontSize = () => {
-      console.log('font-size', document.documentElement.style.fontSize);
-    };
-
-    // 初始打印
-    logFontSize();
-
-    // 监听窗口大小变化
-    window.addEventListener('resize', logFontSize);
-
-    // 清理事件监听器
-    return () => {
-      window.removeEventListener('resize', logFontSize);
-    };
-  }, []);
-
   useEffect(() => {
     // Connected: load based on current chain
     if (isConnected && address && caipNetwork) {
