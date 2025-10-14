@@ -94,7 +94,7 @@ export default function Home() {
       title: 'TVL($)',
       key: 'tvl',
       align,
-      width: 150,
+      width: 120,
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatCompactNumber(record.tvl)}</div>;
       },
@@ -103,7 +103,7 @@ export default function Home() {
       title: 'Staked',
       key: 'totalStaked',
       align,
-      width: 150,
+      width: 120,
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatCompactNumber(record.totalStaked)}</div>;
       },
@@ -112,7 +112,7 @@ export default function Home() {
       title: 'Users',
       key: 'userCount',
       align,
-      width: 150,
+      width: 100,
       render: (value: any, record: any) => {
         return <div className="rank">{utils.formatNumber(record.userCount)}</div>;
       },

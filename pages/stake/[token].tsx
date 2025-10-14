@@ -9,8 +9,11 @@ import { evmUtils, solanaUtils, getRewardPoints, getEVMTokenContract } from '@/w
 import utils from '@/utils';
 import { cookieAPI } from '@/pages/api/cookiefun';
 import { shareOnTwitter } from '@/pages/api/auth';
+import { getCurrentEnv } from '@/pages/api/auth';
+import { signIn, signOut } from 'next-auth/react';
 
 export default function Stake() {
+  const envConfig = getCurrentEnv();
   const { message } = App.useApp();
   const router = useRouter();
   const { token: projectId } = router.query as { token: string };
@@ -356,6 +359,43 @@ export default function Stake() {
       });
   };
 
+  const handleConnectTwitter = async () => {
+    // 首先检查配置
+    if (!envConfig.twitterConfigured) {
+      message.error('Please configure Twitter API key and environment variables first');
+      return;
+    }
+
+    try {
+      if (isTwitterConnected) {
+        // 如果已经连接，则断开连接
+        await signOut({ redirect: false });
+        message.success('Twitter disconnected');
+      } else {
+        // 连接Twitter
+        message.info('Redirecting to Twitter authorization page...');
+
+        // 使用signIn进行重定向
+        await signIn('twitter', {
+          callbackUrl: envConfig.url,
+        });
+      }
+    } catch (error: any) {
+      console.error('Twitter connection error:', error);
+
+      let errorMessage = 'Twitter connection error';
+      if (error.message?.includes('Configuration')) {
+        errorMessage = 'Please configure Twitter API key first';
+      } else if (error.message?.includes('fetch')) {
+        errorMessage = 'Network error, please check your connection';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      message.error(errorMessage);
+    }
+  };
+
   const getShareText = (amount: string, projectName: string) => {
     if (!amount || !projectName) return '';
     return `Staked on @AimonicaBrands ✅
@@ -364,10 +404,6 @@ Merit > Money 🎯`;
   };
 
   const handleShare = () => {
-    if (!isTwitterConnected) {
-      message.error('Please connect your Twitter account first');
-      return;
-    }
     const shareText = getShareText(amount, projectInfo.projectName);
     shareOnTwitter(shareText);
   };
@@ -657,10 +693,18 @@ Merit > Money 🎯`;
               <button className="btn-close" onClick={closeStakeModal}>
                 close
               </button>
-              <button className="btn-share" onClick={handleShare}>
-                Share On
-                <img src="/assets/images/icon-twitter.svg" alt="" />
-              </button>
+
+              {isTwitterConnected ? (
+                <button className="btn-share" onClick={handleShare}>
+                  <img src="/assets/images/icon-twitter.svg" alt="" />
+                  Share On
+                </button>
+              ) : (
+                <button className="btn-share" onClick={handleConnectTwitter}>
+                  <img src="/assets/images/icon-twitter.svg" alt="" />
+                  Connect Twitter
+                </button>
+              )}
             </div>
           </div>
         </div>
