@@ -31,6 +31,7 @@ export default function Stake() {
   const [poolAddress, setPoolAddress] = useState('');
   const [poolLink, setPoolLink] = useState('');
   const [isApproved, setIsApproved] = useState(false);
+  const [allowance, setAllowance] = useState(0);
   const [durationConfig, setDurationConfig] = useState<any>([]);
 
   const [mindshare, setMindshare] = useState(0);
@@ -107,6 +108,14 @@ export default function Stake() {
     }
   }, [amount, durationDay]);
 
+  // 根据输入金额与 allowance 动态决定是否已授权（EVM）
+  useEffect(() => {
+    if (caipNetwork?.chainNamespace === 'eip155') {
+      const inputAmount = Number(amount) || 0;
+      setIsApproved(inputAmount > 0 && allowance >= inputAmount);
+    }
+  }, [amount, allowance, caipNetwork]);
+
   useEffect(() => {
     if (durationConfig && durationConfig.length > 0 && durationDay === 0) {
       setDurationDay(durationConfig[0]);
@@ -160,7 +169,7 @@ export default function Stake() {
           evmUtils
             .getAllowance(evmTokenContract, address, stakeAddress)
             .then((allowance) => {
-              setIsApproved(allowance >= balance);
+              setAllowance(allowance);
             })
             .catch((error) => {
               console.error(error);
@@ -174,6 +183,8 @@ export default function Stake() {
 
   const handleApprove = async () => {
     if (loading) return;
+    if (!Number(amount)) return message.error('Please enter the amount');
+    if (Number(amount) > tokenBalance) return message.error('Insufficient balance');
     setLoading(true);
     const stakeAddress = getContractConfig(chainId).AimStaking;
     evmUtils
@@ -182,7 +193,13 @@ export default function Stake() {
         const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
         console.log('🔗Approval transaction link:', txLink);
         message.success('Approved!');
-        getEvmTokenBalance();
+        // 重新拉取 allowance 用于和输入金额对比
+        evmUtils
+          .getAllowance(evmTokenContract, address, stakeAddress)
+          .then((nextAllowance) => {
+            setAllowance(nextAllowance);
+          })
+          .catch((error) => console.error(error));
       })
       .catch((error) => {
         handleContractError(error);
@@ -478,14 +495,22 @@ Merit > Money 🎯`;
                 <div className="number">{utils.formatNumber(expectedPoints, 4)}</div>
               </div>
 
-              {caipNetwork.chainNamespace === 'eip155' && !isApproved && tokenBalance > 0 ? (
+              {caipNetwork.chainNamespace === 'eip155' && !isApproved ? (
                 <Button
                   type="primary"
                   size="large"
                   className="stake-btn"
                   onClick={handleApprove}
                   loading={loading}
-                  disabled={!isConnected || !address || !caipNetwork || !chainId}>
+                  disabled={
+                    !isConnected ||
+                    !address ||
+                    !caipNetwork ||
+                    !chainId ||
+                    !amount ||
+                    Number(amount) <= 0 ||
+                    Number(amount) > tokenBalance
+                  }>
                   Approve
                 </Button>
               ) : (
@@ -495,7 +520,15 @@ Merit > Money 🎯`;
                   className="stake-btn"
                   onClick={handleStake}
                   loading={loading}
-                  disabled={!isConnected || !address || !caipNetwork || !chainId || !amount || !tokenBalance}>
+                  disabled={
+                    !isConnected ||
+                    !address ||
+                    !caipNetwork ||
+                    !chainId ||
+                    !amount ||
+                    Number(amount) <= 0 ||
+                    Number(amount) > tokenBalance
+                  }>
                   STAKE
                 </Button>
               )}
