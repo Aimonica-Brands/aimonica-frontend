@@ -296,40 +296,58 @@ export default function Dashboard() {
     const record = unstakeRecord;
     setUnstakeLoading(true);
 
-    if (caipNetwork.chainNamespace === 'eip155') {
-      evmUtils
-        .unstake(evmStakingContract, record)
-        .then((tx) => {
-          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
-          console.log('🔗Unstake transaction link:', txLink);
-
-          message.success('Transaction submitted, please wait...');
+    try {
+      if (caipNetwork.chainNamespace === 'eip155') {
+        // 仅 EVM 执行状态检查
+        const statusCheck = await evmUtils.checkStakeStatus(evmStakingContract, record.stakeId);
+        if (!statusCheck.isActive) {
+          message.warning(
+            'This order has already been unstaked. Please wait a few minutes and refresh the page to update the status.',
+          );
           setUnstakeLoading(false);
           closeUnstakeModal();
-          getEvmStakeRecords();
-        })
-        .catch((error) => {
-          handleContractError(error);
-          setUnstakeLoading(false);
-        });
-    } else if (caipNetwork.chainNamespace === 'solana') {
-      solanaUtils
-        .unstake(solanaProgram, record, Number(record.projectId))
-        .then((tx) => {
-          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
-            getContractConfig(chainId).cluster
-          }`;
-          console.log('🔗Unstake transaction link:', txLink);
+          return;
+        }
 
-          message.success('Transaction submitted, please wait...');
-          setUnstakeLoading(false);
-          closeUnstakeModal();
-          getSolanaStakeRecords();
-        })
-        .catch((error) => {
-          handleContractError(error);
-          setUnstakeLoading(false);
-        });
+        evmUtils
+          .unstake(evmStakingContract, record)
+          .then((tx) => {
+            const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+            console.log('🔗Unstake transaction link:', txLink);
+
+            message.success('Transaction submitted, please wait...');
+            setUnstakeLoading(false);
+            closeUnstakeModal();
+            getEvmStakeRecords();
+          })
+          .catch((error) => {
+            handleContractError(error);
+            setUnstakeLoading(false);
+          });
+      } else if (caipNetwork.chainNamespace === 'solana') {
+        // Solana 不做状态检查，直接执行
+        solanaUtils
+          .unstake(solanaProgram, record, Number(record.projectId))
+          .then((tx) => {
+            const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
+              getContractConfig(chainId).cluster
+            }`;
+            console.log('🔗Unstake transaction link:', txLink);
+
+            message.success('Transaction submitted, please wait...');
+            setUnstakeLoading(false);
+            closeUnstakeModal();
+            getSolanaStakeRecords();
+          })
+          .catch((error) => {
+            handleContractError(error);
+            setUnstakeLoading(false);
+          });
+      }
+    } catch (error) {
+      console.error('Failed to check stake status:', error);
+      message.error('Failed to verify order status. Please try again.');
+      setUnstakeLoading(false);
     }
   };
 
@@ -339,39 +357,57 @@ export default function Dashboard() {
     const record = unstakeRecord;
     setUnstakeLoading(true);
 
-    if (caipNetwork.chainNamespace === 'eip155') {
-      evmUtils
-        .emergencyUnstake(evmStakingContract, record)
-        .then((tx) => {
-          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
-          console.log('🔗Emergency unstake transaction link:', txLink);
-
-          message.success('Transaction submitted, please wait...');
+    try {
+      if (caipNetwork.chainNamespace === 'eip155') {
+        // 仅 EVM 执行状态检查
+        const statusCheck = await evmUtils.checkStakeStatus(evmStakingContract, record.stakeId);
+        if (!statusCheck.isActive) {
+          message.warning(
+            'This order has already been unstaked. Please wait a few minutes and refresh the page to update the status.',
+          );
           setUnstakeLoading(false);
           closeEmergencyUnstakeModal();
-          getEvmStakeRecords();
-        })
-        .catch((error) => {
-          handleContractError(error);
-          setUnstakeLoading(false);
-        });
-    } else if (caipNetwork.chainNamespace === 'solana') {
-      solanaUtils
-        .emergencyUnstake(solanaProgram, record, Number(record.projectId))
-        .then((tx) => {
-          const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
-            getContractConfig(chainId).cluster
-          }`;
-          console.log('🔗Emergency unstake transaction link:', txLink);
+          return;
+        }
 
-          setUnstakeLoading(false);
-          closeEmergencyUnstakeModal();
-          getSolanaStakeRecords();
-        })
-        .catch((error) => {
-          handleContractError(error);
-          setUnstakeLoading(false);
-        });
+        evmUtils
+          .emergencyUnstake(evmStakingContract, record)
+          .then((tx) => {
+            const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx.hash}`;
+            console.log('🔗Emergency unstake transaction link:', txLink);
+
+            message.success('Transaction submitted, please wait...');
+            setUnstakeLoading(false);
+            closeEmergencyUnstakeModal();
+            getEvmStakeRecords();
+          })
+          .catch((error) => {
+            handleContractError(error);
+            setUnstakeLoading(false);
+          });
+      } else if (caipNetwork.chainNamespace === 'solana') {
+        // Solana 不做状态检查，直接执行
+        solanaUtils
+          .emergencyUnstake(solanaProgram, record, Number(record.projectId))
+          .then((tx) => {
+            const txLink = `${caipNetwork.blockExplorers.default.url}/tx/${tx}?cluster=${
+              getContractConfig(chainId).cluster
+            }`;
+            console.log('🔗Emergency unstake transaction link:', txLink);
+
+            setUnstakeLoading(false);
+            closeEmergencyUnstakeModal();
+            getSolanaStakeRecords();
+          })
+          .catch((error) => {
+            handleContractError(error);
+            setUnstakeLoading(false);
+          });
+      }
+    } catch (error) {
+      console.error('Failed to check stake status:', error);
+      message.error('Failed to verify order status. Please try again.');
+      setUnstakeLoading(false);
     }
   };
 
@@ -489,7 +525,7 @@ export default function Dashboard() {
         </div>
 
         <div className="title-box-2">
-          Staking History
+          Unstake History
           <img src="/assets/images/star.png" alt="" className="star-img" />
         </div>
 

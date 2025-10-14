@@ -20,9 +20,7 @@ export const evmUtils = {
         console.error(error);
       }
       // 优化：将排行榜转换为 Map，O(1) 查找
-      const leaderboardMap: Map<string, any> = new Map(
-        (leaderboard || []).map((item: any) => [String(item.id), item])
-      );
+      const leaderboardMap: Map<string, any> = new Map((leaderboard || []).map((item: any) => [String(item.id), item]));
 
       // 先创建基本项目信息
       const basicProjects = projects.map((project: any, index: number) => {
@@ -108,7 +106,8 @@ export const evmUtils = {
         if (onProjectUpdate) {
           const now = Date.now();
           (evmUtils as any).__lastEmitAt = (evmUtils as any).__lastEmitAt || 0;
-          if (now - (evmUtils as any).__lastEmitAt > 200) { // 200ms 粗略节流
+          if (now - (evmUtils as any).__lastEmitAt > 200) {
+            // 200ms 粗略节流
             (evmUtils as any).__lastEmitAt = now;
             const validProjects = detailedProjects.filter((p) => !p.shouldRemove);
             const sortedProjects = validProjects
@@ -248,6 +247,25 @@ export const evmUtils = {
       await tx.wait();
       return tx;
     } catch (error) {
+      throw error;
+    }
+  },
+
+  /**检查质押状态 */
+  checkStakeStatus: async (evmStakingContract: any, stakeId: number) => {
+    try {
+      const stake = await evmStakingContract.stakes(stakeId);
+      // status: 0 = Active, 1 = Unstaked, 2 = EmergencyUnstaked
+      const statusMap = ['Active', 'Unstaked', 'EmergencyUnstaked'];
+      const statusValue = Number(stake.status);
+      const status = statusMap[statusValue] || 'Unknown';
+      console.log(`Stake ${stakeId} status:`, status);
+      return {
+        status,
+        isActive: statusValue === 0,
+      };
+    } catch (error) {
+      console.error('Failed to check stake status:', error);
       throw error;
     }
   },
