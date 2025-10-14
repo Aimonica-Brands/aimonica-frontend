@@ -5,7 +5,7 @@ import axios from 'axios';
 // const BASE_URL = 'https://api.coingecko.com/api/v3/';
 
 // Pro API Key 仅适用于CoinGecko API 付费计划订阅者，CoinGecko Pro API 的根 URL 必须为https://pro-api.coingecko.com/api/v3/。
-const BASE_URL = 'https://pro-api.coingecko.com/api/v3/';
+const BASE_URL = 'https://pro-api.coingecko.com/api/v3';
 
 // Demo API 配置
 const headers = {

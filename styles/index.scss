@@ -1,6 +1,13 @@
 // 设置 rem 基准值
 html {
-  font-size: calc(100vw / 19.2);
+  font-size: 100px;
+  @media screen and (min-width: 1920px) {
+    font-size: calc(100vw / 19.2);
+  }
+  @media screen and (max-width: 750px) {
+    font-size: calc(100vw / 7.5);
+    padding-bottom: 1.2rem;
+  }
 }
 
 *,
@@ -177,12 +184,5 @@ button {
     font-weight: 400;
     font-size: 0.16rem !important;
     color: #5c7392;
-  }
-}
-
-@media screen and (max-width: 750px) {
-  html {
-    font-size: calc(100vw / 7.5);
-    padding-bottom: 1.2rem;
   }
 }
