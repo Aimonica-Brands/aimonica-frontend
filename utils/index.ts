@@ -17,6 +17,23 @@ export default {
     return trimmedDecimal ? `${intPart}.${trimmedDecimal}` : intPart;
   },
 
+  formatCompactNumber(num: number, decimals: number = 2) {
+    if (typeof num !== 'number' || num === 0) return '0';
+    
+    const absNum = Math.abs(num);
+    const sign = num < 0 ? '-' : '';
+    
+    if (absNum >= 1e9) {
+      return `${sign}${(absNum / 1e9).toFixed(decimals).replace(/\.?0+$/, '')}B`;
+    } else if (absNum >= 1e6) {
+      return `${sign}${(absNum / 1e6).toFixed(decimals).replace(/\.?0+$/, '')}M`;
+    } else if (absNum >= 1e3) {
+      return `${sign}${(absNum / 1e3).toFixed(decimals).replace(/\.?0+$/, '')}K`;
+    } else {
+      return `${sign}${absNum.toFixed(decimals).replace(/\.?0+$/, '')}`;
+    }
+  },
+
   handleCopy(value: string) {
     const dummy = document.createElement('textarea');
     document.body.appendChild(dummy);

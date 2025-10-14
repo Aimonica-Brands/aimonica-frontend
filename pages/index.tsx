@@ -96,7 +96,7 @@ export default function Home() {
       align,
       width: 150,
       render: (value: any, record: any) => {
-        return <div className="rank">{utils.formatNumber(record.tvl)}</div>;
+        return <div className="rank">{utils.formatCompactNumber(record.tvl)}</div>;
       },
     },
     {
@@ -105,7 +105,7 @@ export default function Home() {
       align,
       width: 150,
       render: (value: any, record: any) => {
-        return <div className="rank">{utils.formatNumber(record.totalStaked)}</div>;
+        return <div className="rank">{utils.formatCompactNumber(record.totalStaked)}</div>;
       },
     },
     {
@@ -127,7 +127,7 @@ export default function Home() {
             <div className="s-img">
               <img src="/assets/images/img-3.png" alt="" />
             </div>
-            <div className="s-text">{utils.formatNumber(record.points)}</div>
+            <div className="s-text">{utils.formatCompactNumber(record.points)}</div>
           </div>
         );
       },
@@ -399,7 +399,7 @@ export default function Home() {
                       <div className="s-img">
                         <img src="/assets/images/img-3.png" alt="" />
                       </div>
-                      <div className="s-text">{utils.formatNumber(item.points)}</div>
+                      <div className="s-text">{utils.formatCompactNumber(item.points)}</div>
                     </div>
                     <div className="s-box">
                       <div className="s-img">
@@ -409,11 +409,11 @@ export default function Home() {
                     </div>
                     <div className="info-item">
                       <div>TVL</div>
-                      <div>$ {utils.formatNumber(item.tvl)}</div>
+                      <div>$ {utils.formatCompactNumber(item.tvl)}</div>
                     </div>
                     <div className="info-item">
                       <div>Staked</div>
-                      <div>{utils.formatNumber(item.totalStaked)}</div>
+                      <div>{utils.formatCompactNumber(item.totalStaked)}</div>
                     </div>
                     <div className="info-item">
                       <div>Users</div>

@@ -420,7 +420,7 @@ Merit > Money 🎯`;
                 </div>
                 <div>
                   <span>TVL</span>
-                  <span>$ {utils.formatNumber(projectInfo?.tvl)}</span>
+                  <span>$ {utils.formatCompactNumber(projectInfo?.tvl)}</span>
                 </div>
               </div>
               <div className="text3">

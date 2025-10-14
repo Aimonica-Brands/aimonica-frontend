@@ -4,7 +4,9 @@ export default function FooterComponent() {
       <div className="rolling-box">
         <div className="rolling-content">
           {Array.from({ length: 10 }).map((_, index) => (
-            <span className="rolling-item" key={index}>AIMONICA</span>
+            <span className="rolling-item" key={index}>
+              AIMONICA
+            </span>
           ))}
         </div>
       </div>
@@ -18,20 +20,11 @@ export default function FooterComponent() {
             <div className="footer-text">© 2025 aimonica. All rights reserved.</div>
           </div>
           <div className="footer-right">
-            <a href="">
+            <a href="https://x.com/AimonicaBrands">
               <img src="/assets/images/icon-twitter.svg" alt="" />
             </a>
-            <a href="">
+            <a href="https://t.me/+QBZYsb2t0gFlMTU1">
               <img src="/assets/images/icon-telegram.svg" alt="" />
-            </a>
-            <a href="">
-              <img src="/assets/images/icon-discord.svg" alt="" />
-            </a>
-            <a href="">
-              <img src="/assets/images/icon-medium.svg" alt="" />
-            </a>
-            <a href="">
-              <img src="/assets/images/icon-doc.svg" alt="" />
             </a>
           </div>
         </div>
