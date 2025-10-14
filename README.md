@@ -66,9 +66,6 @@ module.exports = {
 ```bash
 # Start development server
 npm run dev
-
-# Or start with production configuration
-npm run dev:prod
 ```
 
 ### 2. Production Build
